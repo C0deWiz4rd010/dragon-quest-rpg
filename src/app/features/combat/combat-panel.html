@@ -58,46 +58,69 @@
 
   <div class="actions">
     <button
-      matButton="filled"
+      class="action-btn action-attack"
       [disabled]="!gameState.enemy() || !gameState.gameActive()"
       (click)="combat.attack()"
+      title="Normaler Angriff"
     >
-      Angriff <kbd>1</kbd>
+      <span class="btn-icon">⚔</span>
+      <span class="btn-label">Angriff</span>
+      <kbd>1</kbd>
     </button>
     <button
-      matButton="tonal"
+      class="action-btn action-skill"
       [disabled]="!gameState.canUseSkill()"
       [class.skill-ready]="gameState.canUseSkill()"
       (click)="combat.specialAttack()"
+      title="Drachenklaue – Finisher-Angriff (30 Mana)"
     >
-      Drachenklaue <kbd>2</kbd>
+      <span class="btn-icon">🔥</span>
+      <span class="btn-label">Drachenklaue</span>
       @if (gameState.player().skillCooldown > 0) {
-        <span>{{ gameState.player().skillCooldown }}</span>
+        <span class="cooldown-badge">{{ gameState.player().skillCooldown }}</span>
+      } @else {
+        <kbd>2</kbd>
       }
     </button>
-    <button matButton="outlined" [disabled]="!gameState.canHeal()" (click)="combat.heal()">
-      Heilen <kbd>3</kbd>
+    <button
+      class="action-btn action-heal"
+      [disabled]="!gameState.canHeal()"
+      (click)="combat.heal()"
+      title="Heilung (20 Mana)"
+    >
+      <span class="btn-icon">💊</span>
+      <span class="btn-label">Heilen</span>
+      <kbd>3</kbd>
     </button>
     <button
-      matButton="outlined"
+      class="action-btn action-guard"
       [disabled]="!gameState.enemy() || !gameState.gameActive()"
       (click)="combat.guard()"
+      title="Deckung – gibt Mana und Riposte"
     >
-      Deckung <kbd>4</kbd>
+      <span class="btn-icon">🛡</span>
+      <span class="btn-label">Deckung</span>
+      <kbd>4</kbd>
     </button>
     <button
-      matButton="outlined"
+      class="action-btn action-potion"
       [disabled]="!gameState.canUsePotion()"
       (click)="combat.usePotion()"
+      title="Heiltrank (+50 HP, Cleanse)"
     >
-      Trank <kbd>5</kbd>
+      <span class="btn-icon">🧪</span>
+      <span class="btn-label">Trank {{ gameState.player().potions > 0 ? '×' + gameState.player().potions : '' }}</span>
+      <kbd>5</kbd>
     </button>
     <button
-      matButton="outlined"
+      class="action-btn action-resolve"
       [disabled]="!gameState.canUseResolve()"
       (click)="combat.useResolve()"
+      title="Resolve – Notfallzug, reinigt Status"
     >
-      Resolve <kbd>6</kbd>
+      <span class="btn-icon">⚡</span>
+      <span class="btn-label">Resolve {{ gameState.player().resolve }}/{{ gameState.player().maxResolve }}</span>
+      <kbd>6</kbd>
     </button>
   </div>
 

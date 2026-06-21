@@ -86,14 +86,95 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.actions button {
-  font-size: 10px !important;
+/* Custom icon action buttons */
+.action-btn {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: var(--dq-ink-soft);
+  cursor: pointer;
+  display: flex;
+  font-size: 9px;
+  font-weight: 700;
+  gap: 5px;
+  justify-content: center;
+  letter-spacing: 0.04em;
+  min-height: 38px;
   min-width: 0;
+  padding: 5px 8px;
   position: relative;
+  text-transform: uppercase;
+  transition: background 120ms, border-color 120ms, transform 70ms;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.38;
+  }
+
+  &:not(:disabled):hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-1px);
+  }
+
+  &:not(:disabled):active {
+    transform: scale(0.97);
+  }
+}
+
+.btn-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.btn-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.action-attack {
+  border-color: rgba(248, 113, 113, 0.25);
+  &:not(:disabled):hover { border-color: rgba(248, 113, 113, 0.55); }
+}
+
+.action-skill {
+  border-color: rgba(56, 189, 248, 0.22);
+  &:not(:disabled):hover { border-color: rgba(56, 189, 248, 0.55); }
+}
+
+.action-heal {
+  border-color: rgba(74, 222, 128, 0.22);
+  &:not(:disabled):hover { border-color: rgba(74, 222, 128, 0.5); }
+}
+
+.action-guard {
+  border-color: rgba(45, 212, 191, 0.22);
+  &:not(:disabled):hover { border-color: rgba(45, 212, 191, 0.5); }
+}
+
+.action-potion {
+  border-color: rgba(250, 204, 21, 0.22);
+  &:not(:disabled):hover { border-color: rgba(250, 204, 21, 0.5); }
+}
+
+.action-resolve {
+  border-color: rgba(192, 132, 252, 0.22);
+  &:not(:disabled):hover { border-color: rgba(192, 132, 252, 0.5); }
+}
+
+/* Skill ready glow */
+.action-btn.skill-ready {
+  animation: skillReadyGlow 1.8s ease-in-out infinite;
+  border-color: rgba(56, 189, 248, 0.6) !important;
+  color: #7dd3fc;
 }
 
 /* Cooldown badge on Drachenklaue */
-.actions button span {
+.cooldown-badge {
   align-items: center;
   background: rgba(248, 113, 113, 0.88);
   border-radius: 50%;
@@ -104,26 +185,18 @@
   height: 16px;
   justify-content: center;
   line-height: 1;
-  margin-left: 4px;
   min-width: 16px;
   padding: 1px 3px;
-  vertical-align: middle;
 }
 
-/* Skill ready glow on button */
-.actions .skill-ready {
-  animation: skillReadyGlow 1.8s ease-in-out infinite;
-  border: 1px solid rgba(56, 189, 248, 0.6) !important;
-}
-
-/* Keyboard hint inside button */
-.actions button kbd {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 3px;
+/* Keyboard hint */
+.action-btn kbd {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  flex-shrink: 0;
   font-size: 8px;
-  margin-left: 4px;
-  padding: 1px 3px;
+  padding: 1px 4px;
 }
 
 /* Status effect badge */

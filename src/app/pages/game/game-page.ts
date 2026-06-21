@@ -202,21 +202,40 @@ export class GamePage {
   protected weatherLabelFor(mode: PathWeather): string {
     switch (mode) {
       case 'rain':
-        return 'Regenfront';
+        return '🌧 Regen';
       case 'fog':
-        return 'Nebel';
+        return '🌫 Nebel';
       case 'snow':
-        return 'Schneefall';
+        return '❄ Schnee';
       case 'ash':
-        return 'Asche';
+        return '🌋 Asche';
       case 'storm':
-        return 'Sturm';
+        return '⛈ Sturm';
       case 'glow':
-        return 'Aurenlicht';
+        return '✨ Aura';
       default:
-        return 'Klar';
+        return '☀ Klar';
     }
   }
+
+  protected weatherColorFor(mode: PathWeather): string {
+    switch (mode) {
+      case 'rain': return 'weather-rain';
+      case 'fog': return 'weather-fog';
+      case 'snow': return 'weather-snow';
+      case 'ash': return 'weather-ash';
+      case 'storm': return 'weather-storm';
+      case 'glow': return 'weather-glow';
+      default: return 'weather-clear';
+    }
+  }
+
+  protected bossCountdownClass = computed(() => {
+    const n = this.bossCountdown();
+    if (n === 1) return 'imminent';
+    if (n <= 2) return 'close';
+    return '';
+  });
 
   private renderGameToText(): string {
     const player = this.player();
