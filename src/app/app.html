@@ -1,1 +1,5 @@
-<app-game-page />
+@if (showSplash()) {
+  <app-splash-screen (start)="onSplashStart($event)" />
+} @else {
+  <app-game-page />
+}

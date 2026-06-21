@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { CombatPanel } from '../../features/combat/combat-panel';
 import { RunEncounterOverlay } from '../../features/encounters/run-encounter-overlay';
 import { GameState } from '../../features/game-state/game-state.service';
@@ -9,6 +9,7 @@ import { MiniGameOverlay } from '../../features/minigames/mini-game-overlay';
 import { PathBoard } from '../../features/path/path-board';
 import { routeSynergyPreview } from '../../features/path/path-advisor';
 import { Path, PathWeather } from '../../features/path/path.service';
+import { StorageService } from '../../features/persistence/storage.service';
 import { PixiBackground } from '../../features/pixi/pixi-background/pixi-background';
 
 export type MobileTab = 'combat' | 'path' | 'supply' | 'log';
@@ -39,8 +40,10 @@ export class GamePage {
   protected readonly gameState = inject(GameState);
   protected readonly path = inject(Path);
   protected readonly inventory = inject(Inventory);
+  private readonly storage = inject(StorageService);
   protected readonly handbookOpen = signal(false);
   protected readonly mobileTab = signal<MobileTab>('combat');
+  protected readonly savedAt = signal<string | null>(null);
   protected readonly player = computed(() => this.gameState.player());
   protected readonly weatherOptions: PathWeather[] = [
     'clear',
@@ -184,6 +187,19 @@ export class GamePage {
     window.render_game_to_text = () => this.renderGameToText();
     window.advanceTime = (ms: number) =>
       new Promise((resolve) => window.setTimeout(resolve, Math.max(0, ms)));
+
+    // Auto-save on every player state change (debounced to depth changes)
+    effect(() => {
+      const depth = this.path.currentDepth();
+      if (depth > 0) {
+        this.saveGame();
+      }
+    });
+  }
+
+  protected saveGame(): void {
+    this.storage.save();
+    this.savedAt.set(new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }));
   }
 
   protected setWeather(mode: PathWeather): void {
@@ -202,21 +218,40 @@ export class GamePage {
   protected weatherLabelFor(mode: PathWeather): string {
     switch (mode) {
       case 'rain':
-        return 'Regenfront';
+        return '🌧 Regen';
       case 'fog':
-        return 'Nebel';
+        return '🌫 Nebel';
       case 'snow':
-        return 'Schneefall';
+        return '❄ Schnee';
       case 'ash':
-        return 'Asche';
+        return '🌋 Asche';
       case 'storm':
-        return 'Sturm';
+        return '⛈ Sturm';
       case 'glow':
-        return 'Aurenlicht';
+        return '✨ Aura';
       default:
-        return 'Klar';
+        return '☀ Klar';
     }
   }
+
+  protected weatherColorFor(mode: PathWeather): string {
+    switch (mode) {
+      case 'rain': return 'weather-rain';
+      case 'fog': return 'weather-fog';
+      case 'snow': return 'weather-snow';
+      case 'ash': return 'weather-ash';
+      case 'storm': return 'weather-storm';
+      case 'glow': return 'weather-glow';
+      default: return 'weather-clear';
+    }
+  }
+
+  protected bossCountdownClass = computed(() => {
+    const n = this.bossCountdown();
+    if (n === 1) return 'imminent';
+    if (n <= 2) return 'close';
+    return '';
+  });
 
   private renderGameToText(): string {
     const player = this.player();

@@ -13,23 +13,43 @@
   <div class="path-weather-layer" aria-hidden="true"></div>
 
   <div class="board-header">
-    <div>
-      <span>Tiefe</span><strong>{{ path.currentDepth() + 1 }}</strong>
+    <div class="header-stat">
+      <span>📍 Tiefe</span><strong>{{ path.currentDepth() + 1 }}</strong>
     </div>
-    <div>
-      <span>Abgeschlossen</span><strong>{{ gameState.player().completedPaths }}</strong>
+    <div class="header-stat">
+      <span>✅ Pfade</span><strong>{{ gameState.player().completedPaths }}</strong>
     </div>
-    <div>
-      <span>Status</span><strong>{{ gameState.enemy() ? 'Kampf' : 'Erkunden' }}</strong>
+    <div class="header-stat">
+      <span>⚡ Status</span><strong>{{ gameState.enemy() ? 'Kampf' : 'Erkunden' }}</strong>
     </div>
-    <div>
-      <span>Boss in</span><strong>{{ 5 - (path.currentDepth() % 5) }}</strong>
+    <div class="header-stat">
+      <span>🐉 Boss in</span><strong>{{ 5 - (path.currentDepth() % 5) }}</strong>
     </div>
-    <div>
-      <span>Wetter</span><strong>{{ weatherLabel() }}</strong>
+    <div class="header-stat">
+      <span>🌤 Wetter</span><strong>{{ weatherLabel() }}</strong>
     </div>
-    <div>
-      <span>Prep</span><strong>{{ gameState.bossPrepScore() }}%</strong>
+    <div class="header-stat prep-stat" [class.ready]="gameState.bossPrepScore() >= 70">
+      <span>🎯 Prep</span><strong>{{ gameState.bossPrepScore() }}%</strong>
+    </div>
+  </div>
+
+  <div class="contract-bar-row">
+    <div class="contract-info">
+      <span class="contract-icon">📋</span>
+      <div>
+        <strong>{{ gameState.player().activeContract.title }}</strong>
+        <small>{{ gameState.player().activeContract.description }}</small>
+      </div>
+      <span class="contract-count">
+        {{ gameState.player().activeContract.progress }}/{{ gameState.player().activeContract.target }}
+      </span>
+    </div>
+    <div class="contract-track">
+      <div
+        class="contract-fill"
+        [class.complete]="gameState.player().activeContract.completed"
+        [style.width.%]="gameState.contractProgressPercent()"
+      ></div>
     </div>
   </div>
 

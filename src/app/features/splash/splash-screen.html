@@ -1,0 +1,31 @@
+<div class="splash-overlay">
+  <div class="ember-bg" aria-hidden="true"></div>
+
+  <div class="splash-card">
+    <div class="splash-emblem">🐉</div>
+    <p class="splash-eyebrow">A Browser Roguelite</p>
+    <h1 class="splash-title">Dragon Quest<br><span>RPG</span></h1>
+    <p class="splash-tagline">Wähle deinen Pfad. Besiege den Drachenkönig.</p>
+
+    <div class="splash-actions">
+      <button class="btn-start" type="button" (click)="startNew()">
+        ⚔ Neues Spiel
+      </button>
+      @if (hasSave()) {
+        <button class="btn-load" type="button" (click)="loadGame()">
+          📂 Weiterspielen
+        </button>
+      }
+    </div>
+
+    <div class="splash-hints">
+      <span>⚔ Combo-System</span>
+      <span>🛡 Riposte</span>
+      <span>🔥 Drachenklaue</span>
+      <span>🐉 Boss-Kampf</span>
+      <span>💎 Dragon Shards</span>
+    </div>
+
+    <p class="splash-version">v1.0.0 · Angular 21 + PixiJS</p>
+  </div>
+</div>
