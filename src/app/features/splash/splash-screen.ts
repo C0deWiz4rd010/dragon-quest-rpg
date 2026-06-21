@@ -6,10 +6,12 @@ import {
   signal,
 } from '@angular/core';
 import { StorageService } from '../persistence/storage.service';
+import { SplashBackground } from './splash-background/splash-background';
 
 @Component({
   selector: 'app-splash-screen',
   standalone: true,
+  imports: [SplashBackground],
   templateUrl: './splash-screen.html',
   styleUrl: './splash-screen.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,20 +1,30 @@
 <div class="splash-overlay">
+  <!-- Real-time 3D dragon-hoard backdrop -->
+  <app-splash-background />
+
+  <!-- Vignette + drifting ember haze layered over the 3D scene -->
+  <div class="splash-vignette" aria-hidden="true"></div>
   <div class="ember-bg" aria-hidden="true"></div>
+  <div class="splash-scanline" aria-hidden="true"></div>
 
   <div class="splash-card">
-    <div class="splash-emblem">🐉</div>
+    <div class="splash-crest">
+      <span class="crest-ring" aria-hidden="true"></span>
+      <span class="crest-ring crest-ring-2" aria-hidden="true"></span>
+      <span class="splash-emblem">🐉</span>
+    </div>
+
     <p class="splash-eyebrow">A Browser Roguelite</p>
-    <h1 class="splash-title">Dragon Quest<br><span>RPG</span></h1>
+    <h1 class="splash-title">Dragon Quest<br /><span>RPG</span></h1>
     <p class="splash-tagline">Wähle deinen Pfad. Besiege den Drachenkönig.</p>
 
     <div class="splash-actions">
       <button class="btn-start" type="button" (click)="startNew()">
-        ⚔ Neues Spiel
+        <span class="btn-glow" aria-hidden="true"></span>
+        <span class="btn-text">⚔ Neues Spiel</span>
       </button>
       @if (hasSave()) {
-        <button class="btn-load" type="button" (click)="loadGame()">
-          📂 Weiterspielen
-        </button>
+        <button class="btn-load" type="button" (click)="loadGame()">📂 Weiterspielen</button>
       }
     </div>
 
@@ -26,6 +36,6 @@
       <span>💎 Dragon Shards</span>
     </div>
 
-    <p class="splash-version">v1.0.0 · Angular 21 + PixiJS</p>
+    <p class="splash-version">v1.1.0 · Angular 21 · Three.js · PixiJS</p>
   </div>
 </div>
