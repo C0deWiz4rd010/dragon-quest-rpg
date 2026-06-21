@@ -373,6 +373,21 @@
   &:hover { background: rgba(255, 255, 255, 0.07); border-color: rgba(248, 231, 162, 0.45); }
 }
 
+.save-btn {
+  border-color: rgba(74, 222, 128, 0.28);
+  color: #86efac;
+  font-size: 12px;
+  gap: 4px;
+
+  .save-time {
+    font-size: 8px;
+    font-weight: 700;
+    opacity: 0.75;
+  }
+
+  &:hover { border-color: rgba(74, 222, 128, 0.55); }
+}
+
 .reset-btn {
   border-color: rgba(248, 113, 113, 0.32);
   color: #fca5a5;

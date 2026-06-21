@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { CombatPanel } from '../../features/combat/combat-panel';
 import { RunEncounterOverlay } from '../../features/encounters/run-encounter-overlay';
 import { GameState } from '../../features/game-state/game-state.service';
@@ -9,6 +9,7 @@ import { MiniGameOverlay } from '../../features/minigames/mini-game-overlay';
 import { PathBoard } from '../../features/path/path-board';
 import { routeSynergyPreview } from '../../features/path/path-advisor';
 import { Path, PathWeather } from '../../features/path/path.service';
+import { StorageService } from '../../features/persistence/storage.service';
 import { PixiBackground } from '../../features/pixi/pixi-background/pixi-background';
 
 export type MobileTab = 'combat' | 'path' | 'supply' | 'log';
@@ -39,8 +40,10 @@ export class GamePage {
   protected readonly gameState = inject(GameState);
   protected readonly path = inject(Path);
   protected readonly inventory = inject(Inventory);
+  private readonly storage = inject(StorageService);
   protected readonly handbookOpen = signal(false);
   protected readonly mobileTab = signal<MobileTab>('combat');
+  protected readonly savedAt = signal<string | null>(null);
   protected readonly player = computed(() => this.gameState.player());
   protected readonly weatherOptions: PathWeather[] = [
     'clear',
@@ -184,6 +187,19 @@ export class GamePage {
     window.render_game_to_text = () => this.renderGameToText();
     window.advanceTime = (ms: number) =>
       new Promise((resolve) => window.setTimeout(resolve, Math.max(0, ms)));
+
+    // Auto-save on every player state change (debounced to depth changes)
+    effect(() => {
+      const depth = this.path.currentDepth();
+      if (depth > 0) {
+        this.saveGame();
+      }
+    });
+  }
+
+  protected saveGame(): void {
+    this.storage.save();
+    this.savedAt.set(new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }));
   }
 
   protected setWeather(mode: PathWeather): void {

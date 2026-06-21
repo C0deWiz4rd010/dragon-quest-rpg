@@ -111,6 +111,14 @@
         <div class="tool-btns">
           <button
             type="button"
+            class="tool-btn save-btn"
+            [title]="savedAt() ? 'Gespeichert ' + savedAt() : 'Speichern'"
+            (click)="saveGame()"
+          >
+            💾 @if (savedAt()) { <span class="save-time">{{ savedAt() }}</span> }
+          </button>
+          <button
+            type="button"
             class="tool-btn manual-button"
             title="Handbuch"
             (click)="handbookOpen.set(!handbookOpen())"
