@@ -5,6 +5,7 @@ import {
   QueryList,
   ViewChild,
   ViewChildren,
+  computed,
   effect,
   inject,
 } from '@angular/core';
@@ -31,6 +32,37 @@ export class PathBoard {
   protected readonly path = inject(Path);
   @ViewChild('routeViewport') private routeViewport?: ElementRef<HTMLElement>;
   @ViewChildren('segmentEl') private segmentElements?: QueryList<ElementRef<HTMLElement>>;
+
+  /**
+   * Best choosable branch at the current station, ranked by advisor score.
+   * Drives the "Empfohlen" highlight so the next move always reads clearly —
+   * decision support without changing the underlying mechanics.
+   */
+  protected readonly recommendedBranchId = computed<string | null>(() => {
+    if (this.gameState.enemy() || !this.gameState.gameActive()) {
+      return null;
+    }
+
+    const segment = this.path.currentSegment();
+    if (!segment) {
+      return null;
+    }
+
+    let bestId: string | null = null;
+    let bestScore = -Infinity;
+    for (const branch of segment.branches) {
+      if (branch.completed || branch.locked) {
+        continue;
+      }
+      const score = this.branchAdvice(branch).score;
+      if (score > bestScore) {
+        bestScore = score;
+        bestId = branch.id;
+      }
+    }
+
+    return bestId;
+  });
 
   constructor() {
     effect(() => {
