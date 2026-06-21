@@ -54,15 +54,15 @@
   background:
     linear-gradient(135deg, rgba(28, 16, 36, 0.96), rgba(8, 15, 30, 0.93));
   border: 1px solid var(--dq-line-strong);
-  border-radius: 14px;
+  border-radius: 12px;
   box-shadow:
     0 0 0 1px rgba(212, 175, 55, 0.06) inset,
     var(--dq-shadow-soft),
     0 0 40px rgba(212, 175, 55, 0.06);
   display: grid;
-  gap: 8px;
+  gap: 7px;
   grid-template-columns: 1fr;
-  padding: 10px 12px;
+  padding: 7px 10px;
 }
 
 /* ── Brand ── */
@@ -251,19 +251,19 @@
 /* ── Dashboard chips ── */
 .dashboard-chips {
   display: grid;
-  gap: 5px;
+  gap: 4px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .dashboard-chip {
   background: rgba(10, 14, 26, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 8px;
+  border-radius: 7px;
   cursor: default;
   display: grid;
-  gap: 2px;
+  gap: 1px;
   min-width: 0;
-  padding: 5px 7px;
+  padding: 4px 7px;
   transition: border-color 150ms;
 
   &:hover { border-color: rgba(212, 175, 55, 0.25); }
@@ -272,13 +272,13 @@
     color: var(--dq-ink-muted);
     font-size: 7px;
     font-weight: 800;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
   }
 
   strong {
     color: #fff6c7;
-    font-size: 11px;
+    font-size: 10px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
