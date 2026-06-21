@@ -1,0 +1,327 @@
+<main class="game-shell">
+  <app-pixi-background />
+  <div class="ember-layer" aria-hidden="true"></div>
+
+  <section class="shell-content">
+    <header class="cockpit-bar" aria-label="Run cockpit">
+      <div class="brand-block">
+        <p>Pixel Quest</p>
+        <div class="title-row">
+          <h1>Dragon Quest RPG</h1>
+          <span class="status-pill">{{ runStatus() }}</span>
+        </div>
+      </div>
+
+      <section class="pilot-readout" aria-label="Spielerstatus">
+        <div class="readout-line">
+          <strong>Lvl {{ player().level }}</strong>
+          <span>{{ gameState.dragonRank() }} / Note {{ gameState.runGrade() }}</span>
+          <span>{{ player().hp }}/{{ player().maxHp }} HP</span>
+          <span>{{ player().mana }}/{{ player().maxMana }} Mana</span>
+          <span
+            class="combo-pill"
+            [class.warm]="comboLevel() === 'warm'"
+            [class.hot]="comboLevel() === 'hot'"
+            [class.fever]="comboLevel() === 'fever'"
+            [class.ultra]="comboLevel() === 'ultra'"
+          >{{ player().combo > 0 ? player().combo + 'x' : '—' }} Combo</span>
+          <span>{{ player().riposteCharges }}x Riposte</span>
+        </div>
+        <div class="header-bars">
+          <div class="header-bar hp-bar" [class.danger]="gameState.playerHpPercent() < 30">
+            <span [style.width.%]="gameState.playerHpPercent()"></span>
+          </div>
+          <div class="header-bar mana-bar">
+            <span [style.width.%]="gameState.playerManaPercent()"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-chips" aria-label="Run Werte">
+        @for (stat of quickStats(); track stat.label) {
+          <article class="dashboard-chip">
+            <span>{{ stat.label }}</span>
+            <strong>{{ stat.value }}</strong>
+            <small>{{ stat.detail }}</small>
+          </article>
+        }
+      </section>
+
+      <div class="header-tools" aria-label="Run tools">
+        <div class="weather-switch" aria-label="Wetter">
+          @for (mode of weatherOptions; track mode) {
+            <button
+              type="button"
+              [class.active]="path.weather() === mode"
+              [title]="weatherLabelFor(mode)"
+              (click)="setWeather(mode)"
+            >
+              {{ weatherLabelFor(mode) }}
+            </button>
+          }
+        </div>
+        <button
+          type="button"
+          class="manual-button"
+          title="Handbuch"
+          (click)="handbookOpen.set(!handbookOpen())"
+        >
+          Handbuch
+        </button>
+        <button type="button" class="reset-btn" title="Neustart" (click)="resetRun()">
+          Neustart
+        </button>
+      </div>
+    </header>
+
+    <div class="layout" [attr.data-tab]="mobileTab()">
+      <section class="combat-zone card-frame">
+        <div class="zone-header">
+          <div>
+            <p>Kampf</p>
+            <strong>{{ gameState.enemy() ? (gameState.enemy()?.name ?? '-') : 'Bereit' }}</strong>
+          </div>
+          @if (gameState.enemy(); as enemy) {
+            <span>{{ enemy.role }} / ATK {{ enemy.attack }}</span>
+          } @else {
+            <span>Kein Gegner</span>
+          }
+        </div>
+        <app-combat-panel />
+      </section>
+
+      <section class="path-zone card-frame">
+        <div class="zone-header">
+          <div>
+            <p>Expedition</p>
+            <strong>Route und Risiko</strong>
+          </div>
+          <span
+            >Boss in {{ bossCountdown() === 5 ? 'dieser' : bossCountdown() }}
+            {{ bossCountdown() === 1 ? 'Etappe' : 'Etappen' }}</span
+          >
+        </div>
+        <app-path-board />
+      </section>
+
+      <aside class="side-zone">
+        <section class="card-frame side-card supply-card">
+          <div class="zone-header">
+            <div>
+              <p>Versorgung</p>
+              <strong>{{ player().gold }} Gold</strong>
+            </div>
+            <span>{{ player().dragonShards }} Shards</span>
+          </div>
+          <app-inventory-panel />
+        </section>
+
+        <section class="card-frame side-card log-card">
+          <div class="zone-header">
+            <div>
+              <p>Chronik</p>
+              <strong>Letzte Ereignisse</strong>
+            </div>
+            <span>{{ gameState.logs().length }} Eintraege</span>
+          </div>
+          <app-event-log />
+        </section>
+      </aside>
+    </div>
+
+    <nav class="mobile-tabs" aria-label="Navigation">
+      <button
+        type="button"
+        [class.active]="mobileTab() === 'combat'"
+        (click)="mobileTab.set('combat')"
+      >
+        <span class="tab-icon">ATK</span>
+        <span class="tab-label">Kampf</span>
+      </button>
+      <button type="button" [class.active]="mobileTab() === 'path'" (click)="mobileTab.set('path')">
+        <span class="tab-icon">MAP</span>
+        <span class="tab-label">Karte</span>
+      </button>
+      <button
+        type="button"
+        [class.active]="mobileTab() === 'supply'"
+        (click)="mobileTab.set('supply')"
+      >
+        <span class="tab-icon">BAG</span>
+        <span class="tab-label">Vorrat</span>
+      </button>
+      <button type="button" [class.active]="mobileTab() === 'log'" (click)="mobileTab.set('log')">
+        <span class="tab-icon">LOG</span>
+        <span class="tab-label">Chronik</span>
+      </button>
+    </nav>
+  </section>
+
+  @if (handbookOpen()) {
+    <aside class="handbook" aria-label="Handbuch">
+      <button type="button" title="Schliessen" (click)="handbookOpen.set(false)">Schliessen</button>
+      <h2>Handbuch</h2>
+      <p>
+        <strong>Ziel:</strong> Besiege den Boss in Tiefe 5, 10, 15 und ueberlebe so lang wie
+        moeglich.
+      </p>
+      <p>
+        <strong>Pfadwahl:</strong> Branches zeigen Wetter, Risiko und Reward-Tendenz. Gefaehrliche
+        Wege lohnen mehr, Spezialrouten liefern Prep.
+      </p>
+      <p>
+        <strong>Spezialrouten:</strong> Haendler reagieren auf deinen Bedarf, Schmieden heben deine
+        Kampfwerte an, Sanktuarien geben Resolve und Blessings.
+      </p>
+      <p>
+        <strong>Gegnerrollen:</strong> Bruiser schlagen hart, Swift sind schneller belohnt, Hexer
+        legen Status, Elite und Boss geben hohe Rewards.
+      </p>
+      <p>
+        <strong>Wetter:</strong> Regen gibt Mana, Sturm laesst Gegner verfehlen, Schnee staerkt DEF,
+        Asche brennt, Glow staerkt Krits, Nebel senkt Krits.
+      </p>
+      <p>
+        <strong>Combat:</strong> Combo staerkt normale Angriffe und den Drachenklaue-Finisher.
+        Deckung gibt Mana und Cooldown-Tempo.
+      </p>
+      <p>
+        <strong>Riposte:</strong> Gute Deckung baut Konter-Ladungen auf. Der naechste Angriff oder
+        Finisher entlaedt sie fuer Bonus-Schaden.
+      </p>
+      <p>
+        <strong>Overkill:</strong> Sehr starke Kill-Treffer geben Bonus-Mana, Extra-Gold und bei
+        hohen Werten Dragon Shards.
+      </p>
+      <p>
+        <strong>Biome:</strong> Branches zeigen neben Wetter nun auch ihr Biome. Glutherd, Hain,
+        Ruine, Frost, Sturmgrat und Sanctum helfen beim schnellen Lesen der Karte.
+      </p>
+      <p>
+        <strong>Blessings:</strong> Kampfrausch, Aegis, Fokuslicht, Glueckssegen und Lebenskern
+        verknuepfen Karte, Heilung und Kampf enger miteinander.
+      </p>
+      <p>
+        <strong>Dragon Shards:</strong> Elite- und Bossziele geben Shards. Daraus werden
+        Prep-Caches, Rerolls und Tonika fuer knappe Runs.
+      </p>
+      <p>
+        <strong>Boss-Prep:</strong> HP, Mana, Resolve, Blessings, Relics und Shards speisen den
+        Prep-Score. Vor Bossen lohnt sich gezielte Vorbereitung statt blindes Durchrushen.
+      </p>
+      <p>
+        <strong>Advisor:</strong> Branch-Chips markieren empfohlene, riskante und Prep-starke Wege
+        nach aktuellem HP-, Mana-, Auftrag- und Bossdruck.
+      </p>
+      <p>
+        <strong>Synergy:</strong> Drei unterschiedliche Routentypen in Folge geben Bonusgold, Mana
+        und Shards. Wiederholungen sind sicherer, aber weniger explosiv.
+      </p>
+      <p>
+        <strong>Adaptiv:</strong> Wenn HP, Mana oder Boss-Prep kritisch werden, kann die naechste
+        Segmentvorschau gezielt Rettungs- oder Prep-Pfade anbieten.
+      </p>
+      <p>
+        <strong>Resolve:</strong> Der Notfallzug reinigt Status, heilt, gibt Mana und verhindert
+        einen Gegenschlag. Auftraege fuellen Resolve wieder auf.
+      </p>
+    </aside>
+  }
+
+  @if (inventory.lastLoot(); as loot) {
+    <div class="loot-toast" role="status" aria-live="polite">
+      <span class="loot-toast-icon">{{ loot.icon }}</span>
+      <div class="loot-toast-text">
+        <strong>{{
+          loot.kind === 'pet'
+            ? 'Begleiter gefunden!'
+            : loot.kind === 'relic'
+              ? 'Relic gefunden!'
+              : 'Item gefunden!'
+        }}</strong>
+        <span>{{ loot.name }}</span>
+      </div>
+    </div>
+  }
+
+  @if (gameState.runOutcome(); as outcome) {
+    <div
+      class="run-outcome-overlay"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="outcome === 'victory' ? 'Sieg!' : 'Niederlage'"
+    >
+      <div
+        class="run-outcome-card"
+        [class.victory]="outcome === 'victory'"
+        [class.defeat]="outcome === 'defeat'"
+      >
+        <div class="outcome-emblem">{{ outcome === 'victory' ? 'WIN' : 'KO' }}</div>
+        <h2 class="outcome-title">
+          {{ outcome === 'victory' ? 'Sieg gesichert!' : 'Gefallen im Kampf' }}
+        </h2>
+        <p class="outcome-sub">
+          {{
+            outcome === 'victory'
+              ? 'Der Drachenkoenig liegt besiegt.'
+              : 'Du hast dein Bestes gegeben.'
+          }}
+        </p>
+        <div class="outcome-grade-row">
+          <div class="outcome-grade" [attr.data-grade]="gameState.runGrade()">
+            {{ gameState.runGrade() }}
+          </div>
+          <div class="outcome-rank">{{ gameState.dragonRank() }}</div>
+        </div>
+        <div class="outcome-stats-grid">
+          <div class="outcome-stat">
+            <span>Level</span><strong>{{ player().level }}</strong>
+          </div>
+          <div class="outcome-stat">
+            <span>Kills</span><strong>{{ player().totalKills }}</strong>
+          </div>
+          <div class="outcome-stat">
+            <span>Elite</span><strong>{{ player().eliteKills }}</strong>
+          </div>
+          <div class="outcome-stat">
+            <span>Gold</span><strong>{{ player().gold }}</strong>
+          </div>
+          <div class="outcome-stat">
+            <span>Shards</span><strong>{{ player().dragonShards }}</strong>
+          </div>
+          <div class="outcome-stat">
+            <span>Combo</span><strong>{{ player().maxCombo }}x</strong>
+          </div>
+          <div class="outcome-stat">
+            <span>Riposte</span><strong>{{ player().perfectGuards }}</strong>
+          </div>
+          <div class="outcome-stat">
+            <span>Overkill</span><strong>{{ player().totalOverkillDamage }}</strong>
+          </div>
+          <div class="outcome-stat">
+            <span>Pfade</span><strong>{{ player().completedPaths }}</strong>
+          </div>
+          <div class="outcome-stat">
+            <span>Prep</span><strong>{{ gameState.bossPrepScore() }}%</strong>
+          </div>
+          <div class="outcome-stat">
+            <span>Games</span><strong>{{ player().miniGamesWon }}</strong>
+          </div>
+          <div class="outcome-stat">
+            <span>Tiefe</span><strong>{{ path.currentDepth() + 1 }}</strong>
+          </div>
+          <div class="outcome-stat">
+            <span>Rang</span><strong>{{ gameState.dragonRank() }}</strong>
+          </div>
+          <div class="outcome-stat">
+            <span>Note</span><strong>{{ gameState.runGrade() }}</strong>
+          </div>
+        </div>
+        <button type="button" class="outcome-restart-btn" (click)="resetRun()">Neuer Run</button>
+      </div>
+    </div>
+  }
+</main>
+
+<app-mini-game-overlay />
+<app-run-encounter-overlay />

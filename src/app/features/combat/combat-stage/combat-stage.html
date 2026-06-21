@@ -1,0 +1,92 @@
+<div
+  class="stage-wrap"
+  [class.skill-online]="gameState.canUseSkill()"
+  [class.riposte-ready]="gameState.player().riposteCharges > 0"
+  [class.enemy-heated]="enemyPhaseTone() === 'heated'"
+  [class.enemy-enraged]="enemyPhaseTone() === 'enraged'"
+  [class.status-burn]="gameState.player().statusEffect?.type === 'burn'"
+  [class.status-poison]="gameState.player().statusEffect?.type === 'poison'"
+  [class.weather-ash]="path.weather() === 'ash'"
+  [class.weather-fog]="path.weather() === 'fog'"
+  [class.weather-glow]="path.weather() === 'glow'"
+  [class.weather-rain]="path.weather() === 'rain'"
+  [class.weather-snow]="path.weather() === 'snow'"
+  [class.weather-storm]="path.weather() === 'storm'"
+>
+  <div class="combat-weather-layer" aria-hidden="true"></div>
+  <div class="skill-aura" aria-hidden="true"></div>
+  <div class="combat-pressure-layer" aria-hidden="true"></div>
+  <div class="riposte-aura" aria-hidden="true"></div>
+  @if (gameState.player().riposteCharges > 0 || enemyPhaseTone() !== 'calm') {
+    <div class="stage-alerts" aria-label="Kampfstatus">
+      @if (gameState.player().riposteCharges > 0) {
+        <span>Riposte {{ gameState.player().riposteCharges }}x</span>
+      }
+      @if (enemyPhaseTone() !== 'calm') {
+        <span class="danger">{{ enemyPhaseLabel() }}</span>
+      }
+    </div>
+  }
+  <!-- Fighter titles (DOM) -->
+  <div class="stage-titles">
+    <div class="fighter-title">
+      <p>Held</p>
+      <strong>Lvl {{ gameState.player().level }}</strong>
+    </div>
+    <div class="fighter-title enemy-title" [class.idle]="!gameState.enemy()">
+      <p>{{ gameState.enemy() ? 'Gegner' : 'Wartet' }}</p>
+      <strong>{{ gameState.enemy()?.name ?? 'Kein Kontakt' }}</strong>
+    </div>
+  </div>
+
+  <!-- PixiJS canvas: animated sprites + HP/Mana bars + floating text + effects -->
+  <canvas #canvas class="battle-canvas"></canvas>
+
+  <!-- Stats below canvas (DOM) -->
+  <div class="stage-stats">
+    <dl class="stat-grid" [class.hp-danger]="gameState.playerHpPercent() < 30">
+      <div>
+        <dt>HP</dt>
+        <dd>{{ gameState.player().hp }}/{{ gameState.player().maxHp }}</dd>
+      </div>
+      <div>
+        <dt>Mana</dt>
+        <dd>{{ gameState.player().mana }}/{{ gameState.player().maxMana }}</dd>
+      </div>
+      <div>
+        <dt>ATK</dt>
+        <dd>{{ gameState.playerAttack() }}</dd>
+      </div>
+      <div>
+        <dt>DEF</dt>
+        <dd>{{ gameState.playerDefense() }}</dd>
+      </div>
+      <div>
+        <dt>Crit</dt>
+        <dd>{{ gameState.playerCritChance() }}%</dd>
+      </div>
+      <div>
+        <dt>XP</dt>
+        <dd>{{ gameState.player().xp }}/{{ gameState.xpForNextLevel() }}</dd>
+      </div>
+    </dl>
+    <dl class="stat-grid compact" [class.idle]="!gameState.enemy()">
+      <div>
+        <dt>HP</dt>
+        <dd>{{ gameState.enemy()?.hp ?? 0 }}/{{ gameState.enemy()?.maxHp ?? 0 }}</dd>
+      </div>
+      <div>
+        <dt>ATK</dt>
+        <dd>{{ gameState.enemy()?.attack ?? 0 }}</dd>
+      </div>
+      <div>
+        <dt>Gold</dt>
+        <dd>{{ gameState.enemy()?.gold ?? 0 }}</dd>
+      </div>
+      <div>
+        <dt>XP</dt>
+        <dd>{{ gameState.enemy()?.xp ?? 0 }}</dd>
+      </div>
+    </dl>
+  </div>
+</div>

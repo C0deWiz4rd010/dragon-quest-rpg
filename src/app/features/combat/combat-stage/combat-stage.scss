@@ -1,0 +1,309 @@
+:host {
+  display: block;
+  min-height: 0;
+}
+
+.stage-wrap {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 26% 30%, rgba(250, 204, 21, 0.07), transparent 40%),
+    radial-gradient(circle at 74% 30%, rgba(56, 189, 248, 0.07), transparent 40%),
+    linear-gradient(180deg, rgba(10, 12, 22, 0.92), rgba(5, 6, 14, 0.97));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.combat-weather-layer,
+.skill-aura,
+.combat-pressure-layer,
+.riposte-aura {
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+}
+
+.combat-weather-layer,
+.skill-aura,
+.combat-pressure-layer,
+.riposte-aura {
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.stage-wrap.weather-rain .combat-weather-layer,
+.stage-wrap.weather-storm .combat-weather-layer {
+  background:
+    linear-gradient(105deg, transparent 0 72%, rgba(125, 211, 252, 0.24) 73% 76%, transparent 77%),
+    linear-gradient(105deg, transparent 0 84%, rgba(191, 219, 254, 0.16) 85% 87%, transparent 88%);
+  background-size:
+    56px 130px,
+    98px 190px;
+  animation: combatRain 1.9s linear infinite;
+  opacity: 0.88;
+}
+
+.stage-wrap.weather-snow .combat-weather-layer {
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.65) 0 1px, transparent 2px),
+    radial-gradient(circle, rgba(186, 230, 253, 0.35) 0 1px, transparent 2px);
+  background-size:
+    54px 68px,
+    86px 110px;
+  animation: combatSnow 4.2s linear infinite;
+  opacity: 0.78;
+}
+
+.stage-wrap.weather-ash .combat-weather-layer {
+  background:
+    radial-gradient(circle, rgba(251, 146, 60, 0.34) 0 1.3px, transparent 2.5px),
+    radial-gradient(circle, rgba(148, 163, 184, 0.2) 0 1.2px, transparent 2.4px);
+  background-size:
+    74px 96px,
+    112px 138px;
+  animation: combatAsh 5s linear infinite;
+  opacity: 0.76;
+}
+
+.stage-wrap.weather-fog .combat-weather-layer {
+  background:
+    radial-gradient(ellipse at 24% 38%, rgba(226, 232, 240, 0.13), transparent 36%),
+    radial-gradient(ellipse at 72% 58%, rgba(186, 230, 253, 0.12), transparent 42%);
+  animation: combatFog 7s ease-in-out infinite alternate;
+  opacity: 1;
+}
+
+.stage-wrap.weather-glow .combat-weather-layer,
+.stage-wrap.skill-online .skill-aura {
+  background:
+    radial-gradient(circle at 28% 48%, rgba(250, 204, 21, 0.16), transparent 28%),
+    radial-gradient(circle at 72% 48%, rgba(56, 189, 248, 0.14), transparent 30%);
+  animation: combatGlow 2.8s ease-in-out infinite alternate;
+  opacity: 1;
+}
+
+.stage-wrap.riposte-ready .riposte-aura {
+  background:
+    radial-gradient(circle at 25% 54%, rgba(45, 212, 191, 0.24), transparent 24%),
+    linear-gradient(90deg, rgba(45, 212, 191, 0.08), transparent 48%);
+  animation: riposteReady 1.8s ease-in-out infinite alternate;
+  opacity: 1;
+}
+
+.stage-wrap.enemy-heated .combat-pressure-layer,
+.stage-wrap.enemy-enraged .combat-pressure-layer {
+  background:
+    radial-gradient(circle at 76% 48%, rgba(248, 113, 113, 0.22), transparent 28%),
+    linear-gradient(270deg, rgba(251, 146, 60, 0.12), transparent 46%);
+  animation: enemyPressure 1.8s ease-in-out infinite alternate;
+  opacity: 1;
+}
+
+.stage-wrap.enemy-enraged .combat-pressure-layer {
+  background:
+    radial-gradient(circle at 76% 48%, rgba(248, 113, 113, 0.32), transparent 30%),
+    linear-gradient(270deg, rgba(248, 113, 113, 0.16), transparent 50%);
+}
+
+.stage-wrap.status-burn {
+  box-shadow:
+    inset 0 0 0 1px rgba(249, 115, 22, 0.2),
+    0 0 22px rgba(249, 115, 22, 0.13);
+}
+
+.stage-wrap.status-poison {
+  box-shadow:
+    inset 0 0 0 1px rgba(168, 85, 247, 0.18),
+    0 0 22px rgba(168, 85, 247, 0.12);
+}
+
+.stage-alerts {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  left: 50%;
+  position: absolute;
+  top: 26px;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.stage-alerts span {
+  background: rgba(7, 11, 18, 0.72);
+  border: 1px solid rgba(45, 212, 191, 0.38);
+  border-radius: 999px;
+  color: #99f6e4;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  padding: 3px 7px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.stage-alerts .danger {
+  border-color: rgba(248, 113, 113, 0.52);
+  color: #fecaca;
+}
+
+/* Fighter titles */
+.stage-titles {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 1fr 1fr;
+  padding: 7px 7px 0;
+  position: relative;
+  z-index: 1;
+}
+
+.fighter-title {
+  text-align: center;
+}
+
+.fighter-title p {
+  color: #94a3b8;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.fighter-title strong {
+  color: #f8e7a2;
+  display: block;
+  font-size: clamp(9px, 0.9vw, 11px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fighter-title.enemy-title strong {
+  color: #bae6fd;
+}
+
+.fighter-title.idle strong {
+  color: #475569;
+}
+
+/* PixiJS battle canvas */
+.battle-canvas {
+  display: block;
+  height: 180px;
+  image-rendering: pixelated;
+  position: relative;
+  width: 100%;
+  z-index: 1;
+}
+
+/* Stats below canvas */
+.stage-stats {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 1fr 1fr;
+  padding: 0 7px 7px;
+  position: relative;
+  z-index: 1;
+}
+
+.stat-grid {
+  display: grid;
+  gap: 2px 3px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.stat-grid.compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.stat-grid.idle {
+  opacity: 0.35;
+}
+
+.stat-grid.hp-danger dt {
+  color: #fca5a5;
+}
+
+.stat-grid > div {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 3px 4px;
+  text-align: center;
+}
+
+.stat-grid dt {
+  color: #7f8aa5;
+  font-size: 6px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.stat-grid dd {
+  color: #e7edf8;
+  font-size: clamp(9px, 0.85vw, 11px);
+  font-weight: 700;
+  margin: 1px 0 0;
+}
+
+@keyframes combatRain {
+  to {
+    background-position:
+      0 130px,
+      0 96px;
+  }
+}
+
+@keyframes combatSnow {
+  to {
+    background-position:
+      0 68px,
+      0 110px;
+  }
+}
+
+@keyframes combatAsh {
+  to {
+    background-position:
+      0 -82px,
+      0 -118px;
+  }
+}
+
+@keyframes combatFog {
+  to {
+    transform: translateX(4%);
+  }
+}
+
+@keyframes combatGlow {
+  to {
+    filter: brightness(1.18);
+    transform: scale(1.02);
+  }
+}
+
+@keyframes riposteReady {
+  to {
+    filter: brightness(1.2);
+    transform: translateX(2%);
+  }
+}
+
+@keyframes enemyPressure {
+  to {
+    filter: brightness(1.22);
+    transform: translateX(-2%);
+  }
+}

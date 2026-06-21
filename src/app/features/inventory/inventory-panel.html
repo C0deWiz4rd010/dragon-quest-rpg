@@ -1,0 +1,174 @@
+<section class="inventory-panel">
+  <div class="panel-title">
+    <div>
+      <p>Inventar</p>
+      <strong>{{ gameState.player().gold }} Gold</strong>
+    </div>
+    <button matButton="filled" [disabled]="!gameState.canUsePotion()" (click)="combat.usePotion()">Trank 5</button>
+  </div>
+
+  <div class="inventory-stack">
+    <section class="inventory-section run-section">
+      <div class="section-head">
+        <span>Run Status</span>
+        <strong>{{ inventory.equippedItems().length }}/3 Gear</strong>
+      </div>
+      <div class="run-note">
+        <strong>{{ gameState.player().activeContract.title }}</strong>
+        <span>{{ gameState.player().activeContract.description }} Fortschritt: {{ gameState.player().activeContract.progress }}/{{ gameState.player().activeContract.target }} - Serie {{ gameState.player().contractStreak }}</span>
+      </div>
+      <div class="resources">
+        <div class="tip" data-tip="Verbrauchbare Heilung im Kampf">
+          <span>Traenke</span>
+          <strong>{{ gameState.player().potions }}</strong>
+        </div>
+        <div class="tip" data-tip="Erhoeht Angriffsschaden, bricht bei Schaden/Defensivaktionen">
+          <span>Combo</span>
+          <strong>{{ gameState.player().combo }}x</strong>
+        </div>
+        <div class="tip" data-tip="Aktiver Begleiter und sein Bonus">
+          <span>Pet</span>
+          <strong>{{ gameState.player().activePet?.name ?? '-' }}</strong>
+        </div>
+        <div class="tip" data-tip="Notfallressource fuer Resolve im Kampf">
+          <span>Resolve</span>
+          <strong>{{ gameState.player().resolve }}/{{ gameState.player().maxResolve }}</strong>
+        </div>
+        <div class="tip" data-tip="Abgeschlossene Pfadentscheidungen">
+          <span>Auftraege</span>
+          <strong>{{ gameState.player().completedContracts }}</strong>
+        </div>
+        <div class="tip" data-tip="Alle drei sauberen Pfade geben Mana und Bonusgold">
+          <span>Serie</span>
+          <strong>{{ gameState.player().routeStreak }}</strong>
+        </div>
+        <div class="tip" data-tip="Aktiver Statuseffekt">
+          <span>Status</span>
+          <strong>{{ gameState.player().statusEffect?.type ?? '-' }}</strong>
+        </div>
+        <div class="tip" data-tip="Aktive Blessings und ihre Gesamtladungen">
+          <span>Segen</span>
+          <strong>{{ gameState.activeBlessingCount() }}</strong>
+        </div>
+        <div class="tip" data-tip="Sekundaerressource aus Elite- und Boss-Prep fuer starke Utility-Kauefe">
+          <span>Shards</span>
+          <strong>{{ gameState.player().dragonShards }}</strong>
+        </div>
+        <div class="tip" data-tip="Verdichtet Level, Elite-Kills, Blessings und Relics zu einer Run-Einschaetzung">
+          <span>Rang</span>
+          <strong>{{ gameState.dragonRank() }}</strong>
+        </div>
+        <div class="tip" data-tip="Laufnote aus Fortschritt, Bossprep und Siegtempo">
+          <span>Note</span>
+          <strong>{{ gameState.runGrade() }}</strong>
+        </div>
+      </div>
+      <div class="blessing-row">
+        @for (blessing of gameState.player().activeBlessings; track blessing.type) {
+          <div class="blessing-chip tip" [attr.data-tip]="blessingDescription(blessing.type)">
+            <span>{{ blessingLabel(blessing.type) }}</span>
+            <strong>{{ blessing.charges }}x</strong>
+          </div>
+        } @empty {
+          <div class="empty-chip blessing-empty">Noch keine Blessings aktiv</div>
+        }
+      </div>
+    </section>
+
+    <section class="inventory-section gear-section">
+      <div class="equipment-title">
+        <span>Ausrustung</span>
+        <strong>{{ inventory.equippedItems().length }}/3 aktiv</strong>
+      </div>
+      <div class="loadout compact-grid">
+        @for (item of inventory.ownedEquipment(); track item.id) {
+          <button type="button" class="loadout-chip tip" [class.active]="inventory.isEquipped(item)" [attr.data-tip]="item.name + ': ' + item.desc" (click)="inventory.equip(item)">
+            <span>{{ item.icon }}</span>
+            <strong>{{ item.name }}</strong>
+            <small>{{ item.desc }}</small>
+          </button>
+        } @empty {
+          <div class="empty-chip">Noch keine Ausrustung</div>
+        }
+      </div>
+    </section>
+
+    <section class="inventory-section pet-section">
+      <div class="equipment-title">
+        <span>Begleiter</span>
+        <strong>{{ inventory.ownedPets().length }}</strong>
+      </div>
+      <div class="pet-row compact-grid">
+        @for (pet of inventory.ownedPets(); track pet.id) {
+          <button type="button" class="pet-chip tip" [class.active]="inventory.isActivePet(pet)" [attr.data-tip]="pet.name + ': ' + pet.desc" (click)="inventory.activatePet(pet)">
+            <span>{{ pet.icon }}</span>
+            <strong>{{ pet.name }}</strong>
+            <small>{{ pet.desc }}</small>
+          </button>
+        } @empty {
+          <div class="empty-chip">Keine Pets</div>
+        }
+      </div>
+    </section>
+
+    <section class="inventory-section relic-section">
+      <div class="equipment-title">
+        <span>Relics</span>
+        <strong>{{ inventory.ownedRelics().length }}</strong>
+      </div>
+      <div class="relic-row compact-grid">
+        @for (relic of inventory.ownedRelics(); track relic.id) {
+          <div class="relic-chip tip" [attr.data-tip]="relic.name + ': ' + relic.desc">
+            <span>{{ relic.icon }}</span>
+            <strong>{{ relic.name }}</strong>
+            <small>{{ relic.desc }}</small>
+          </div>
+        } @empty {
+          <div class="empty-chip">Noch keine Relics</div>
+        }
+      </div>
+    </section>
+
+    <section class="inventory-section action-section">
+      <div class="equipment-title">
+        <span>Shop und Run</span>
+        <strong>Aktionen</strong>
+      </div>
+      <div class="inventory-actions">
+        <button matButton="outlined" [disabled]="gameState.player().gold < 50 || !gameState.gameActive()" (click)="inventory.buyPotion()">Trank 50g</button>
+        <button matButton="outlined" [disabled]="gameState.player().gold < 80 || !gameState.gameActive()" (click)="inventory.buyFocus()">Fokus 80g</button>
+        <button matButton="outlined" [disabled]="gameState.player().gold < 75 || !gameState.player().statusEffect || !gameState.gameActive()" (click)="inventory.buyCleanse()">Cleanse 75g</button>
+        <button matButton="outlined" [disabled]="gameState.player().gold < 140 || gameState.player().maxResolve >= 5 || !gameState.gameActive()" (click)="inventory.buyResolveCapacity()">Resolve +1 140g</button>
+        <button matButton="outlined" [disabled]="!gameState.player().activeContract.completed || !gameState.gameActive()" (click)="inventory.acceptNextContract()">Neuer Auftrag</button>
+        <button matButton="outlined" [disabled]="gameState.player().gold < 100 || !gameState.gameActive()" (click)="inventory.buyAttack()">ATK +5</button>
+        <button matButton="outlined" [disabled]="gameState.player().gold < 100 || !gameState.gameActive()" (click)="inventory.buyDefense()">DEF +3</button>
+        <button matButton="outlined" [disabled]="gameState.player().dragonShards < 2 || gameState.player().activeContract.completed || !gameState.gameActive()" (click)="inventory.buyContractIntel()">Intel 2s</button>
+        <button matButton="outlined" [disabled]="gameState.player().dragonShards < 3 || !gameState.gameActive()" (click)="inventory.brewDragonTonic()">Tonikum 3s</button>
+        <button matButton="outlined" [disabled]="gameState.player().dragonShards < 4 || !gameState.gameActive()" (click)="inventory.buyBlessingInfusion()">Infusion 4s</button>
+        <button matButton="outlined" [disabled]="gameState.player().dragonShards < 4 || !gameState.levelUpChoices().length || !gameState.gameActive()" (click)="inventory.rerollLevelUpChoices()">Reroll 4s</button>
+        <button matButton="outlined" [disabled]="gameState.player().dragonShards < 5 || !gameState.gameActive()" (click)="inventory.buyPrepCache()">Prep-Cache 5s</button>
+        <button matButton="outlined" (click)="storage.save()">Run speichern</button>
+        <button matButton="outlined" (click)="storage.load()">Run laden</button>
+        <button matButton="tonal" (click)="resetRun()">Neustart</button>
+      </div>
+    </section>
+
+    <section class="inventory-section history-section">
+      <div class="equipment-title">
+        <span>Route Feed</span>
+        <strong>{{ gameState.player().routeHistory.length }}</strong>
+      </div>
+      <div class="history-list">
+        @for (entry of gameState.player().routeHistory; track entry.depth + entry.label) {
+          <div class="history-row">
+            <span>T{{ entry.depth }}</span>
+            <strong>{{ entry.label }}</strong>
+            <small>{{ entry.result }}</small>
+          </div>
+        } @empty {
+          <div class="empty-chip">Noch keine Route gespielt</div>
+        }
+      </div>
+    </section>
+  </div>
+</section>

@@ -1,0 +1,497 @@
+:host {
+  display: block;
+  min-height: 0;
+}
+
+.combat-panel {
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at top, rgba(248, 113, 113, 0.12), transparent 34%),
+    linear-gradient(145deg, rgba(38, 18, 24, 0.92), rgba(12, 13, 17, 0.96));
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.32);
+  align-content: start;
+  display: grid;
+  gap: 6px;
+  grid-template-rows: auto auto auto auto;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding: 8px;
+  position: relative;
+  text-align: center;
+}
+
+/* ── Combat overview readouts ────────────────────────────────────── */
+.combat-overview {
+  align-content: start;
+  align-items: start;
+  display: grid;
+  gap: 4px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.combat-readout {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(33, 18, 25, 0.62), rgba(0, 0, 0, 0.16));
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding: 4px 6px;
+}
+
+.combat-readout span,
+.actions-header p {
+  color: #94a3b8;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.combat-readout strong,
+.actions-header strong {
+  color: #fff6c7;
+  font-size: 10px;
+}
+
+.combat-readout small,
+.actions-header span {
+  color: #dce6f5;
+  font-size: 8px;
+}
+
+/* ── Action buttons row ──────────────────────────────────────────── */
+.actions-header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+  text-align: center;
+}
+
+.actions-header p,
+.actions-header strong,
+.actions-header span {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.actions {
+  display: grid;
+  gap: 5px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.actions button {
+  font-size: 10px !important;
+  min-width: 0;
+  position: relative;
+}
+
+/* Cooldown badge on Drachenklaue */
+.actions button span {
+  align-items: center;
+  background: rgba(248, 113, 113, 0.88);
+  border-radius: 50%;
+  color: #fff;
+  display: inline-flex;
+  font-size: 9px;
+  font-weight: 900;
+  height: 16px;
+  justify-content: center;
+  line-height: 1;
+  margin-left: 4px;
+  min-width: 16px;
+  padding: 1px 3px;
+  vertical-align: middle;
+}
+
+/* Skill ready glow on button */
+.actions .skill-ready {
+  animation: skillReadyGlow 1.8s ease-in-out infinite;
+  border: 1px solid rgba(56, 189, 248, 0.6) !important;
+}
+
+/* Keyboard hint inside button */
+.actions button kbd {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 3px;
+  font-size: 8px;
+  margin-left: 4px;
+  padding: 1px 3px;
+}
+
+/* Status effect badge */
+.status-badge {
+  animation: statusPulse 1.2s ease-in-out infinite;
+  border-radius: 6px;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  white-space: nowrap;
+
+  &.burn {
+    background: rgba(249, 115, 22, 0.22);
+    border: 1px solid rgba(249, 115, 22, 0.55);
+    color: #fb923c;
+  }
+
+  &.poison {
+    background: rgba(168, 85, 247, 0.18);
+    border: 1px solid rgba(168, 85, 247, 0.45);
+    color: #c084fc;
+  }
+}
+
+/* Weather buff badge */
+.weather-buff-badge {
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 6px;
+  color: #7dd3fc;
+  font-size: 8px;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+
+.role-badge {
+  background: rgba(250, 204, 21, 0.1);
+  border: 1px solid rgba(250, 204, 21, 0.28);
+  border-radius: 6px;
+  color: #f8e7a2;
+  font-size: 8px;
+  font-weight: 800;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+
+/* Combo fever badge */
+.combo-fever-badge {
+  animation: comboFeverBadge 0.7s ease-in-out infinite;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.58);
+  border-radius: 6px;
+  color: #fca5a5;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  padding: 2px 7px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Elemental weakness badge */
+.weakness-badge {
+  background: rgba(100, 116, 139, 0.14);
+  border: 1px solid rgba(100, 116, 139, 0.3);
+  border-radius: 6px;
+  color: #94a3b8;
+  font-size: 8px;
+  font-weight: 800;
+  padding: 2px 7px;
+  white-space: nowrap;
+
+  &.exploitable {
+    animation: weaknessPulse 2s ease-in-out infinite;
+    background: rgba(251, 191, 36, 0.16);
+    border-color: rgba(251, 191, 36, 0.5);
+    color: #fde68a;
+  }
+}
+
+/* Telegraph ability warning banner */
+.telegraph-warning {
+  align-items: center;
+  animation: telegraphPulse 0.9s ease-in-out infinite;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.55);
+  border-radius: 8px;
+  display: flex;
+  gap: 8px;
+  padding: 6px 10px;
+
+  .telegraph-icon {
+    color: #fca5a5;
+    flex-shrink: 0;
+    font-size: 13px;
+  }
+
+  strong {
+    color: #fca5a5;
+    flex-shrink: 0;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  span:last-child {
+    color: #fecaca;
+    font-size: 8px;
+  }
+}
+
+.riposte-badge,
+.phase-badge {
+  border-radius: 6px;
+  font-size: 8px;
+  font-weight: 900;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+
+.riposte-badge {
+  background: rgba(45, 212, 191, 0.14);
+  border: 1px solid rgba(45, 212, 191, 0.4);
+  color: #99f6e4;
+}
+
+.phase-badge {
+  background: rgba(251, 146, 60, 0.14);
+  border: 1px solid rgba(251, 146, 60, 0.4);
+  color: #fed7aa;
+
+  &.enraged {
+    animation: phasePulse 1.2s ease-in-out infinite;
+    background: rgba(248, 113, 113, 0.2);
+    border-color: rgba(248, 113, 113, 0.58);
+    color: #fecaca;
+  }
+}
+
+.riposte-readout.active {
+  border-color: rgba(45, 212, 191, 0.4);
+  box-shadow: inset 0 0 18px rgba(45, 212, 191, 0.08);
+}
+
+.phase-readout.heated {
+  border-color: rgba(251, 146, 60, 0.32);
+}
+
+.phase-readout.enraged {
+  border-color: rgba(248, 113, 113, 0.5);
+  box-shadow: inset 0 0 18px rgba(248, 113, 113, 0.08);
+}
+
+.blessing-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.blessing-badge {
+  background: rgba(45, 212, 191, 0.1);
+  border: 1px solid rgba(45, 212, 191, 0.28);
+  border-radius: 999px;
+  color: #99f6e4;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+@keyframes statusPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.65;
+  }
+}
+
+@keyframes phasePulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.74;
+  }
+}
+
+/* ── Level-up panel (absolute overlay) ──────────────────────────── */
+.level-up-panel {
+  background:
+    linear-gradient(rgba(7, 9, 15, 0.78), rgba(7, 9, 15, 0.9)),
+    url('/assets/Tiny%20Swords%20%28Free%20Pack%29/UI%20Elements/UI%20Elements/Papers/SpecialPaper.png')
+      center / cover;
+  border: 1px solid rgba(250, 204, 21, 0.56);
+  border-radius: 8px;
+  inset: 12px;
+  padding: 12px;
+  position: absolute;
+  z-index: 5;
+}
+
+.level-up-title {
+  color: #facc15;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  margin-bottom: 10px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.level-up-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  height: calc(100% - 28px);
+}
+
+.level-up-card {
+  border: 2px solid rgba(250, 204, 21, 0.42);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(94, 58, 22, 0.64), rgba(22, 18, 17, 0.92));
+  color: #fff6c7;
+  cursor: pointer;
+  display: grid;
+  gap: 6px;
+  place-content: center;
+  padding: 10px;
+  text-align: center;
+  transition:
+    border-color 120ms,
+    box-shadow 120ms,
+    transform 120ms;
+}
+
+.level-up-card:hover {
+  border-color: rgba(250, 204, 21, 0.72);
+  box-shadow: 0 0 14px rgba(250, 204, 21, 0.2);
+  transform: translateY(-2px);
+}
+
+.level-up-card strong {
+  font-size: 13px;
+}
+
+.level-up-card span {
+  color: #a8b3cf;
+  font-size: 11px;
+}
+
+/* ── Outcome panel ───────────────────────────────────────────────── */
+.outcome-stats {
+  color: #dce6f5;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  text-align: center;
+}
+
+.outcome-panel {
+  align-content: center;
+  display: grid;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.outcome-panel button {
+  justify-self: center;
+  min-width: 160px;
+}
+
+/* Level-up entrance animation */
+.level-up-panel.levelup-entrance {
+  animation: levelUpEnter 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Action damage previews */
+.action-previews {
+  display: grid;
+  gap: 4px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  small {
+    color: #7dd3fc;
+    font-size: 7px;
+    letter-spacing: 0.04em;
+    text-align: center;
+
+    &.exploitable {
+      color: #fde68a;
+      font-weight: 800;
+    }
+  }
+}
+
+/* Wide combat panels keep all commands visible in one row. */
+@media (min-width: 600px) {
+  .actions {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .combat-overview {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .action-previews {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+/* ── Keyframes ───────────────────────────────────────────────────── */
+@keyframes skillReadyGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 6px rgba(56, 189, 248, 0.4);
+  }
+  50% {
+    box-shadow:
+      0 0 18px rgba(56, 189, 248, 0.75),
+      0 0 30px rgba(56, 189, 248, 0.3);
+  }
+}
+
+@keyframes levelUpEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes comboFeverBadge {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.82;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes weaknessPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes telegraphPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 6px rgba(239, 68, 68, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(239, 68, 68, 0.55);
+  }
+}

@@ -1,0 +1,149 @@
+@if (activeGame(); as game) {
+  <div class="mg-backdrop" (click)="skipGame()"></div>
+  <div class="mg-card" (click)="$event.stopPropagation()">
+
+    <div class="mg-header">
+      <span class="mg-title">
+        @switch (game.type) {
+          @case ('reaction')  { ⚡ Reaktionsspiel  }
+          @case ('memory')    { 🧠 Gedächtnisspiel }
+          @case ('precision') { 🎯 Präzisionsspiel }
+          @case ('typing')    { ⌨️ Schnelltipp     }
+        }
+      </span>
+      <button class="mg-skip" type="button" (click)="skipGame()">✕ Skip</button>
+    </div>
+
+    <div class="mg-body">
+    @switch (game.type) {
+
+      <!-- ======= REACTION ======= -->
+      @case ('reaction') {
+        <p class="mg-desc">Klicke den Kreis sobald er <strong>grün</strong> leuchtet!</p>
+
+        <!-- PixiJS Reaktions-Canvas -->
+        <app-reaction-canvas
+          [phase]="reactionPhase()"
+          (clicked)="onReactionClick()"
+        />
+
+        @if (reactionPhase() === 'done') {
+          <p class="mg-result-text won">{{ reactionLabel() }}</p>
+          <button class="mg-btn primary" (click)="submitReaction()">Weiter →</button>
+        }
+        @if (reactionPhase() === 'tooEarly') {
+          <p class="mg-result-text lost">Du hast zu früh geklickt!</p>
+          <div class="mg-row">
+            <button class="mg-btn" (click)="retryReaction()">↺ Nochmal</button>
+            <button class="mg-btn primary" (click)="submitReaction()">Aufgeben</button>
+          </div>
+        }
+      }
+
+      <!-- ======= MEMORY ======= -->
+      @case ('memory') {
+        @switch (memoryPhase()) {
+          @case ('showing') {
+            <p class="mg-desc">Merke dir die Reihenfolge der Farben!</p>
+            <div class="memory-display">
+              @for (color of memoryColors; track color.id) {
+                <div
+                  class="memory-block"
+                  [class.active]="memorySequence()[memoryShowIdx()] === color.id && memoryShowIdx() >= 0"
+                  [style.background]="color.color"
+                ></div>
+              }
+            </div>
+            <div class="memory-progress-dots">
+              @for (step of memorySequence(); track $index) {
+                <span class="dot" [class.active]="$index === memoryShowIdx()"></span>
+              }
+            </div>
+          }
+          @case ('input') {
+            <p class="mg-desc">{{ memoryPlayerInput().length }}/{{ memorySequence().length }} – Klicke die Farben in der richtigen Reihenfolge!</p>
+            <div class="memory-display input-mode">
+              @for (color of memoryColors; track color.id) {
+                <button
+                  class="memory-block clickable"
+                  [style.background]="color.color"
+                  (click)="onMemoryColorClick(color.id)"
+                >{{ color.label }}</button>
+              }
+            </div>
+          }
+          @case ('result') {
+            @if (memoryWon()) {
+              <p class="mg-result-text won">🎉 Perfekt! Sequenz korrekt!</p>
+            } @else {
+              <p class="mg-result-text lost">💀 Falsche Reihenfolge! Richtig wäre gewesen:</p>
+              <div class="memory-answer">
+                @for (colorId of memorySequence(); track $index) {
+                  @let color = memoryColors[$any(memoryColors).findIndex(c => c.id === colorId)];
+                  <span class="answer-dot" [style.background]="color.color">{{ color.label }}</span>
+                }
+              </div>
+            }
+            <button class="mg-btn primary" (click)="submitMemory()">Weiter →</button>
+          }
+        }
+      }
+
+      <!-- ======= PRECISION ======= -->
+      @case ('precision') {
+        @if (!precisionDone()) {
+          <p class="mg-desc">Triff den roten Punkt! Zeit: <strong>{{ precisionTimeLeft() }}s</strong></p>
+
+          <!-- PixiJS Präzisions-Canvas -->
+          <app-precision-canvas
+            [dotX]="precisionDot().x"
+            [dotY]="precisionDot().y"
+            [done]="precisionDone()"
+            (dotClicked)="onDotClickFromCanvas()"
+          />
+        } @else {
+          @if (precisionWon()) {
+            <p class="mg-result-text won">🎯 Treffer! Gut gezielt!</p>
+          } @else {
+            <p class="mg-result-text lost">⏱️ Zeit abgelaufen! Zu langsam...</p>
+          }
+          <button class="mg-btn primary" (click)="submitPrecision()">Weiter →</button>
+        }
+      }
+
+      <!-- ======= TYPING ======= -->
+      @case ('typing') {
+        @if (!typingDone()) {
+          <p class="mg-desc">Tippe den Satz in <strong>{{ typingTimeLeft() }}s</strong> nach:</p>
+          <p class="typing-target">{{ typingTarget() }}</p>
+          <input
+            class="typing-input"
+            type="text"
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+            placeholder="Hier tippen..."
+            [value]="typingInput()"
+            (input)="onTypingInput($event)"
+          />
+          <div class="typing-progress-bar">
+            <div
+              class="typing-progress-fill"
+              [style.width.%]="typingTarget().length ? (typingInput().length / typingTarget().length) * 100 : 0"
+            ></div>
+          </div>
+        } @else {
+          @if (typingWon()) {
+            <p class="mg-result-text won">⌨️ Tipp-Meister! Perfekt!</p>
+          } @else {
+            <p class="mg-result-text lost">⏱️ Zeit abgelaufen!</p>
+            <p class="typing-target small">{{ typingTarget() }}</p>
+          }
+          <button class="mg-btn primary" (click)="submitTyping()">Weiter →</button>
+        }
+      }
+
+    }<!-- /switch -->
+    </div><!-- /mg-body -->
+  </div><!-- /mg-card -->
+}

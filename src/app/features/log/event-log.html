@@ -1,0 +1,20 @@
+<section class="event-log-panel">
+  <div class="log-header">
+    <h2>Ereignisse</h2>
+    <span>{{ gameState.logs().length }} letzte Meldungen</span>
+  </div>
+  <div class="entries" #entriesEl role="log" aria-live="polite" aria-atomic="false">
+    @for (entry of gameState.logs(); track entry.id) {
+      <article class="entry-card" [class]="entry.type" [class.latest]="entry.id === latestLogId()">
+        <header>
+          <span class="entry-icon">{{ logIcon(entry.type) }}</span>
+          <strong>{{ logLabel(entry.type) }}</strong>
+          <time>{{ formatTime(entry.createdAt) }}</time>
+        </header>
+        <p>
+          {{ entry.message }}
+        </p>
+      </article>
+    }
+  </div>
+</section>

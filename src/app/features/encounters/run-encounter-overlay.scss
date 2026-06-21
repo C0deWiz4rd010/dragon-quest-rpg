@@ -1,0 +1,131 @@
+:host {
+  pointer-events: none;
+}
+
+.encounter-overlay {
+  align-items: center;
+  backdrop-filter: blur(10px);
+  background: rgba(3, 7, 18, 0.7);
+  display: grid;
+  inset: 0;
+  justify-items: center;
+  padding: 20px;
+  pointer-events: auto;
+  position: fixed;
+  z-index: 70;
+}
+
+.encounter-card {
+  border: 1px solid rgba(168, 85, 247, 0.32);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+  display: grid;
+  gap: 14px;
+  max-width: 880px;
+  padding: 20px;
+  width: min(100%, 880px);
+}
+
+.encounter-header {
+  display: grid;
+  gap: 4px;
+  text-align: center;
+}
+
+.encounter-header p {
+  color: #c4b5fd;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.encounter-header h2 {
+  color: #f8fafc;
+  font-size: clamp(22px, 2vw, 28px);
+  margin: 0;
+}
+
+.encounter-header span {
+  color: #cbd5e1;
+  font-size: 13px;
+}
+
+.encounter-offers {
+  display: grid;
+  gap: 12px;
+}
+
+.offer-card {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(51, 65, 85, 0.6), rgba(15, 23, 42, 0.85));
+  color: #e2e8f0;
+  cursor: pointer;
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  text-align: left;
+  transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.offer-card:hover {
+  border-color: rgba(192, 132, 252, 0.55);
+  box-shadow: 0 12px 28px rgba(76, 29, 149, 0.22);
+  transform: translateY(-2px);
+}
+
+.offer-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none;
+}
+
+.offer-topline {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.offer-topline strong {
+  font-size: 16px;
+}
+
+.offer-cost,
+.offer-kind,
+.offer-reward {
+  color: #ddd6fe;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.offer-kind {
+  text-transform: uppercase;
+}
+
+.offer-desc {
+  color: #cbd5e1;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.skip-button {
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.84);
+  color: #cbd5e1;
+  cursor: pointer;
+  font-size: 13px;
+  justify-self: center;
+  min-width: 180px;
+  padding: 10px 16px;
+}
+
+@media (min-width: 720px) {
+  .encounter-offers {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

@@ -1,0 +1,344 @@
+// Include theming for Angular Material with `mat.theme()`.
+// This Sass mixin will define CSS variables that are used for styling Angular Material
+// components according to the Material 3 design spec.
+// Learn more about theming and how to use it for your application's
+// custom components at https://material.angular.dev/guide/theming
+@use '@angular/material' as mat;
+
+:root {
+  --dq-font-display: 'Cinzel', 'Georgia', serif;
+  --dq-font-pixel: 'Press Start 2P', monospace;
+  --dq-font-body: 'Segoe UI', 'Arial', sans-serif;
+  --dq-ink-bright: #fff4c5;
+  --dq-ink-soft: #dce8f8;
+  --dq-ink-muted: #94a3b8;
+  --dq-ink-accent: #f3cb62;
+  --dq-line-strong: rgba(243, 203, 98, 0.34);
+  --dq-line-soft: rgba(255, 255, 255, 0.08);
+  --dq-surface-0: #07090f;
+  --dq-surface-1: rgba(11, 17, 31, 0.92);
+  --dq-surface-2: rgba(15, 23, 42, 0.88);
+  --dq-shadow-soft: 0 18px 48px rgba(0, 0, 0, 0.28);
+  --dq-glow-gold: 0 0 12px rgba(212, 175, 55, 0.45), 0 0 28px rgba(212, 175, 55, 0.15);
+  --dq-glow-red: 0 0 10px rgba(239, 68, 68, 0.45), 0 0 22px rgba(239, 68, 68, 0.15);
+  --dq-glow-blue: 0 0 10px rgba(56, 189, 248, 0.45), 0 0 20px rgba(56, 189, 248, 0.15);
+}
+
+html {
+  height: 100%;
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}
+
+body {
+  color-scheme: dark;
+
+  // Set a default background, font and text colors for the application using
+  // Angular Material's system-level CSS variables. Learn more about these
+  // variables at https://material.angular.dev/guide/system-variables
+  background:
+    radial-gradient(circle at top, rgba(243, 203, 98, 0.08), transparent 26%),
+    var(--dq-surface-0);
+  color: var(--dq-ink-bright);
+  font: var(--mat-sys-body-medium);
+  font-family: var(--dq-font-body);
+
+  // Reset the user agent margin.
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button[matbutton],
+button[matButton] {
+  border-radius: 8px !important;
+  font-weight: 900 !important;
+  min-height: 34px;
+  text-transform: uppercase;
+}
+
+.mat-mdc-unelevated-button,
+.mat-mdc-outlined-button,
+.mat-mdc-filled-button,
+.mat-mdc-tonal-button {
+  --mat-sys-corner-full: 8px;
+}
+
+img {
+  display: block;
+}
+
+.unit-sprite {
+  --frames: 8;
+  --sprite-scale: 1;
+  --sprite-flip: 1;
+  --sprite-shift-x: 0%;
+  --sprite-x: 50%;
+  animation: spriteFloat 4.8s ease-in-out infinite, spriteFrames 1s steps(var(--frames)) infinite;
+  aspect-ratio: 1;
+  background-position: var(--sprite-x) 50%;
+  background-repeat: no-repeat;
+  background-size: calc(var(--frames) * 100%) 100%;
+  display: block;
+  filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.28));
+  image-rendering: pixelated;
+  transform: translateX(var(--sprite-shift-x)) scaleX(var(--sprite-flip)) scale(var(--sprite-scale));
+  transform-origin: center;
+  width: min(100%, 190px);
+  will-change: transform;
+}
+
+.hero-sprite {
+  --sprite-scale: 1.34;
+  --sprite-shift-x: 0%;
+  --sprite-x: 0%;
+  animation: portraitHover 4.8s ease-in-out infinite;
+  width: 122%;
+}
+
+.enemy-sprite {
+  --sprite-scale: 1.34;
+  --sprite-flip: -1;
+  --sprite-shift-x: 0%;
+  --sprite-x: 0%;
+  animation: portraitHover 4.8s ease-in-out infinite;
+  width: 122%;
+}
+
+.portrait .unit-sprite,
+.branch-icon .unit-sprite {
+  margin: 0 auto;
+}
+
+.portrait .unit-sprite {
+  width: 100%;
+}
+
+.branch-sprite {
+  --sprite-scale: 1.42;
+  --sprite-x: 0%;
+  animation: portraitHover 4.8s ease-in-out infinite;
+  width: min(100%, 168px);
+}
+
+.path-weather-layer {
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transition: opacity 180ms ease;
+  z-index: 0;
+}
+
+.path-board.weather-rain .path-weather-layer {
+  background-image:
+    linear-gradient(105deg, transparent 0 72%, rgba(125, 211, 252, 0.2) 73% 75%, transparent 76%),
+    linear-gradient(105deg, transparent 0 82%, rgba(186, 230, 253, 0.14) 83% 84%, transparent 85%);
+  background-size: 74px 180px, 112px 230px;
+  animation: pathRain 1.1s linear infinite;
+  opacity: 0.7;
+}
+
+.path-board.weather-fog .path-weather-layer {
+  background:
+    radial-gradient(ellipse at 20% 28%, rgba(226, 232, 240, 0.13), transparent 42%),
+    radial-gradient(ellipse at 76% 68%, rgba(186, 230, 253, 0.11), transparent 46%);
+  animation: pathDrift 7s ease-in-out infinite alternate;
+  opacity: 1;
+}
+
+.path-board.weather-snow .path-weather-layer,
+.path-board.weather-ash .path-weather-layer {
+  background-image:
+    radial-gradient(circle, rgba(226, 232, 240, 0.6) 0 1px, transparent 2px),
+    radial-gradient(circle, rgba(148, 163, 184, 0.36) 0 1px, transparent 2px);
+  background-size: 66px 82px, 104px 130px;
+  animation: pathSnow 4s linear infinite;
+  opacity: 0.62;
+}
+
+.path-board.weather-ash .path-weather-layer {
+  filter: sepia(1) hue-rotate(330deg);
+}
+
+.path-board.weather-storm .path-weather-layer {
+  background:
+    linear-gradient(110deg, transparent 0 46%, rgba(147, 197, 253, 0.18) 47%, transparent 49%),
+    radial-gradient(circle at 72% 24%, rgba(248, 113, 113, 0.16), transparent 28%);
+  animation: pathStorm 1.9s steps(2) infinite;
+  opacity: 0.72;
+}
+
+.path-board.weather-glow .path-weather-layer {
+  background:
+    radial-gradient(circle at 22% 74%, rgba(74, 222, 128, 0.16), transparent 26%),
+    radial-gradient(circle at 78% 30%, rgba(250, 204, 21, 0.14), transparent 24%);
+  animation: pathDrift 5s ease-in-out infinite alternate;
+  opacity: 1;
+}
+
+.tip {
+  position: relative;
+}
+
+.tip:hover::after,
+.tip:focus-visible::after {
+  background: rgba(7, 9, 15, 0.96);
+  border: 1px solid rgba(248, 231, 162, 0.34);
+  border-radius: 7px;
+  bottom: calc(100% + 7px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.36);
+  color: #fff6c7;
+  content: attr(data-tip);
+  font-size: 11px;
+  font-weight: 700;
+  left: 50%;
+  line-height: 1.25;
+  max-width: 220px;
+  min-width: 130px;
+  padding: 7px 8px;
+  pointer-events: none;
+  position: absolute;
+  text-align: center;
+  transform: translateX(-50%);
+  white-space: normal;
+  z-index: 20;
+}
+
+@keyframes lunge {
+  0% { transform: translateX(0) scale(1); }
+  30% { transform: translateX(14px) scale(1.03) rotate(1.5deg); }
+  65% { transform: translateX(7px) scale(1.01); }
+  100% { transform: translateX(0) scale(1); }
+}
+
+@keyframes skillPulse {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.04); box-shadow: inset 0 0 40px rgba(56, 189, 248, 0.4), 0 0 22px rgba(56, 189, 248, 0.3); }
+  70% { transform: scale(1.02); }
+  100% { transform: scale(1); box-shadow: none; }
+}
+
+@keyframes hitShake {
+  0%, 100% { transform: translateX(0); filter: none; }
+  18% { transform: translateX(-9px) rotate(-0.5deg); filter: brightness(1.6) saturate(1.5); }
+  36% { transform: translateX(8px); filter: brightness(1.3); }
+  54% { transform: translateX(-6px); }
+  72% { transform: translateX(5px); }
+  90% { transform: translateX(-2px); }
+}
+
+@keyframes critFlash {
+  0% { transform: scale(1); filter: none; }
+  20% { transform: scale(1.07); filter: brightness(2.2) saturate(2); }
+  50% { transform: scale(1.04); filter: brightness(1.55); }
+  80% { transform: scale(1.01); filter: brightness(1.15); }
+  100% { transform: scale(1); filter: none; }
+}
+
+@keyframes healGlow {
+  0% { box-shadow: none; }
+  35% { box-shadow: inset 0 0 42px rgba(34, 197, 94, 0.42), 0 0 22px rgba(34, 197, 94, 0.28); }
+  100% { box-shadow: none; }
+}
+
+@keyframes fallOut {
+  0% { opacity: 1; transform: translateY(0) rotate(0deg); filter: none; }
+  35% { filter: brightness(1.9) saturate(1.8); }
+  100% { filter: grayscale(1) brightness(0.45); opacity: 0.28; transform: translateY(12px) rotate(-5deg); }
+}
+
+@keyframes floatUp {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px) scale(0.78);
+  }
+  15% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(2px) scale(1.15);
+  }
+  65% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-20px) scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-34px) scale(0.97);
+  }
+}
+
+@keyframes spriteFloat {
+  0%,
+  100% {
+    transform: translateX(var(--sprite-shift-x)) translateY(0) scaleX(var(--sprite-flip)) scale(var(--sprite-scale));
+  }
+
+  50% {
+    transform: translateX(var(--sprite-shift-x)) translateY(-3px) scaleX(var(--sprite-flip)) scale(var(--sprite-scale));
+  }
+}
+
+@keyframes spriteFrames {
+  from {
+    background-position: 0 50%;
+  }
+
+  to {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes portraitHover {
+  0%,
+  100% {
+    transform: translateX(0) translateY(0) scaleX(var(--sprite-flip)) scale(var(--sprite-scale));
+  }
+
+  50% {
+    transform: translateX(0) translateY(-4px) scaleX(var(--sprite-flip)) scale(var(--sprite-scale));
+  }
+}
+
+
+@keyframes pathRain {
+  to {
+    background-position: 0 180px, 0 230px;
+  }
+}
+
+@keyframes pathSnow {
+  to {
+    background-position: 0 82px, 0 130px;
+  }
+}
+
+@keyframes pathDrift {
+  to {
+    transform: translateX(4%);
+  }
+}
+
+@keyframes pathStorm {
+  50% {
+    filter: brightness(1.55);
+  }
+}
+/* You can add global styles to this file, and also import other style files */

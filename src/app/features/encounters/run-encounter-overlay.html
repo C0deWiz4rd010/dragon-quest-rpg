@@ -1,0 +1,27 @@
+@if (activeEncounter(); as encounter) {
+  <div class="encounter-overlay" role="dialog" aria-modal="true" aria-label="Haendlerauswahl">
+    <section class="encounter-card">
+      <header class="encounter-header">
+        <p>Vorbereitung</p>
+        <h2>{{ encounter.source }}</h2>
+        <span>{{ encounter.subtitle }}</span>
+      </header>
+
+      <div class="encounter-offers">
+        @for (offer of encounter.offers; track offer.id) {
+          <button type="button" class="offer-card" [disabled]="encounter.currentGold < offer.cost" (click)="encounters.resolve(offer.id)">
+            <span class="offer-topline">
+              <strong>{{ offer.title }}</strong>
+              <span class="offer-cost">{{ offer.cost > 0 ? offer.cost + 'g' : 'Gratis' }}</span>
+            </span>
+            <span class="offer-kind">{{ offer.kind }}</span>
+            <span class="offer-desc">{{ offer.description }}</span>
+            <span class="offer-reward">{{ offer.rewardLabel }}</span>
+          </button>
+        }
+      </div>
+
+      <button type="button" class="skip-button" (click)="encounters.resolve(null)">Weiterziehen</button>
+    </section>
+  </div>
+}

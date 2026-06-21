@@ -1,0 +1,218 @@
+<section class="combat-panel">
+  <app-combat-stage />
+
+  <div class="actions-header">
+    <p>Kommandos</p>
+    <strong>{{ gameState.enemy() ? 'Aktion waehlen' : 'Pfad fortsetzen' }}</strong>
+    <span>{{ gameState.canUseSkill() ? 'Finisher bereit' : 'Skill laedt auf' }}</span>
+    @if (gameState.player().riposteCharges > 0) {
+      <span class="riposte-badge">Riposte {{ gameState.player().riposteCharges }}x</span>
+    }
+    @if (gameState.player().comboFever) {
+      <span class="combo-fever-badge">Fever! Naechster Krit garantiert</span>
+    }
+    @if (gameState.player().statusEffect; as fx) {
+      <span
+        class="status-badge"
+        [class.burn]="fx.type === 'burn'"
+        [class.poison]="fx.type === 'poison'"
+      >
+        {{ statusIcon(fx.type) }} ({{ fx.rounds }}x {{ fx.damagePerRound }} DMG)
+      </span>
+    }
+    @if (weatherBuff(path.weather()); as buff) {
+      <span class="weather-buff-badge">{{ buff }}</span>
+    }
+    @if (gameState.enemy(); as enemy) {
+      <span class="role-badge">{{ roleLabel(enemy.role) }}</span>
+    }
+    @if (enemyWeakness(); as weakness) {
+      <span class="weakness-badge" [class.exploitable]="isWeaknessExploitable()">
+        {{ weaknessIcon() }} {{ weaknessElementLabel() }}schwach
+      </span>
+    }
+    @if (phaseTone() !== 'calm') {
+      <span class="phase-badge" [class.enraged]="phaseTone() === 'enraged'">
+        {{ phasePressure() }}
+      </span>
+    }
+  </div>
+
+  @if (telegraphWarning(); as telegraph) {
+    <div class="telegraph-warning" role="alert">
+      <span class="telegraph-icon">⚠</span>
+      <strong>{{ telegraph.name }}</strong>
+      <span>{{ telegraphDescription(telegraph) }}</span>
+    </div>
+  }
+
+  @if (gameState.player().activeBlessings.length) {
+    <div class="blessing-strip" aria-label="Aktive Blessings">
+      @for (blessing of gameState.player().activeBlessings; track blessing.type) {
+        <span class="blessing-badge"
+          >{{ blessingLabel(blessing.type) }} {{ blessing.charges }}x</span
+        >
+      }
+    </div>
+  }
+
+  <div class="actions">
+    <button
+      matButton="filled"
+      [disabled]="!gameState.enemy() || !gameState.gameActive()"
+      (click)="combat.attack()"
+    >
+      Angriff <kbd>1</kbd>
+    </button>
+    <button
+      matButton="tonal"
+      [disabled]="!gameState.canUseSkill()"
+      [class.skill-ready]="gameState.canUseSkill()"
+      (click)="combat.specialAttack()"
+    >
+      Drachenklaue <kbd>2</kbd>
+      @if (gameState.player().skillCooldown > 0) {
+        <span>{{ gameState.player().skillCooldown }}</span>
+      }
+    </button>
+    <button matButton="outlined" [disabled]="!gameState.canHeal()" (click)="combat.heal()">
+      Heilen <kbd>3</kbd>
+    </button>
+    <button
+      matButton="outlined"
+      [disabled]="!gameState.enemy() || !gameState.gameActive()"
+      (click)="combat.guard()"
+    >
+      Deckung <kbd>4</kbd>
+    </button>
+    <button
+      matButton="outlined"
+      [disabled]="!gameState.canUsePotion()"
+      (click)="combat.usePotion()"
+    >
+      Trank <kbd>5</kbd>
+    </button>
+    <button
+      matButton="outlined"
+      [disabled]="!gameState.canUseResolve()"
+      (click)="combat.useResolve()"
+    >
+      Resolve <kbd>6</kbd>
+    </button>
+  </div>
+
+  @if (gameState.enemy()) {
+    <div class="action-previews">
+      <small>{{ attackPreview() }}</small>
+      <small [class.exploitable]="isWeaknessExploitable()">{{ specialPreview() }}{{ isWeaknessExploitable() ? ' ★' : '' }}</small>
+      <small>{{ healPreview() }}</small>
+      <small>+12 Mana, Riposte</small>
+      <small>+50 HP, Cleanse</small>
+      <small>{{ resolvePreview() }}</small>
+    </div>
+  }
+
+  <div class="combat-overview">
+    <article class="combat-readout tip" data-tip="Direkter Vergleich der aktuellen Frontwerte.">
+      <span>Duell</span>
+      <strong>{{ gameState.playerAttack() }} / {{ gameState.enemy()?.attack ?? 0 }}</strong>
+      <small>ATK Held vs. Gegner</small>
+    </article>
+    <article
+      class="combat-readout tip"
+      data-tip="Deckung reduziert den naechsten Treffer, gibt Mana und verkuerzt den Cooldown."
+    >
+      <span>Momentum</span>
+      <strong>{{ finisherPower() }}</strong>
+      <small
+        >{{ gameState.player().combo }}x Combo, CD {{ gameState.player().skillCooldown }}</small
+      >
+    </article>
+    <article
+      class="combat-readout tip"
+      data-tip="Mana, Status und Heiloptionen bestimmen, wie lange du den Kampf halten kannst."
+    >
+      <span>Ressourcen</span>
+      <strong>{{ gameState.player().mana }}/{{ gameState.player().maxMana }}</strong>
+      <small>{{ gameState.player().potions }} Traenke verfuegbar</small>
+    </article>
+    <article
+      class="combat-readout tip"
+      data-tip="Drachenklaue trifft unter 40% Gegner-HP staerker, unter 25% am haertesten."
+    >
+      <span>Execute</span>
+      <strong>{{ executeWindow() }}</strong>
+      <small>niedrige Gegner-HP</small>
+    </article>
+    <article
+      class="combat-readout tip riposte-readout"
+      [class.active]="gameState.player().riposteCharges > 0"
+      data-tip="Deckung kann Riposte-Ladungen aufbauen, die den naechsten Angriff oder Finisher verstaerken."
+    >
+      <span>Riposte</span>
+      <strong>{{ ripostePower() }}</strong>
+      <small>{{ gameState.player().perfectGuards }} perfekte Deckungen</small>
+    </article>
+    <article
+      class="combat-readout tip phase-readout"
+      [class.heated]="phaseTone() === 'heated'"
+      [class.enraged]="phaseTone() === 'enraged'"
+      data-tip="Elite- und Bossgegner werden in spaeten HP-Phasen aggressiver."
+    >
+      <span>Phase</span>
+      <strong>{{ phasePressure() }}</strong>
+      <small>{{ enemyIntent() }}</small>
+    </article>
+    <article
+      class="combat-readout tip"
+      data-tip="Vorschau auf den naechsten Gegnertyp und Wetterdruck."
+    >
+      <span>Incoming</span>
+      <strong>{{ incomingPreview() }}</strong>
+      <small>naechster Gegenschlag</small>
+    </article>
+    <article
+      class="combat-readout tip"
+      data-tip="Kurzer Vorschlag aus HP, Mana, Resolve, Cooldown und Gegner-HP."
+    >
+      <span>Plan</span>
+      <strong>{{ tacticalAdvice() }}</strong>
+      <small>{{ gameState.player().resolve }}/{{ gameState.player().maxResolve }} Resolve</small>
+    </article>
+    <article
+      class="combat-readout tip"
+      data-tip="Wie gut der Run aktuell auf Boss- oder Elite-Druck vorbereitet ist."
+    >
+      <span>Prep</span>
+      <strong>{{ gameState.bossPrepScore() }}%</strong>
+      <small>{{ prepForecast() }}</small>
+    </article>
+    <article
+      class="combat-readout tip"
+      data-tip="Overkill belohnt starkes Timing mit Extra-Mana, Gold und bei hohen Treffern Shards."
+    >
+      <span>Overkill</span>
+      <strong>{{ overkillLabel() }}</strong>
+      <small>{{ gameState.player().totalOverkillDamage }} Bonus-DMG</small>
+    </article>
+  </div>
+
+  @if (gameState.levelUpChoices().length) {
+    <div class="level-up-panel levelup-entrance">
+      <div class="level-up-title">Level Up</div>
+      <div class="level-up-grid">
+        @for (choice of gameState.levelUpChoices(); track choice.id) {
+          <button
+            type="button"
+            class="level-up-card"
+            [attr.title]="choice.description"
+            (click)="combat.chooseLevelUp(choice.id)"
+          >
+            <strong>{{ choice.title }}</strong>
+            <span>{{ choice.description }}</span>
+          </button>
+        }
+      </div>
+    </div>
+  }
+</section>
