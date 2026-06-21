@@ -1,128 +1,139 @@
 :host {
   display: block;
+  height: 100%;
   min-height: 0;
   overflow: hidden;
-}
-
-.event-log-panel {
-  border: 1px solid rgba(251, 191, 36, 0.28);
-  border-radius: 18px;
-  background: linear-gradient(145deg, rgba(45, 32, 12, 0.9), rgba(12, 13, 17, 0.96));
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  min-height: 0;
-  max-height: 100%;
-  overflow: hidden;
-  padding: 8px;
-}
-
-.log-header {
-  align-items: center;
-  display: flex;
-  gap: 8px;
-  justify-content: space-between;
-}
-
-.event-log-panel h2 {
-  color: #fde68a;
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  margin: 0;
-  text-transform: uppercase;
-}
-
-.log-header span {
-  color: #dce6f5;
-  font-size: 9px;
 }
 
 .entries {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-top: 6px;
+  gap: 5px;
+  height: 100%;
   min-height: 0;
   overflow-y: auto;
-  padding: 0 2px 14px 0;
-  scroll-padding-block-end: 14px;
+  overscroll-behavior: contain;
+  padding: 2px 4px 10px 0;
+  scrollbar-gutter: stable;
 }
 
+.entries::-webkit-scrollbar {
+  width: 6px;
+}
+
+.entries::-webkit-scrollbar-thumb {
+  background: rgba(125, 211, 252, 0.4);
+  border-radius: 999px;
+}
+
+.entries-empty {
+  color: var(--dq-ink-muted, #94a3b8);
+  font-size: 10px;
+  font-style: italic;
+  margin: 8px 4px;
+  opacity: 0.7;
+}
 
 .entry-card {
-  border-left: 3px solid rgba(255, 255, 255, 0.18);
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.24);
+  --rail: rgba(148, 163, 184, 0.5);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.012) 40%),
+    rgba(7, 12, 22, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 9px;
   display: grid;
   gap: 2px;
-  padding: 5px 7px;
+  overflow: hidden;
+  padding: 6px 9px 6px 12px;
+  position: relative;
   text-align: left;
-  transition: background 120ms ease;
+  transition: background 140ms ease, transform 140ms ease;
+}
+
+.entry-card:hover {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02) 40%),
+    rgba(12, 18, 30, 0.7);
+}
+
+/* Coloured rail down the left edge */
+.entry-rail {
+  background: var(--rail);
+  border-radius: 999px;
+  bottom: 5px;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--rail) 55%, transparent);
+  left: 5px;
+  position: absolute;
+  top: 5px;
+  width: 3px;
 }
 
 .entry-card header {
   align-items: center;
   display: flex;
-  gap: 5px;
-  justify-content: flex-start;
+  gap: 6px;
 }
 
-.entry-card strong,
-.entry-card time {
-  color: #dce6f5;
+.entry-icon {
+  align-items: center;
+  background: color-mix(in srgb, var(--rail) 16%, rgba(255, 255, 255, 0.04));
+  border: 1px solid color-mix(in srgb, var(--rail) 32%, transparent);
+  border-radius: 5px;
+  display: inline-grid;
+  font-size: 9px;
+  height: 16px;
+  place-items: center;
+  width: 16px;
+}
+
+.entry-card strong {
+  color: color-mix(in srgb, var(--rail) 60%, #ffffff);
   font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.entry-card time {
+  color: var(--dq-ink-muted, #94a3b8);
+  font-size: 8px;
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
 }
 
 .entry-card p {
   color: #dce6f5;
   font-size: 10px;
-  line-height: 1.2;
+  line-height: 1.28;
   margin: 0;
 }
 
-.entry-card.damage {
-  border-color: #ef4444;
-}
-
-.entry-card.heal {
-  border-color: #22c55e;
-}
-
+/* Per-type accent */
+.entry-card.damage { --rail: #ef4444; }
+.entry-card.heal { --rail: #22c55e; }
 .entry-card.event,
-.entry-card.skill {
-  border-color: #38bdf8;
-}
-
+.entry-card.skill { --rail: #38bdf8; }
 .entry-card.achievement,
-.entry-card.critical {
-  border-color: #facc15;
-}
-
-.entry-icon {
-  font-size: 10px;
-  opacity: 0.85;
-}
-
-.entry-card.damage { background: rgba(239, 68, 68, 0.06); }
-.entry-card.heal { background: rgba(34, 197, 94, 0.06); }
-.entry-card.event { background: rgba(56, 189, 248, 0.05); }
-.entry-card.achievement, .entry-card.critical { background: rgba(250, 204, 21, 0.07); }
+.entry-card.critical { --rail: #facc15; }
 
 .entry-card.latest {
-  animation: latestEntryPulse 380ms ease-out;
+  animation: latestEntryPulse 480ms ease-out;
+  border-color: color-mix(in srgb, var(--rail) 40%, transparent);
 }
 
 @keyframes latestEntryPulse {
   0% {
     box-shadow: 0 0 0 rgba(250, 204, 21, 0);
-    transform: translateY(4px);
+    transform: translateY(5px);
+    opacity: 0.4;
   }
-
   55% {
-    box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.4), 0 0 18px rgba(250, 204, 21, 0.16);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--rail) 45%, transparent),
+      0 0 18px color-mix(in srgb, var(--rail) 22%, transparent);
   }
-
   100% {
     transform: translateY(0);
+    opacity: 1;
   }
 }

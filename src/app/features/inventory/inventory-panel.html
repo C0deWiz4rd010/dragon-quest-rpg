@@ -1,10 +1,15 @@
 <section class="inventory-panel">
-  <div class="panel-title">
-    <div>
-      <p>Inventar</p>
-      <strong>{{ gameState.player().gold }} Gold</strong>
-    </div>
-    <button matButton="filled" [disabled]="!gameState.canUsePotion()" (click)="combat.usePotion()">Trank 5</button>
+  <div class="quick-bar">
+    <span class="quick-readout gold"><i>💰</i>{{ gameState.player().gold }}<small>Gold</small></span>
+    <span class="quick-readout shards"><i>💎</i>{{ gameState.player().dragonShards }}<small>Shards</small></span>
+    <span class="quick-readout pots"><i>🧪</i>{{ gameState.player().potions }}<small>Tränke</small></span>
+    <button
+      class="quick-potion"
+      [disabled]="!gameState.canUsePotion()"
+      (click)="combat.usePotion()"
+    >
+      Trank nutzen
+    </button>
   </div>
 
   <div class="inventory-stack">
