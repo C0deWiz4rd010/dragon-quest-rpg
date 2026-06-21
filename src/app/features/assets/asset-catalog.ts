@@ -1,4 +1,7 @@
-const assetRoot = '/assets';
+// Relative (no leading slash) so URLs resolve against <base href>, which the
+// production build rewrites to "/dragon-quest-rpg/" for GitHub Pages. An
+// absolute "/assets" would 404 because the app is not served from the domain root.
+const assetRoot = 'assets';
 const tinySwords = `${assetRoot}/Tiny%20Swords%20%28Free%20Pack%29`;
 const tinyDungeon = `${assetRoot}/kenney_tinyDungeon`;
 

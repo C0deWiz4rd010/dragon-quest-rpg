@@ -405,22 +405,97 @@
 }
 
 .card-frame {
-  background: linear-gradient(180deg, rgba(9, 13, 24, 0.75), rgba(4, 9, 18, 0.6));
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 14px;
+  --accent: #d4af37;
+  --accent-2: #38bdf8;
+  --accent-soft: rgba(212, 175, 55, 0.16);
+  background:
+    radial-gradient(120% 80% at 50% -10%, var(--accent-soft), transparent 60%),
+    linear-gradient(180deg, rgba(13, 18, 32, 0.82), rgba(4, 9, 18, 0.66));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.03),
-    0 12px 24px rgba(0, 0, 0, 0.18);
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 16px 32px rgba(0, 0, 0, 0.3);
   min-height: 0;
   overflow: hidden;
-  padding: 8px;
+  padding: 9px;
+  position: relative;
+}
+
+/* Gradient ring drawn with a mask so it reads as an etched metallic frame */
+.card-frame::before {
+  background: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--accent) 60%, transparent),
+    transparent 32%,
+    transparent 68%,
+    color-mix(in srgb, var(--accent-2) 36%, transparent)
+  );
+  border-radius: inherit;
+  content: '';
+  inset: 0;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  padding: 1px;
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+}
+
+/* Thin luminous accent bar across the top edge */
+.card-frame::after {
+  background: linear-gradient(90deg, transparent, var(--accent), var(--accent-2), transparent);
+  content: '';
+  height: 2px;
+  left: 14px;
+  opacity: 0.7;
+  position: absolute;
+  right: 14px;
+  top: 0;
+  z-index: 1;
+}
+
+.card-frame > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Per-zone accent theming */
+.combat-zone {
+  --accent: #f87171;
+  --accent-2: #fb923c;
+  --accent-soft: rgba(248, 113, 113, 0.14);
+}
+
+.path-zone {
+  --accent: #4ade80;
+  --accent-2: #facc15;
+  --accent-soft: rgba(74, 222, 128, 0.13);
+}
+
+.supply-card {
+  --accent: #d8b4fe;
+  --accent-2: #facc15;
+  --accent-soft: rgba(216, 180, 254, 0.13);
+}
+
+.log-card {
+  --accent: #7dd3fc;
+  --accent-2: #38bdf8;
+  --accent-soft: rgba(125, 211, 252, 0.12);
 }
 
 .combat-zone,
 .path-zone,
 .side-card {
   display: grid;
-  gap: 6px;
+  gap: 7px;
   grid-template-rows: auto minmax(0, 1fr);
   min-height: 0;
 }
@@ -440,19 +515,37 @@
 /* ── Zone headers ── */
 .zone-header {
   align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   justify-content: space-between;
+  padding: 1px 2px 6px;
+  position: relative;
 
   > div {
     display: grid;
     gap: 2px;
     min-width: 0;
+    padding-left: 9px;
+    position: relative;
+  }
+
+  /* Accent tab marking each zone */
+  > div::before {
+    background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    border-radius: 999px;
+    bottom: 1px;
+    box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent);
+    content: '';
+    left: 0;
+    position: absolute;
+    top: 1px;
+    width: 3px;
   }
 
   p {
-    color: var(--dq-ink-muted);
+    color: color-mix(in srgb, var(--accent) 75%, #ffffff);
     font-size: 8px;
     font-weight: 800;
     letter-spacing: 0.18em;
@@ -462,7 +555,9 @@
 
   strong {
     color: var(--dq-ink-bright);
-    font-size: 12px;
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -470,10 +565,10 @@
 }
 
 .zone-badge {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--accent) 9%, rgba(255, 255, 255, 0.03));
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
   border-radius: 999px;
-  color: var(--dq-ink-muted);
+  color: color-mix(in srgb, var(--accent) 65%, #ffffff);
   font-size: 8px;
   font-weight: 700;
   padding: 2px 8px;

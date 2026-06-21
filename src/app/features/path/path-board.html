@@ -109,6 +109,9 @@
                 [class.type-sanctuary]="branch.type === 'sanctuary'"
                 [class.type-treasure]="branch.type === 'treasure'"
                 [class.selected]="branch.id === gameState.selectedBranchId()"
+                [class.is-best]="
+                  i === path.currentDepth() && branch.id === recommendedBranchId()
+                "
                 [class.done]="branch.completed"
                 [class.locked]="branch.locked && !branch.completed"
                 [disabled]="
@@ -149,6 +152,9 @@
                 </span>
 
                 <span class="node-caption">
+                  @if (i === path.currentDepth() && branch.id === recommendedBranchId()) {
+                    <span class="best-chip">★ Empfohlen</span>
+                  }
                   <span class="node-name">{{ branch.name }}</span>
                   <span class="node-sub">
                     <span class="node-type">{{ branchTypeLabel(branch.type) }}</span>

@@ -271,6 +271,15 @@
   overflow: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
+  /* Fade the left/right edges so off-screen stations read as "more to explore" */
+  -webkit-mask: linear-gradient(
+    90deg,
+    transparent,
+    #000 22px,
+    #000 calc(100% - 22px),
+    transparent
+  );
+  mask: linear-gradient(90deg, transparent, #000 22px, #000 calc(100% - 22px), transparent);
 }
 
 .route-viewport::-webkit-scrollbar {
@@ -322,9 +331,39 @@
   animation: spineFlow 6s linear infinite;
 }
 
+/* A bright traveller comet sweeping along the journey line */
+.route-spine::after {
+  background: radial-gradient(circle, #fffbe6 0 2px, rgba(250, 204, 21, 0.9) 40%, transparent 72%);
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.85);
+  content: '';
+  height: 11px;
+  left: 0;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 11px;
+  animation: spineComet 5.5s linear infinite;
+}
+
 @keyframes spineFlow {
   to {
     background-position: 200% 0;
+  }
+}
+
+@keyframes spineComet {
+  0% {
+    left: 0;
+    opacity: 0;
+  }
+  10%,
+  90% {
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
   }
 }
 
@@ -355,6 +394,20 @@
   z-index: 2;
 }
 
+/* Soft radial spotlight behind the active station */
+.segment.current::before {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(250, 204, 21, 0.14),
+    transparent 68%
+  );
+  content: '';
+  inset: -6px 2px;
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+}
+
 /* Depth tag floating at the top of each station */
 .segment-tag {
   align-items: center;
@@ -382,8 +435,28 @@
   }
 }
 
-.segment.current .segment-tag strong {
-  color: #fde047;
+.segment.current .segment-tag {
+  small {
+    color: #0a0d08;
+    background: linear-gradient(90deg, #facc15, #fde047);
+    border-radius: 999px;
+    box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+    padding: 1px 6px;
+  }
+
+  strong {
+    color: #fde047;
+  }
+
+  /* Downward pin pointing at the active station */
+  &::after {
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid #facc15;
+    content: '';
+    height: 0;
+    width: 0;
+  }
 }
 
 /* Vertical branch line connecting the station's nodes */
@@ -574,14 +647,51 @@
 }
 
 .node-reward {
+  background: rgba(250, 204, 21, 0.1);
+  border: 1px solid rgba(250, 204, 21, 0.26);
+  border-radius: 999px;
   color: #f8e7a2;
   font-size: 8px;
-  font-weight: 700;
-  max-width: 110px;
+  font-weight: 800;
+  max-width: 112px;
   overflow: hidden;
+  padding: 1px 7px;
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.best-chip {
+  background: linear-gradient(90deg, #facc15, #fb923c);
+  border-radius: 999px;
+  color: #1a0f02;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  padding: 1px 7px;
+  text-transform: uppercase;
+  box-shadow: 0 0 10px rgba(250, 204, 21, 0.45);
+}
+
+/* Recommended station node: golden breathing ring to anchor the next move */
+.node.is-best .node-dot {
+  border-color: rgba(250, 204, 21, 0.9);
+  animation: bestPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes bestPulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px rgba(250, 204, 21, 0.25),
+      0 4px 12px rgba(0, 0, 0, 0.45);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px rgba(250, 204, 21, 0.5),
+      0 0 20px rgba(250, 204, 21, 0.55),
+      0 4px 12px rgba(0, 0, 0, 0.45);
+  }
 }
 
 /* ── Interaction states ──────────────────────────────────────── */
@@ -722,7 +832,7 @@
 }
 
 /* Current selectable nodes breathe softly */
-.segment.current .node:enabled:not(.type-boss) .node-dot {
+.segment.current .node:enabled:not(.type-boss):not(.is-best) .node-dot {
   animation: nodeReady 2.6s ease-in-out infinite;
 }
 
