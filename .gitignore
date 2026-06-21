@@ -22,3 +22,7 @@ Thumbs.db
 # Env
 .env
 .env.local
+
+# Local scratch / logs
+.tmp/
+build-out.txt
