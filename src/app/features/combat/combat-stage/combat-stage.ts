@@ -73,6 +73,7 @@ export class CombatStage {
   private lastFtId = -1;
   private W = 0;
   private readonly H = 180;
+  private stageShakeId: ReturnType<typeof setInterval> | null = null;
   private resizeObserver: ResizeObserver | null = null;
 
   constructor() {
@@ -159,6 +160,10 @@ export class CombatStage {
 
     this.destroyRef.onDestroy(() => {
       this.resizeObserver?.disconnect();
+      if (this.stageShakeId !== null) {
+        clearInterval(this.stageShakeId);
+        this.stageShakeId = null;
+      }
       this.app?.destroy(false, { children: true });
       this.app = null;
     });
@@ -336,6 +341,7 @@ export class CombatStage {
         this.shakeSprite(sprite, 5);
         this.flashTint(sprite, 0xff4444, 140);
         this.spawnParticles(cx, cy, 0xfb7185);
+        this.shakeStage(4);
         break;
       case 'attack':
         this.pulseSprite(sprite, 1.22, 110);
@@ -345,20 +351,68 @@ export class CombatStage {
         this.pulseSprite(sprite, 1.4, 160);
         this.flashTint(sprite, 0xfacc15, 220);
         this.spawnParticles(cx, cy, 0xfacc15, 14);
+        this.shakeStage(9, 13);
+        this.flashScreen(0xfacc15, 0.32);
         break;
       case 'heal':
         this.flashTint(sprite, 0x4ade80, 320);
         this.spawnParticles(cx, cy, 0x4ade80);
+        this.flashScreen(0x4ade80, 0.18);
         break;
       case 'skill':
         this.pulseSprite(sprite, 1.45, 200);
         this.flashTint(sprite, 0x38bdf8, 280);
         this.spawnParticles(cx, cy, 0x38bdf8, 16);
+        this.shakeStage(7, 11);
+        this.flashScreen(0x38bdf8, 0.26);
         break;
       case 'death':
         this.fadeSprite(sprite);
+        this.shakeStage(11, 16);
+        this.flashScreen(0xffffff, 0.4);
         break;
     }
+  }
+
+  /** Whole-stage screen shake for heavy impacts (crit, finisher, defeat). */
+  private shakeStage(amount: number, ticks = 9): void {
+    if (!this.app) return;
+    const stage = this.app.stage;
+    if (this.stageShakeId !== null) {
+      clearInterval(this.stageShakeId);
+    }
+    let n = 0;
+    this.stageShakeId = setInterval(() => {
+      if (!this.app) return;
+      const decay = 1 - n / ticks;
+      stage.x = (Math.random() - 0.5) * amount * 2 * decay;
+      stage.y = (Math.random() - 0.5) * amount * 2 * decay;
+      if (++n >= ticks) {
+        if (this.stageShakeId !== null) {
+          clearInterval(this.stageShakeId);
+        }
+        this.stageShakeId = null;
+        stage.x = 0;
+        stage.y = 0;
+      }
+    }, 22);
+  }
+
+  /** Brief full-screen colour flash on impactful actions. */
+  private flashScreen(color: number, alpha: number): void {
+    if (!this.app) return;
+    const g = new Graphics().rect(-30, -30, this.W + 60, this.H + 60).fill({ color, alpha });
+    g.eventMode = 'none';
+    this.app.stage.addChild(g);
+    let a = alpha;
+    const id = setInterval(() => {
+      a -= alpha / 8;
+      g.alpha = Math.max(0, a / alpha);
+      if (a <= 0) {
+        clearInterval(id);
+        if (!g.destroyed) g.destroy();
+      }
+    }, 26);
   }
 
   private shakeSprite(sprite: AnimatedSprite, amount: number): void {

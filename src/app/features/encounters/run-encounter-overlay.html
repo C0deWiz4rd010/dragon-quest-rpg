@@ -1,27 +1,77 @@
 @if (activeEncounter(); as encounter) {
-  <div class="encounter-overlay" role="dialog" aria-modal="true" aria-label="Haendlerauswahl">
-    <section class="encounter-card">
-      <header class="encounter-header">
-        <p>Vorbereitung</p>
-        <h2>{{ encounter.source }}</h2>
-        <span>{{ encounter.subtitle }}</span>
-      </header>
+  <div class="encounter-overlay" role="dialog" aria-modal="true" aria-label="Begegnung">
+    @if (encounter.type === 'merchant') {
+      <section class="encounter-card">
+        <header class="encounter-header">
+          <p>Vorbereitung</p>
+          <h2>{{ encounter.source }}</h2>
+          <span>{{ encounter.subtitle }}</span>
+        </header>
 
-      <div class="encounter-offers">
-        @for (offer of encounter.offers; track offer.id) {
-          <button type="button" class="offer-card" [disabled]="encounter.currentGold < offer.cost" (click)="encounters.resolve(offer.id)">
-            <span class="offer-topline">
-              <strong>{{ offer.title }}</strong>
-              <span class="offer-cost">{{ offer.cost > 0 ? offer.cost + 'g' : 'Gratis' }}</span>
-            </span>
-            <span class="offer-kind">{{ offer.kind }}</span>
-            <span class="offer-desc">{{ offer.description }}</span>
-            <span class="offer-reward">{{ offer.rewardLabel }}</span>
-          </button>
-        }
-      </div>
+        <div class="encounter-offers">
+          @for (offer of encounter.offers; track offer.id) {
+            <button
+              type="button"
+              class="offer-card"
+              [disabled]="encounter.currentGold < offer.cost"
+              (click)="encounters.resolve(offer.id)"
+            >
+              <span class="offer-topline">
+                <strong>{{ offer.title }}</strong>
+                <span class="offer-cost">{{ offer.cost > 0 ? offer.cost + 'g' : 'Gratis' }}</span>
+              </span>
+              <span class="offer-kind">{{ offer.kind }}</span>
+              <span class="offer-desc">{{ offer.description }}</span>
+              <span class="offer-reward">{{ offer.rewardLabel }}</span>
+            </button>
+          }
+        </div>
 
-      <button type="button" class="skip-button" (click)="encounters.resolve(null)">Weiterziehen</button>
-    </section>
+        <button type="button" class="skip-button" (click)="encounters.resolve(null)">
+          Weiterziehen
+        </button>
+      </section>
+    } @else {
+      <section class="encounter-card dilemma-card" [attr.data-biome]="encounter.biome">
+        <header class="encounter-header dilemma-header">
+          <span class="dilemma-icon">{{ encounter.icon }}</span>
+          <p>Entscheidung</p>
+          <h2>{{ encounter.source }}</h2>
+          <span class="dilemma-flavor">{{ encounter.flavor }}</span>
+        </header>
+
+        <div class="dilemma-choices">
+          @for (choice of encounter.choices; track choice.id) {
+            <button
+              type="button"
+              class="choice-card"
+              [class.tone-risk]="choice.tone === 'risk'"
+              [class.tone-reward]="choice.tone === 'reward'"
+              [class.tone-safe]="choice.tone === 'safe'"
+              [disabled]="choice.disabled"
+              (click)="encounters.resolve(choice.id)"
+            >
+              <span class="choice-topline">
+                <strong>{{ choice.title }}</strong>
+                @if (choice.chance != null) {
+                  <span class="choice-chance">{{ choice.chance }}%</span>
+                }
+              </span>
+              <span class="choice-desc">{{ choice.description }}</span>
+              <span class="choice-meta">
+                @if (choice.riskLabel) {
+                  <span class="choice-risk">{{ choice.riskLabel }}</span>
+                }
+                <span class="choice-reward">{{ choice.rewardLabel }}</span>
+              </span>
+            </button>
+          }
+        </div>
+
+        <button type="button" class="skip-button" (click)="encounters.resolve(null)">
+          Vorsichtig weiterziehen
+        </button>
+      </section>
+    }
   </div>
 }

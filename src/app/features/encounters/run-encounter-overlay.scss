@@ -129,3 +129,166 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+/* ════════════════════════════════════════════════════
+   DILEMMA (risk / reward choice)
+════════════════════════════════════════════════════ */
+.dilemma-card {
+  --biome-glow: rgba(168, 85, 247, 0.5);
+  animation: dilemmaEnter 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border-color: color-mix(in srgb, var(--biome-glow) 40%, transparent);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.5),
+    0 0 60px color-mix(in srgb, var(--biome-glow) 22%, transparent);
+  max-width: 760px;
+  position: relative;
+  width: min(100%, 760px);
+}
+
+.dilemma-card[data-biome='ember'] { --biome-glow: rgba(251, 146, 60, 0.6); }
+.dilemma-card[data-biome='frost'] { --biome-glow: rgba(125, 211, 252, 0.6); }
+.dilemma-card[data-biome='grove'] { --biome-glow: rgba(110, 231, 183, 0.55); }
+.dilemma-card[data-biome='ruin'] { --biome-glow: rgba(196, 181, 253, 0.55); }
+.dilemma-card[data-biome='sanctum'] { --biome-glow: rgba(250, 204, 21, 0.55); }
+.dilemma-card[data-biome='storm'] { --biome-glow: rgba(56, 189, 248, 0.6); }
+
+.dilemma-header {
+  position: relative;
+}
+
+.dilemma-icon {
+  display: block;
+  filter: drop-shadow(0 0 16px color-mix(in srgb, var(--biome-glow) 70%, transparent));
+  font-size: 46px;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.dilemma-flavor {
+  color: #cbd5e1;
+  font-size: 13px;
+  font-style: italic;
+  line-height: 1.45;
+  margin: 0 auto;
+  max-width: 52ch;
+}
+
+.dilemma-choices {
+  display: grid;
+  gap: 11px;
+}
+
+.choice-card {
+  --tone: rgba(148, 163, 184, 0.5);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--tone) 8%, rgba(15, 23, 42, 0.7)), rgba(8, 12, 22, 0.85));
+  border: 1px solid color-mix(in srgb, var(--tone) 36%, transparent);
+  border-radius: 14px;
+  color: #e2e8f0;
+  cursor: pointer;
+  display: grid;
+  gap: 7px;
+  padding: 13px 15px;
+  position: relative;
+  text-align: left;
+  transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.choice-card::before {
+  background: var(--tone);
+  border-radius: 999px;
+  bottom: 12px;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--tone) 60%, transparent);
+  content: '';
+  left: 6px;
+  position: absolute;
+  top: 12px;
+  width: 3px;
+}
+
+.choice-card:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--tone) 75%, transparent);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35), 0 0 22px color-mix(in srgb, var(--tone) 25%, transparent);
+  transform: translateY(-2px);
+}
+
+.choice-card:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+  opacity: 0.45;
+}
+
+.choice-card.tone-risk { --tone: #f87171; }
+.choice-card.tone-reward { --tone: #facc15; }
+.choice-card.tone-safe { --tone: #4ade80; }
+
+.choice-topline {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  padding-left: 8px;
+}
+
+.choice-topline strong {
+  color: #f8fafc;
+  font-size: 15px;
+}
+
+.choice-chance {
+  background: color-mix(in srgb, var(--tone) 18%, rgba(0, 0, 0, 0.3));
+  border: 1px solid color-mix(in srgb, var(--tone) 45%, transparent);
+  border-radius: 999px;
+  color: color-mix(in srgb, var(--tone) 70%, #ffffff);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  padding: 2px 9px;
+}
+
+.choice-desc {
+  color: #cbd5e1;
+  font-size: 12.5px;
+  line-height: 1.4;
+  padding-left: 8px;
+}
+
+.choice-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-left: 8px;
+}
+
+.choice-risk,
+.choice-reward {
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  padding: 2px 8px;
+  text-transform: uppercase;
+}
+
+.choice-risk {
+  background: rgba(248, 113, 113, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.38);
+  color: #fca5a5;
+}
+
+.choice-reward {
+  background: color-mix(in srgb, var(--tone) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tone) 42%, transparent);
+  color: color-mix(in srgb, var(--tone) 72%, #ffffff);
+}
+
+@keyframes dilemmaEnter {
+  from { opacity: 0; transform: scale(0.94) translateY(16px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@media (min-width: 720px) {
+  .dilemma-choices {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

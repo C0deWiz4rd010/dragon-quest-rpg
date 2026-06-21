@@ -1,4 +1,11 @@
-<section class="combat-panel">
+<section class="combat-panel" [class.engaged]="engaged()">
+  @if (engaged()) {
+    <div class="engage-flash" aria-hidden="true">
+      <span class="engage-bar"></span>
+      <span class="engage-text">⚔ Gefecht!</span>
+    </div>
+  }
+
   <app-combat-stage />
 
   <div class="actions-header">

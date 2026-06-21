@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, HostListener, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  HostListener,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { blessingLabel } from '../game-state/run-blessings';
 import { CombatStage } from './combat-stage/combat-stage';
@@ -27,6 +34,26 @@ export class CombatPanel {
   protected readonly combat = inject(Combat);
   protected readonly path = inject(Path);
   protected readonly blessingLabel = blessingLabel;
+
+  /** Drives a brief "engage" transition each time a fresh enemy appears. */
+  protected readonly engaged = signal(false);
+  private lastEnemyKey = '';
+
+  constructor() {
+    effect(() => {
+      const enemy = this.gameState.enemy();
+      if (!enemy) {
+        this.lastEnemyKey = '';
+        return;
+      }
+      const key = `${enemy.name}:${enemy.maxHp}:${enemy.role}`;
+      if (key !== this.lastEnemyKey) {
+        this.lastEnemyKey = key;
+        this.engaged.set(true);
+        setTimeout(() => this.engaged.set(false), 720);
+      }
+    });
+  }
 
   @HostListener('window:keydown', ['$event'])
   onKeyDown(event: KeyboardEvent): void {
