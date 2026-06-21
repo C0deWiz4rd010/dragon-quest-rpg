@@ -17,6 +17,53 @@
   text-align: center;
 }
 
+/* ── Engage transition (Map -> Kampf) ────────────────────────────── */
+.engage-flash {
+  align-items: center;
+  display: grid;
+  inset: 0;
+  justify-items: center;
+  pointer-events: none;
+  position: absolute;
+  z-index: 20;
+}
+
+.engage-flash .engage-bar {
+  background: linear-gradient(90deg, transparent, rgba(248, 113, 113, 0.5), rgba(250, 204, 21, 0.55), rgba(248, 113, 113, 0.5), transparent);
+  grid-area: 1 / 1;
+  height: 100%;
+  width: 100%;
+  animation: engageSweep 0.72s ease-out forwards;
+}
+
+.engage-flash .engage-text {
+  color: #fff6c7;
+  font-family: var(--dq-font-display, 'Cinzel', serif);
+  font-size: clamp(20px, 5vw, 34px);
+  font-weight: 900;
+  grid-area: 1 / 1;
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 18px rgba(248, 113, 113, 0.7), 0 2px 6px rgba(0, 0, 0, 0.6);
+  animation: engagePunch 0.72s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes engageSweep {
+  0% { clip-path: inset(0 100% 0 0); opacity: 0; }
+  35% { clip-path: inset(0 0 0 0); opacity: 1; }
+  100% { clip-path: inset(0 0 0 100%); opacity: 0; }
+}
+
+@keyframes engagePunch {
+  0% { opacity: 0; transform: scale(0.6) rotate(-6deg); }
+  40% { opacity: 1; transform: scale(1.12) rotate(0deg); }
+  75% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.04); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .engage-flash { display: none; }
+}
+
 /* ── Combat overview readouts ────────────────────────────────────── */
 .combat-overview {
   align-content: start;

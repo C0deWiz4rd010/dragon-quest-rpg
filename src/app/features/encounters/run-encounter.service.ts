@@ -31,11 +31,40 @@ export interface MerchantEncounter {
   onResolve: (offer: MerchantOffer | null) => void;
 }
 
+export type DilemmaTone = 'risk' | 'reward' | 'safe';
+
+export interface DilemmaChoice {
+  id: string;
+  title: string;
+  description: string;
+  /** Short downside line, e.g. "Risiko: -15% HP". */
+  riskLabel?: string;
+  /** Short upside line, e.g. "Relikt-Chance". */
+  rewardLabel: string;
+  tone: DilemmaTone;
+  /** Odds (0-100) shown as a chance meter when the outcome is a gamble. */
+  chance?: number;
+  disabled?: boolean;
+}
+
+export interface DilemmaEncounter {
+  type: 'dilemma';
+  source: string;
+  subtitle: string;
+  flavor: string;
+  icon: string;
+  biome?: string;
+  choices: DilemmaChoice[];
+  onResolve: (choiceId: string | null) => void;
+}
+
+export type RunEncounter = MerchantEncounter | DilemmaEncounter;
+
 @Injectable({
   providedIn: 'root',
 })
 export class RunEncounterService {
-  readonly activeEncounter = signal<MerchantEncounter | null>(null);
+  readonly activeEncounter = signal<RunEncounter | null>(null);
 
   launchMerchant(
     source: string,
@@ -54,7 +83,11 @@ export class RunEncounterService {
     });
   }
 
-  resolve(offerId: string | null): void {
+  launchDilemma(encounter: Omit<DilemmaEncounter, 'type'>): void {
+    this.activeEncounter.set({ type: 'dilemma', ...encounter });
+  }
+
+  resolve(id: string | null): void {
     const encounter = this.activeEncounter();
     this.activeEncounter.set(null);
 
@@ -62,7 +95,12 @@ export class RunEncounterService {
       return;
     }
 
-    const offer = encounter.offers.find((entry) => entry.id === offerId) ?? null;
+    if (encounter.type === 'dilemma') {
+      encounter.onResolve(id);
+      return;
+    }
+
+    const offer = encounter.offers.find((entry) => entry.id === id) ?? null;
     encounter.onResolve(offer);
   }
 }

@@ -2,7 +2,11 @@ import { computed, Injectable, inject, signal } from '@angular/core';
 import { assets } from '../assets/asset-catalog';
 import { roleLootMultiplier } from '../combat/combat-rules';
 import { Enemy, EnemyElement, EnemyRole } from '../combat/enemy.model';
-import { RunEncounterService, MerchantOffer } from '../encounters/run-encounter.service';
+import {
+  RunEncounterService,
+  MerchantOffer,
+  DilemmaChoice,
+} from '../encounters/run-encounter.service';
 import { GameState } from '../game-state/game-state.service';
 import { blessingLabel, mergeBlessing, spendBlessing } from '../game-state/run-blessings';
 import { Player, RouteHistoryType, RunBlessingType } from '../inventory/player.model';
@@ -303,6 +307,12 @@ export class Path {
       return;
     }
 
+    // Event nodes are now interactive risk/reward dilemmas.
+    this.launchEventDilemma(branch);
+  }
+
+  /** Standard (low-variance) event outcome — used when the player declines the gamble. */
+  private applyOmenOutcome(branch: PathBranch): void {
     const outcome = resolveEventOutcome(this.currentDepth(), this.gameState.playerLuck());
     let fortuneUsed = false;
     let bonusGold = 0;
@@ -354,7 +364,195 @@ export class Path {
     if (outcome.relic) {
       this.grantRouteRelic({ ...branch, guaranteedRelicId: outcome.relic.id }, 'Runenschrein');
     }
-    this.completeSelectedBranch();
+  }
+
+  /**
+   * Risk/reward map mechanic: event nodes present a themed dilemma with a
+   * high-variance "risk" choice, a steady "reward" choice, and a safe decline
+   * (which falls back to the standard omen outcome). Effects reuse the existing
+   * reward/blessing/relic helpers so balance stays consistent with the rest of
+   * the run economy.
+   */
+  private launchEventDilemma(branch: PathBranch): void {
+    const depth = this.currentDepth();
+    const luck = this.gameState.playerLuck();
+    const biome = branch.biome ?? 'ruin';
+    const goldBase = 30 + depth * 6 + Math.floor(luck * 1.4);
+
+    const hurt = (frac: number) =>
+      this.gameState.updatePlayer((p) => ({
+        ...p,
+        hp: Math.max(1, p.hp - Math.floor(p.maxHp * frac)),
+      }));
+
+    const archetypes = ['shrine', 'coin', 'cache'] as const;
+    const kind = archetypes[Math.floor(Math.random() * archetypes.length)];
+
+    const effects: Record<string, () => void> = {};
+    const choices: DilemmaChoice[] = [];
+    let icon = '🔮';
+    let source = 'Runenschrein';
+    let flavor = '';
+
+    if (kind === 'shrine') {
+      icon = '⛩';
+      source = 'Verfluchter Schrein';
+      flavor = 'Ein verfallener Schrein pulsiert mit dunkler Macht — sein Segen hat einen Preis.';
+      choices.push(
+        {
+          id: 'risk',
+          title: 'Blut opfern',
+          description: 'Lege die Hand auf den Altar und gib Lebenskraft hin.',
+          tone: 'risk',
+          riskLabel: 'Risiko: -18% HP',
+          rewardLabel: 'Relikt + Shard',
+        },
+        {
+          id: 'reward',
+          title: 'Andächtig beten',
+          description: 'Ehre den Schrein ohne Opfer.',
+          tone: 'reward',
+          rewardLabel: 'Segen + Heilung',
+        },
+      );
+      effects['risk'] = () => {
+        hurt(0.18);
+        this.grantRouteRelic({ ...branch, guaranteedRelicId: undefined }, source);
+        this.gameState.addDragonShards(1, source);
+        this.gameState.addLog(
+          `${source}: Du opferst Lebenskraft — der Altar gewährt ein Relikt und einen Shard.`,
+          'achievement',
+        );
+      };
+      effects['reward'] = () => {
+        const blessing = randomBlessing(['ward', 'focus']);
+        this.gameState.updatePlayer((p) => ({
+          ...p,
+          hp: Math.min(p.maxHp, p.hp + Math.floor(p.maxHp * 0.15)),
+          mana: Math.min(p.maxMana, p.mana + 14),
+        }));
+        this.gameState.grantBlessing(blessing.type, blessing.charges, source);
+        this.gameState.addLog(
+          `${source}: Dein Gebet bringt ${blessingLabel(blessing.type)} und etwas Heilung.`,
+          'heal',
+        );
+      };
+    } else if (kind === 'coin') {
+      icon = '🪙';
+      source = 'Gauklermünze';
+      flavor = 'Ein Geist wirft dir eine schimmernde Münze zu. Versuchst du dein Glück?';
+      const winChance = Math.min(72, 52 + Math.floor(luck * 0.9));
+      choices.push(
+        {
+          id: 'risk',
+          title: 'Münze werfen',
+          description: 'Alles oder nichts — der Geist liebt Mut.',
+          tone: 'risk',
+          chance: winChance,
+          riskLabel: 'Verlust: -30% Gold',
+          rewardLabel: `+${goldBase * 2} Gold + Shard`,
+        },
+        {
+          id: 'reward',
+          title: 'Sicher tauschen',
+          description: 'Nimm den garantierten kleinen Gewinn.',
+          tone: 'reward',
+          rewardLabel: `+${Math.floor(goldBase * 0.8)} Gold, +1 Trank`,
+        },
+      );
+      effects['risk'] = () => {
+        if (Math.random() * 100 < winChance) {
+          this.gameState.updatePlayer((p) => ({ ...p, gold: p.gold + goldBase * 2 }));
+          this.gameState.addDragonShards(1, source);
+          this.gameState.addLog(
+            `${source}: Die Münze fällt günstig! +${goldBase * 2} Gold und ein Shard.`,
+            'achievement',
+          );
+        } else {
+          this.gameState.updatePlayer((p) => ({ ...p, gold: Math.floor(p.gold * 0.7) }));
+          this.gameState.addLog(`${source}: Pech — der Geist nimmt 30% deines Goldes.`, 'damage');
+        }
+      };
+      effects['reward'] = () => {
+        this.gameState.updatePlayer((p) => ({
+          ...p,
+          gold: p.gold + Math.floor(goldBase * 0.8),
+          potions: p.potions + 1,
+        }));
+        this.gameState.addLog(
+          `${source}: Sicherer Tausch — +${Math.floor(goldBase * 0.8)} Gold und ein Trank.`,
+          'heal',
+        );
+      };
+    } else {
+      icon = '📦';
+      source = 'Uralter Hort';
+      flavor = 'Eine versiegelte Truhe summt vor Energie. Das Schloss könnte eine Falle sein.';
+      choices.push(
+        {
+          id: 'risk',
+          title: 'Gewaltsam öffnen',
+          description: 'Brich das Siegel auf — egal, was lauert.',
+          tone: 'risk',
+          riskLabel: 'Risiko: -12% HP',
+          rewardLabel: `+${goldBase + 20} Gold, Trank, Relikt-Chance`,
+        },
+        {
+          id: 'reward',
+          title: 'Mechanik studieren',
+          description: 'Entschärfe die Falle mit Bedacht.',
+          tone: 'reward',
+          rewardLabel: 'Fokus-Segen + Mana',
+        },
+      );
+      effects['risk'] = () => {
+        hurt(0.12);
+        this.gameState.updatePlayer((p) => ({
+          ...p,
+          gold: p.gold + goldBase + 20,
+          potions: p.potions + 1,
+        }));
+        if (Math.random() < 0.45) {
+          this.grantRouteRelic({ ...branch, guaranteedRelicId: undefined }, source);
+        }
+        this.gameState.addDragonShards(1, source);
+        this.gameState.addLog(
+          `${source}: Eine Falle schnappt zu, doch der Hort ist reich — +${goldBase + 20} Gold und mehr.`,
+          'achievement',
+        );
+      };
+      effects['reward'] = () => {
+        const blessing = randomBlessing(['focus', 'fortune']);
+        this.gameState.updatePlayer((p) => ({
+          ...p,
+          mana: Math.min(p.maxMana, p.mana + 20),
+        }));
+        this.gameState.grantBlessing(blessing.type, blessing.charges, source);
+        this.gameState.addLog(
+          `${source}: Sorgfalt zahlt sich aus — ${blessingLabel(blessing.type)} und Mana.`,
+          'event',
+        );
+      };
+    }
+
+    this.encounters.launchDilemma({
+      source,
+      subtitle: '',
+      flavor,
+      icon,
+      biome,
+      choices,
+      onResolve: (choiceId) => {
+        const effect = choiceId ? effects[choiceId] : null;
+        if (effect) {
+          effect();
+        } else {
+          this.gameState.addLog(`${source}: Du ziehst vorsichtig weiter.`, 'event');
+          this.applyOmenOutcome(branch);
+        }
+        this.completeSelectedBranch();
+      },
+    });
   }
 
   completeSelectedBranch(): void {
