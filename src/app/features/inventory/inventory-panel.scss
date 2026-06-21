@@ -4,55 +4,61 @@
   overflow: hidden;
 }
 
-/* Inventory panel: title bar + scrollable content area */
+/* Frameless: the parent zone card-frame provides the outer frame + header */
 .inventory-panel {
-  border: 1px solid rgba(56, 189, 248, 0.28);
-  border-radius: 18px;
-  background: linear-gradient(145deg, rgba(13, 32, 43, 0.92), rgba(12, 13, 17, 0.96));
   display: grid;
-  gap: 6px;
+  gap: 7px;
   grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
   min-height: 0;
-  max-height: 100%;
   overflow: hidden;
-  padding: 8px;
 }
 
-.panel-title {
+/* Quick readout + one-tap potion */
+.quick-bar {
   align-items: center;
   display: flex;
-  gap: 10px;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 5px;
 }
 
-.panel-title > div {
-  min-width: 0;
-}
-
-/* Panel title: "Inventar" label (small) above the gold value (large) */
-.panel-title p {
-  color: #bae6fd;
-  font-size: 7px;
-  font-weight: 800;
-  letter-spacing: 0.2em;
-  margin: 0;
-  text-transform: uppercase;
-}
-
-/* Gold value — main emphasis in the title area */
-.panel-title strong {
+.quick-readout {
+  align-items: baseline;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
   color: #f8e7a2;
-  font-size: clamp(13px, 1.1vw, 16px);
+  display: inline-flex;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
   font-weight: 900;
-  text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+  gap: 4px;
+  padding: 3px 8px;
+
+  i { font-size: 10px; font-style: normal; }
+  small { color: var(--dq-ink-muted, #94a3b8); font-size: 7px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+
+  &.shards { color: #c4b5fd; }
+  &.pots { color: #bbf7d0; }
 }
 
-.panel-title button {
-  --mdc-filled-button-label-text-size: 9px;
-  --mdc-filled-button-container-height: 26px;
-  --mdc-filled-button-horizontal-padding: 10px;
+.quick-potion {
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.22), rgba(37, 99, 235, 0.22));
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  border-radius: 8px;
+  color: #e0f2fe;
+  cursor: pointer;
   font-size: 9px;
-  min-width: 52px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  margin-left: auto;
+  padding: 5px 11px;
+  text-transform: uppercase;
+  transition: filter 120ms, transform 120ms, opacity 120ms;
+
+  &:hover:not(:disabled) { filter: brightness(1.15); transform: translateY(-1px); }
+  &:active:not(:disabled) { transform: scale(0.96); }
+  &:disabled { cursor: default; opacity: 0.4; }
 }
 
 /* Scrollable stack of sections inside the panel */

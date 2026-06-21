@@ -4,131 +4,142 @@
 
   <section class="shell-content">
     <!-- ── TOP COCKPIT ──────────────────────────────────────────── -->
-    <header class="cockpit-bar" aria-label="Run cockpit">
+    <header class="cockpit" aria-label="Run cockpit">
 
-      <!-- Brand + Title -->
-      <div class="brand-block">
-        <span class="brand-eyebrow">Dragon Quest</span>
-        <div class="title-row">
-          <h1>⚔ RPG</h1>
-          <span class="status-pill" [class.active]="gameState.gameActive()">
-            {{ runStatus() }}
-          </span>
+      <!-- Row 1: identity crest + controls -->
+      <div class="cockpit-top">
+        <div class="crest">
+          <div
+            class="crest-emblem"
+            [class.danger]="gameState.playerHpPercent() < 30"
+            [style.--hp]="gameState.playerHpPercent()"
+          >
+            <span class="crest-rune">🐉</span>
+            <span class="crest-level">{{ player().level }}</span>
+          </div>
+          <div class="crest-titles">
+            <span class="crest-eyebrow">Dragon Quest</span>
+            <h1 class="crest-name">
+              RPG
+              <span class="crest-status" [class.active]="gameState.gameActive()">{{ runStatus() }}</span>
+            </h1>
+            <div class="crest-tags">
+              <span class="tag rank-tag">{{ gameState.dragonRank() }}</span>
+              <span class="tag grade-tag" [attr.data-grade]="gameState.runGrade()">
+                Note {{ gameState.runGrade() }}
+              </span>
+            </div>
+          </div>
         </div>
-        <div class="rank-row">
-          <span class="rank-badge">{{ gameState.dragonRank() }}</span>
-          <span class="grade-badge" [attr.data-grade]="gameState.runGrade()">
-            Note {{ gameState.runGrade() }}
-          </span>
+
+        <div class="cockpit-controls" aria-label="Run tools">
+          <div class="boss-dial" [class]="bossCountdownClass()">
+            <span class="boss-dial-icon">🐉</span>
+            <div class="boss-dial-text">
+              <small>Boss-Etappe</small>
+              <strong>{{ bossCountdown() === 1 ? 'JETZT' : 'in ' + bossCountdown() }}</strong>
+            </div>
+          </div>
+
+          <div class="weather-rail" [class]="weatherColorFor(path.weather())" aria-label="Wetter">
+            @for (mode of weatherOptions; track mode) {
+              <button
+                type="button"
+                [class.active]="path.weather() === mode"
+                [title]="weatherLabelFor(mode)"
+                (click)="setWeather(mode)"
+              >
+                {{ weatherLabelFor(mode) }}
+              </button>
+            }
+          </div>
+
+          <div class="tool-cluster">
+            <button
+              type="button"
+              class="tool-btn save-btn"
+              [title]="savedAt() ? 'Gespeichert ' + savedAt() : 'Speichern'"
+              (click)="saveGame()"
+            >
+              <span class="tool-glyph">💾</span>
+              @if (savedAt()) { <span class="save-time">{{ savedAt() }}</span> }
+            </button>
+            <button
+              type="button"
+              class="tool-btn manual-button"
+              title="Handbuch"
+              (click)="handbookOpen.set(!handbookOpen())"
+            >
+              <span class="tool-glyph">📖</span>
+            </button>
+            <button type="button" class="tool-btn reset-btn" title="Neustart" (click)="resetRun()">
+              <span class="tool-glyph">↺</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Player vital bars + stats -->
-      <section class="pilot-readout" aria-label="Spielerstatus">
-        <div class="vital-row">
-          <span class="vital-icon">❤</span>
-          <div class="vital-bar-wrap">
-            <div class="vital-bar hp-bar" [class.danger]="gameState.playerHpPercent() < 30">
-              <span [style.width.%]="gameState.playerHpPercent()"></span>
+      <!-- Row 2: vitals + stat ledger -->
+      <div class="cockpit-readout">
+        <section class="vitals-panel" aria-label="Spielerstatus">
+          <div class="vital-row">
+            <span class="vital-icon hp-icon">❤</span>
+            <div class="vital-bar-wrap">
+              <div class="vital-bar hp-bar" [class.danger]="gameState.playerHpPercent() < 30">
+                <span [style.width.%]="gameState.playerHpPercent()"></span>
+              </div>
+              <span class="vital-label">{{ player().hp }}<i>/{{ player().maxHp }}</i></span>
             </div>
-            <span class="vital-label">{{ player().hp }}/{{ player().maxHp }}</span>
           </div>
-        </div>
-        <div class="vital-row">
-          <span class="vital-icon">💧</span>
-          <div class="vital-bar-wrap">
-            <div class="vital-bar mana-bar">
-              <span [style.width.%]="gameState.playerManaPercent()"></span>
+          <div class="vital-row">
+            <span class="vital-icon mana-icon">💧</span>
+            <div class="vital-bar-wrap">
+              <div class="vital-bar mana-bar">
+                <span [style.width.%]="gameState.playerManaPercent()"></span>
+              </div>
+              <span class="vital-label">{{ player().mana }}<i>/{{ player().maxMana }}</i></span>
             </div>
-            <span class="vital-label">{{ player().mana }}/{{ player().maxMana }}</span>
           </div>
-        </div>
-        <div class="vital-row">
-          <span class="vital-icon xp-icon">✦</span>
-          <div class="vital-bar-wrap">
-            <div class="vital-bar xp-bar">
-              <span [style.width.%]="gameState.playerXpPercent()"></span>
+          <div class="vital-row">
+            <span class="vital-icon xp-icon">✦</span>
+            <div class="vital-bar-wrap">
+              <div class="vital-bar xp-bar">
+                <span [style.width.%]="gameState.playerXpPercent()"></span>
+              </div>
+              <span class="vital-label">Lvl <i>{{ player().level }}</i></span>
             </div>
-            <span class="vital-label">Lvl {{ player().level }}</span>
           </div>
-        </div>
-        <div class="readout-chips">
-          <span class="readout-chip">⚔ ATK {{ gameState.playerAttack() }}</span>
-          <span class="readout-chip">🛡 DEF {{ gameState.playerDefense() }}</span>
-          <span class="readout-chip">🎯 Crit {{ gameState.playerCritChance() }}%</span>
-          <span
-            class="readout-chip combo-chip"
-            [class.warm]="comboLevel() === 'warm'"
-            [class.hot]="comboLevel() === 'hot'"
-            [class.fever]="comboLevel() === 'fever'"
-            [class.ultra]="comboLevel() === 'ultra'"
-          >{{ player().combo > 0 ? '🔥 ' + player().combo + 'x Combo' : '○ Combo' }}</span>
-          @if (player().riposteCharges > 0) {
-            <span class="readout-chip riposte-chip">⚡ Riposte {{ player().riposteCharges }}x</span>
-          }
-          @if (player().statusEffect; as fx) {
-            <span class="readout-chip status-chip" [class.burn]="fx.type === 'burn'" [class.poison]="fx.type === 'poison'">
-              {{ fx.type === 'burn' ? '🔥' : '☠' }} {{ fx.rounds }}rd
-            </span>
-          }
-        </div>
-      </section>
-
-      <!-- Dashboard stat chips -->
-      <section class="dashboard-chips" aria-label="Run Werte">
-        @for (stat of quickStats(); track stat.label) {
-          <article class="dashboard-chip">
-            <span>{{ stat.label }}</span>
-            <strong>{{ stat.value }}</strong>
-            <small>{{ stat.detail }}</small>
-          </article>
-        }
-      </section>
-
-      <!-- Tools: weather + boss countdown + controls -->
-      <div class="header-tools" aria-label="Run tools">
-        <div class="boss-countdown" [class]="bossCountdownClass()">
-          <span class="boss-icon">🐉</span>
-          <div>
-            <small>Boss</small>
-            <strong>in {{ bossCountdown() === 1 ? 'dieser Etappe' : bossCountdown() + ' Etappen' }}</strong>
+          <div class="readout-chips">
+            <span class="readout-chip"><i>⚔</i>{{ gameState.playerAttack() }}</span>
+            <span class="readout-chip"><i>🛡</i>{{ gameState.playerDefense() }}</span>
+            <span class="readout-chip"><i>🎯</i>{{ gameState.playerCritChance() }}%</span>
+            <span
+              class="readout-chip combo-chip"
+              [class.warm]="comboLevel() === 'warm'"
+              [class.hot]="comboLevel() === 'hot'"
+              [class.fever]="comboLevel() === 'fever'"
+              [class.ultra]="comboLevel() === 'ultra'"
+            >{{ player().combo > 0 ? '🔥' + player().combo + 'x' : '○' }}</span>
+            @if (player().riposteCharges > 0) {
+              <span class="readout-chip riposte-chip"><i>⚡</i>{{ player().riposteCharges }}x</span>
+            }
+            @if (player().statusEffect; as fx) {
+              <span class="readout-chip status-chip" [class.burn]="fx.type === 'burn'" [class.poison]="fx.type === 'poison'">
+                {{ fx.type === 'burn' ? '🔥' : '☠' }} {{ fx.rounds }}rd
+              </span>
+            }
           </div>
-        </div>
+        </section>
 
-        <div class="weather-switch" [class]="weatherColorFor(path.weather())" aria-label="Wetter">
-          @for (mode of weatherOptions; track mode) {
-            <button
-              type="button"
-              [class.active]="path.weather() === mode"
-              [title]="weatherLabelFor(mode)"
-              (click)="setWeather(mode)"
-            >
-              {{ weatherLabelFor(mode) }}
-            </button>
+        <section class="ledger" aria-label="Run Werte">
+          @for (stat of quickStats(); track stat.label) {
+            <article class="ledger-cell">
+              <span class="ledger-label">{{ stat.label }}</span>
+              <strong class="ledger-value">{{ stat.value }}</strong>
+              <small class="ledger-detail">{{ stat.detail }}</small>
+            </article>
           }
-        </div>
-
-        <div class="tool-btns">
-          <button
-            type="button"
-            class="tool-btn save-btn"
-            [title]="savedAt() ? 'Gespeichert ' + savedAt() : 'Speichern'"
-            (click)="saveGame()"
-          >
-            💾 @if (savedAt()) { <span class="save-time">{{ savedAt() }}</span> }
-          </button>
-          <button
-            type="button"
-            class="tool-btn manual-button"
-            title="Handbuch"
-            (click)="handbookOpen.set(!handbookOpen())"
-          >
-            📖
-          </button>
-          <button type="button" class="tool-btn reset-btn" title="Neustart" (click)="resetRun()">
-            ↺
-          </button>
-        </div>
+        </section>
       </div>
     </header>
 
@@ -170,9 +181,8 @@
           <div class="zone-header">
             <div>
               <p>🎒 Versorgung</p>
-              <strong>{{ player().gold }} 💰 Gold</strong>
+              <strong>Vorrat &amp; Shop</strong>
             </div>
-            <span class="zone-badge">💎 {{ player().dragonShards }} Shards</span>
           </div>
           <app-inventory-panel />
         </section>
