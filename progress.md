@@ -1,0 +1,40 @@
+Original prompt: Refactor nochmal das Porgramm mit besonderer Hinsicht auf diese vorgaben, und verbessere das core gameplay :)
+
+- Started a targeted refactor around gameplay flow, weather presentation, and minigame overlay readability.
+- Missing requested external skills in this session; using the local dragon-rpg workflow as fallback.
+- Refactored combat pacing: combo attacks ramp harder, the special now behaves like a finisher, heal grants a short guard window, and guard restores mana / cooldown tempo.
+- Expanded route rewards: rest nodes can reset cooldowns and find potions, event nodes now roll varied recovery/reward outcomes, and minigames scale better with depth.
+- Improved presentation: shell/path weather layers now cover ash, storm, and glow; ambient sparks are stronger; minigame card uses more transparency.
+- Verification: `ng build` passes, `ng test --watch=false` passes.
+- Note: production build still emits a warning that `src/app/pages/game/game-page.scss` exceeds the warning budget, but it is below the updated error threshold and does not block the build.
+- Follow-up request handled: root ember/spark effect is now global-only again; path weather effects are confined to the green expedition card.
+- Path card UI/UX overhaul: converted the route into a horizontal timeline with explicit viewport scrolling, centered visuals, larger branch cards, clearer branch status pills, and stronger active-segment emphasis.
+- Expanded visible route window from 3 to 5 segments so the expedition card reads more like a navigable journey.
+- Verification after card redesign: `ng build` passes and `ng test --watch=false` passes.
+- Note: production build now emits a non-blocking warning that `src/app/features/path/path-board.scss` is slightly over the warning budget (8.12 kB vs 8 kB).
+- Follow-up fix: rebuilt the expedition card mobile-first after the previous layout broke visibility and responsiveness.
+- The path viewport now scrolls safely in both axes when needed, the segment cards size from small screens upward, and branch stacks remain fully vertically reachable instead of clipping after the first visible option.
+- Verification after the mobile-first rebuild: `ng build` passes and `ng test --watch=false` passes.
+- Current note: `path-board.scss` still triggers a non-blocking warning budget overage (8.50 kB vs 8 kB).
+- Tightened the selectable branch cards further so three cards fit more comfortably per segment column without forcing unnecessary vertical scrolling.
+- Adjusted route width density so depth 1-3 fit more naturally in the green card viewport, while keeping horizontal scrolling for deeper previews.
+- Restored sprite-sheet animation behavior for branch enemies by removing the local path-card override that exposed the full sprite strip and by adding a stepping frame animation.
+- Verification after compact-card and sprite fixes: `ng build` passes and `ng test --watch=false` passes.
+- Added auto-centering for the active route depth inside the green card viewport whenever the current depth changes.
+- Synced the monster-path branch sprite motion with the newer combat sprite behavior so it stays centered and hovers in place while still animating through frames.
+- Verification after active-depth focus and sprite-motion sync: `ng build` passes and `ng test --watch=false` passes.
+- Follow-up improvement round completed: added adaptive route generation for low HP, low Mana/cooldown, and weak boss-prep states.
+- Added route advice chips, branch scoring, route-synergy rewards for three different route types, and a cockpit focus directive.
+- Added combat advisor readouts for incoming damage and next-step tactical advice, plus weather/status/skill aura layers around the Pixi combat stage.
+- Extended `window.render_game_to_text` telemetry with directive, route synergy, and advisor data.
+- Verification: `npx ng test --watch=false` passes (13 files, 52 tests), `npm run build` passes, Playwright smoke passes for desktop click flow and mobile tab flow.
+- Release blocker: `D:\Meine Projekte\dragon-quest-rpg` is not a Git checkout and no matching GitHub repo/remote was found through `gh`; push to `develop` and GitHub Pages release could not be performed from this folder.
+- Improvement Plan 4 completed: added a 13-point todo in `docs/improvement-plan-4.md` and worked through it.
+- Added Riposte combat flow: guarded hits can build Riposte charges, perfect guards are tracked, attacks and Drachenklaue consume charges for bonus damage.
+- Added enemy phase pressure and Overkill rewards: elite/boss low-HP phases hit harder and oversized kills now track overkill stats with extra mana/gold/shard rewards.
+- Updated CombatPanel and CombatStage with Riposte, phase, incoming, and Overkill readouts plus visible Riposte/Enrage aura layers.
+- Added path biomes (`ember`, `grove`, `ruin`, `frost`, `storm`, `sanctum`) to generated and hydrated branches, with PathBoard biome chips and visual edge accents.
+- Extended cockpit, handbook, outcome stats, and `window.render_game_to_text` with Riposte, perfect guard, Overkill, and biome telemetry.
+- Added focused tests for combat rules, combat advisor, combat service flows, path biome hydration, and game-page telemetry.
+- Verification: `npx ng test --watch=false` passes (13 files, 60 tests), `npm run build` passes, Playwright smoke passes on `http://127.0.0.1:4200` for desktop load/weather/branch flow and mobile map tab.
+- Browser QA note: Browser plugin was not available, so regular Playwright was used. Headless Chromium emitted WebGL GPU-stall performance warnings only; no app console errors were observed.

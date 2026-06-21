@@ -1,0 +1,1784 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Pixel Quest - Erweitert mit Casino</title>
+    <style>
+        /* ========== GLOBALE STYLES ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+        }
+
+        body {
+            background: #0a0c12;
+            font-family: 'Courier New', 'VT323', monospace;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .game-container {
+            width: 1400px;
+            max-width: 98vw;
+            height: 95vh;
+            max-height: 900px;
+            background: linear-gradient(135deg, #1a1d2b 0%, #0f1119 100%);
+            border: 4px solid #d4af37;
+            border-radius: 12px;
+            box-shadow: 0 0 0 2px #2a2418, 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .game-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 2px, transparent 2px, transparent 6px);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Stats Bereich */
+        .top-stats {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: #0a0c14;
+            border-bottom: 3px solid #d4af37;
+            gap: 20px;
+            z-index: 5;
+        }
+
+        .character-stats {
+            display: flex;
+            gap: 20px;
+            flex: 1;
+            background: #14161f;
+            border: 2px solid #4a3f2c;
+            border-radius: 8px;
+            padding: 10px 15px;
+            position: relative;
+        }
+
+        .pixel-character {
+            width: 80px;
+            height: 80px;
+            background: #1e212e;
+            border: 2px solid #d4af37;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            transition: all 0.1s;
+            position: relative;
+        }
+
+        .pixel-character::before,
+        .pixel-character::after {
+            position: absolute;
+            font-size: 14px;
+            background: #0a0c14;
+            border-radius: 12px;
+            padding: 2px 6px;
+            border: 1px solid #d4af37;
+        }
+        .pixel-character::before {
+            content: attr(data-weapon);
+            top: -12px;
+            left: -12px;
+        }
+        .pixel-character::after {
+            content: attr(data-armor);
+            bottom: -12px;
+            right: -12px;
+        }
+        .ring-symbol {
+            position: absolute;
+            bottom: -12px;
+            left: -12px;
+            font-size: 14px;
+            background: #0a0c14;
+            border-radius: 12px;
+            padding: 2px 6px;
+            border: 1px solid #d4af37;
+        }
+        .pet-icon {
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            font-size: 24px;
+            filter: drop-shadow(0 0 2px #d4af37);
+        }
+
+        .pixel-character.hit { animation: hitShake 0.3s; background: #8b3a3a; }
+        .pixel-character.heal { animation: healGlow 0.3s; }
+        .pixel-character.critical { animation: criticalPulse 0.3s; background: #ff9800; }
+        .pixel-character.find { animation: findGlow 0.5s; background: #d4af37; }
+
+        @keyframes hitShake {
+            0%,100%{transform:translateX(0)}
+            25%{transform:translateX(-5px) rotate(-5deg)}
+            75%{transform:translateX(5px) rotate(5deg)}
+        }
+        @keyframes healGlow {
+            0%,100%{text-shadow:0 0 0 #7ec850;background:#1e212e}
+            50%{text-shadow:0 0 20px #7ec850;background:#2a4a2a}
+        }
+        @keyframes criticalPulse {
+            0%,100%{transform:scale(1);text-shadow:0 0 0 #ff9800}
+            50%{transform:scale(1.2);text-shadow:0 0 20px #ff9800}
+        }
+        @keyframes findGlow {
+            0%{transform:scale(1);background:#1e212e}
+            50%{transform:scale(1.1);background:#ffd966;text-shadow:0 0 10px gold}
+            100%{transform:scale(1);background:#1e212e}
+        }
+
+        .stat-details { flex: 1; }
+        .stat-details h3 { color: #d4af37; font-size: 14px; margin-bottom: 5px; letter-spacing: 1px; }
+        .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; font-size: 11px; margin: 5px 0; }
+        .stat-grid span { color: #b8c7e7; }
+        .stat-value { color: #7ec850; font-weight: bold; }
+        .hp-bar-pixel, .mana-bar-pixel {
+            width: 100%; height: 10px; background: #2a2418; margin: 5px 0; border-radius: 3px; overflow: hidden;
+        }
+        .mana-bar-pixel { height: 6px; }
+        .hp-fill-pixel { height: 100%; background: #7ec850; transition: width 0.2s; }
+        .mana-fill-pixel { height: 100%; background: #3a6ea5; transition: width 0.2s; }
+
+        /* Achievement Toast (fest oben rechts) */
+        .achievement-toast {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: linear-gradient(135deg, #d4af37, #ff9800);
+            color: #0a0c12;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            animation: slideInRight 0.3s ease-out;
+            z-index: 2000;
+            font-size: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Pfad-Bereich */
+        .path-container {
+            flex: 1;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            min-height: 0;
+        }
+        .path-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            min-width: min-content;
+            padding: 10px;
+        }
+        .segment-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        .segment-title {
+            font-size: 12px;
+            color: #d4af37;
+            background: #0a0c14;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+            border: 1px solid #4a3f2c;
+            white-space: nowrap;
+        }
+        .branch-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .branch-card {
+            background: #0f1119;
+            border: 2px solid #4a3f2c;
+            border-radius: 12px;
+            padding: 12px 20px;
+            min-width: 200px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .branch-card.available { border-color: #d4af37; background: #1a1d2b; }
+        .branch-card.available:hover { transform: translateY(-3px); border-color: #ff9800; background: #2a2418; }
+        .branch-card.completed { border-color: #7ec850; background: #1a2a1a; opacity: 0.8; cursor: default; }
+        .branch-card.locked { opacity: 0.4; cursor: not-allowed; }
+        .branch-icon { font-size: 32px; margin-bottom: 8px; }
+        .branch-name { font-size: 13px; font-weight: bold; color: #d4af37; }
+        .branch-type { font-size: 10px; color: #b8c7e7; margin-top: 5px; }
+        .connector-arrow { font-size: 28px; color: #4a3f2c; margin: 0 5px; }
+
+        /* Event-Log */
+        .event-box {
+            background: #0a0c14;
+            border: 3px solid #d4af37;
+            border-radius: 8px;
+            margin: 8px;
+            height: 150px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .event-header {
+            background: #1a1d2b;
+            padding: 6px 12px;
+            border-bottom: 2px solid #d4af37;
+            color: #d4af37;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .event-log {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+            font-size: 12px;
+        }
+        .event-log::-webkit-scrollbar, .modal-body::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .event-log::-webkit-scrollbar-track, .modal-body::-webkit-scrollbar-track {
+            background: #0a0c14;
+        }
+        .event-log::-webkit-scrollbar-thumb, .modal-body::-webkit-scrollbar-thumb {
+            background: #d4af37;
+            border-radius: 4px;
+        }
+        .event-message {
+            padding: 4px 0 4px 10px;
+            border-left: 3px solid #d4af37;
+            margin: 3px 0;
+            color: #e0e0e0;
+            animation: fadeIn 0.2s;
+        }
+        .event-message.damage { border-left-color: #ff5252; color: #ffb3b3; }
+        .event-message.heal { border-left-color: #7ec850; color: #b8f0a0; }
+        .event-message.critical { border-left-color: #ff9800; color: #ffcc80; font-weight: bold; }
+        .event-message.event { border-left-color: #9c27b0; color: #e1b0ff; }
+        .event-message.achievement { border-left-color: #d4af37; color: #ffd966; font-weight: bold; }
+
+        /* Action Bar */
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px;
+            background: #0a0c14;
+            border-top: 2px solid #4a3f2c;
+        }
+        .action-left, .action-right {
+            display: flex;
+            gap: 10px;
+        }
+        .pixel-btn {
+            background: linear-gradient(180deg, #2a2418 0%, #1a1410 100%);
+            border: 2px solid #4a3f2c;
+            color: #d4af37;
+            padding: 8px 16px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.05s linear;
+            text-transform: uppercase;
+        }
+        .pixel-btn:hover:not(:disabled) { background: #3a2e20; transform: translateY(-2px); border-color: #d4af37; }
+        .pixel-btn:active:not(:disabled) { transform: translateY(1px); }
+        .pixel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .attack-btn { border-left-color: #ff5252; border-right-color: #ff5252; }
+        .skill-btn { border-left-color: #ff9800; border-right-color: #ff9800; }
+
+        /* Bottom Panels */
+        .bottom-panels {
+            display: flex;
+            gap: 12px;
+            padding: 8px 12px;
+            background: #05070c;
+            border-top: 2px solid #2a2418;
+        }
+        .compact-panel {
+            flex: 1;
+            background: #0a0c14;
+            border: 1px solid #d4af37;
+            border-radius: 6px;
+            padding: 6px 10px;
+        }
+        .compact-panel h4 {
+            color: #ffd966;
+            font-size: 11px;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .compact-items {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-size: 11px;
+        }
+        .compact-item {
+            background: #1e212e;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.1s;
+            color: #e0e0e0;
+            border: 1px solid #4a3f2c;
+        }
+        .compact-item:hover { background: #3a2e20; border-color: #d4af37; color: #ffd966; }
+        .gold-value { color: #ffd966; font-weight: bold; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        .path-container::-webkit-scrollbar { height: 8px; }
+        .path-container::-webkit-scrollbar-track { background: #0a0c14; }
+        .path-container::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 4px; }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #0f1119;
+            border: 4px solid #d4af37;
+            display: flex;
+            flex-direction: column;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+        }
+        .modal-header {
+            padding: 15px 20px;
+            border-bottom: 2px solid #d4af37;
+            text-align: center;
+        }
+        .modal-header h2 { color: #ffd966; margin: 0; }
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            color: #ffd966;
+        }
+        .modal-footer {
+            padding: 12px;
+            border-top: 2px solid #4a3f2c;
+            text-align: center;
+        }
+        .close-btn {
+            background: #2a2418;
+            border: 1px solid #d4af37;
+            color: #ffd966;
+            padding: 6px 20px;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        .item-list { display: flex; flex-direction: column; gap: 8px; }
+        .item-entry {
+            background: #1e212e;
+            border: 1px solid #4a3f2c;
+            border-radius: 6px;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .item-stats { font-size: 11px; color: #b8c7e7; }
+        .equip-btn {
+            background: #2a2418;
+            border: 1px solid #d4af37;
+            color: #ffd966;
+            padding: 4px 12px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .equip-btn.active { background: #7ec850; color: #0a0c12; border-color: #7ec850; }
+        .choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+        .choice-card {
+            background: #1e212e;
+            border: 2px solid #4a3f2c;
+            padding: 12px;
+            cursor: pointer;
+            transition: 0.1s;
+            color: #e0e0e0;
+            text-align: center;
+        }
+        .choice-card:hover { border-color: #d4af37; background: #2a2418; color: #ffd966; transform: scale(1.02); }
+
+        /* Casino Spiele */
+        .dice-area {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .dice {
+            display: inline-block;
+            font-size: 60px;
+            background: #1e212e;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 10px;
+            width: 100px;
+            border: 2px solid #d4af37;
+        }
+        .slot-machine {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .slot-reel {
+            font-size: 48px;
+            background: #1e212e;
+            padding: 20px;
+            border-radius: 12px;
+            width: 80px;
+            text-align: center;
+            border: 2px solid #d4af37;
+        }
+        .bet-input {
+            width: 100px;
+            background: #1e212e;
+            border: 1px solid #d4af37;
+            color: #ffd966;
+            padding: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <div class="top-stats">
+        <div class="character-stats">
+            <div class="pixel-character" id="player-pixel" data-weapon="" data-armor="">⚔️<div class="ring-symbol" id="ring-symbol"></div><div class="pet-icon" id="pet-icon"></div></div>
+            <div class="stat-details">
+                <h3>⚔️ HELD</h3>
+                <div class="stat-grid">
+                    <span>LVL <span id="player-level" class="stat-value">1</span></span>
+                    <span>❤️ <span id="player-hp" class="stat-value">100</span>/<span id="player-max-hp">100</span></span>
+                    <span>⭐ <span id="player-crit" class="stat-value">15</span>%</span>
+                </div>
+                <div class="hp-bar-pixel"><div class="hp-fill-pixel" id="player-hp-fill" style="width: 100%"></div></div>
+                <div class="stat-grid">
+                    <span>⚔️ <span id="player-attack" class="stat-value">25</span></span>
+                    <span>🛡️ <span id="player-defense" class="stat-value">10</span></span>
+                    <span>✨ <span id="player-xp">0</span>/<span id="next-xp">100</span></span>
+                </div>
+                <div class="stat-grid">
+                    <span>🍀 Glück <span id="player-luck" class="stat-value">5</span></span>
+                    <span>💙 Mana <span id="player-mana" class="stat-value">100</span>/<span id="player-max-mana">100</span></span>
+                </div>
+                <div class="mana-bar-pixel"><div class="mana-fill-pixel" id="player-mana-fill" style="width: 100%"></div></div>
+                <div class="stat-grid">
+                    <span>🐾 Haustier</span>
+                    <span id="pet-name" class="stat-value">Keins</span>
+                </div>
+            </div>
+        </div>
+        <div class="character-stats">
+            <div class="stat-details" style="text-align: right;">
+                <h3>🐉 GEGNER</h3>
+                <div class="stat-grid">
+                    <span id="enemy-name">-</span>
+                    <span>❤️ <span id="enemy-hp" class="stat-value">0</span>/<span id="enemy-max-hp">0</span></span>
+                    <span>⚔️ <span id="enemy-attack" class="stat-value">0</span></span>
+                </div>
+                <div class="hp-bar-pixel"><div class="hp-fill-pixel" id="enemy-hp-fill" style="width: 0%"></div></div>
+                <div class="stat-grid">
+                    <span>💰 <span id="enemy-gold" class="stat-value">0</span></span>
+                </div>
+            </div>
+            <div class="pixel-character" id="enemy-pixel">❓</div>
+        </div>
+    </div>
+
+    <div class="path-container" id="path-container"><div class="path-wrapper" id="path-wrapper"></div></div>
+    <div class="event-box"><div class="event-header">📜 EREIGNIS-LOG</div><div class="event-log" id="event-log"><div class="event-message">✨ Willkommen, Held! Wähle deinen Pfad...</div></div></div>
+
+    <div class="action-bar">
+        <div class="action-left">
+            <button class="pixel-btn attack-btn" id="attack-btn">⚔️ ANGRIFF</button>
+            <button class="pixel-btn skill-btn" id="skill-btn">🌀 DRACHENKLAUE (30💙)</button>
+            <button class="pixel-btn heal-btn" id="heal-btn">💚 HEILEN (20💙)</button>
+        </div>
+        <div class="action-right">
+            <button class="pixel-btn" id="handbook-btn">📖 HANDBUCH</button>
+            <button class="pixel-btn" id="reset-btn">🔄 NEUSTART</button>
+            <button class="pixel-btn" id="save-btn">💾 SPEICHERN</button>
+            <button class="pixel-btn" id="load-btn">📂 LADEN</button>
+        </div>
+    </div>
+
+    <div class="bottom-panels">
+        <div class="compact-panel">
+            <h4>🎒 INVENTAR <span>💰 <span id="gold" class="gold-value">150</span> Gold</span></h4>
+            <div class="compact-items">
+                <div class="compact-item" id="use-potion">💊 Heiltrank <span id="potion-count">3</span>x</div>
+                <div class="compact-item" id="show-equipment">🛡️ Ausrüstung</div>
+                <div class="compact-item" id="show-pets">🐾 Haustiere</div>
+                <div class="compact-item" id="show-achievements">🏆 Erfolge</div>
+                <div class="compact-item" id="show-stats">📊 Statistik</div>
+                <div class="compact-item" id="show-journal">📔 Tagebuch</div>
+                <div class="compact-item" id="show-casino">🎰 Casino</div>
+            </div>
+        </div>
+        <div class="compact-panel">
+            <h4>🏪 SHOP</h4>
+            <div class="compact-items">
+                <div class="compact-item" id="buy-potion">💊 Trank (50💰)</div>
+                <div class="compact-item" id="buy-attack">⚔️ +5 Angriff (100💰)</div>
+                <div class="compact-item" id="buy-defense">🛡️ +3 Def (100💰)</div>
+                <div class="compact-item" id="buy-crit">⭐ +5% Krit (150💰)</div>
+                <div class="compact-item" id="buy-luck">🍀 +3 Glück (200💰)</div>
+                <div class="compact-item" id="buy-mana">💙 +10 Max-Mana (150💰)</div>
+                <div class="compact-item" id="buy-pet">🐣 Zufalls-Haustier (300💰)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+<div id="levelup-modal" class="modal"><div class="modal-content"><div class="modal-header"><h2>🌟 LEVEL UP!</h2></div><div class="modal-body"><div id="level-choices" class="choice-grid"></div></div></div></div>
+<div id="equipment-modal" class="modal"><div class="modal-content"><div class="modal-header"><h2>🛡️ AUSRÜSTUNG</h2></div><div class="modal-body" id="equipment-list"></div><div class="modal-footer"><button class="close-btn" onclick="closeModal('equipment-modal')">SCHLIESSEN</button></div></div></div>
+<div id="pets-modal" class="modal"><div class="modal-content"><div class="modal-header"><h2>🐾 HAUSTIERE</h2></div><div class="modal-body" id="pets-list"></div><div class="modal-footer"><button class="close-btn" onclick="closeModal('pets-modal')">SCHLIESSEN</button></div></div></div>
+<div id="achievements-modal" class="modal"><div class="modal-content"><div class="modal-header"><h2>🏆 ERFOLGE</h2></div><div class="modal-body" id="achievements-list"></div><div class="modal-footer"><button class="close-btn" onclick="closeModal('achievements-modal')">SCHLIESSEN</button></div></div></div>
+<div id="handbook-modal" class="modal"><div class="modal-content"><div class="modal-header"><h2>📖 HANDBUCH</h2></div><div class="modal-body" id="handbook-text"></div><div class="modal-footer"><button class="close-btn" onclick="closeModal('handbook-modal')">SCHLIESSEN</button></div></div></div>
+<div id="journal-modal" class="modal"><div class="modal-content"><div class="modal-header"><h2>📔 TAGEBUCH</h2></div><div class="modal-body" id="journal-text"></div><div class="modal-footer"><button class="close-btn" onclick="closeModal('journal-modal')">SCHLIESSEN</button></div></div></div>
+<div id="stats-modal" class="modal"><div class="modal-content"><div class="modal-header"><h2>📊 STATISTIK</h2></div><div class="modal-body" id="stats-text"></div><div class="modal-footer"><button class="close-btn" onclick="closeModal('stats-modal')">SCHLIESSEN</button></div></div></div>
+<div id="victory-modal" class="modal"><div class="modal-content"><div class="modal-header"><h2>🏆 SIEG! 🏆</h2></div><div class="modal-body" id="victory-stats"></div><div class="modal-footer"><div id="victory-choices" class="choice-grid"></div></div></div></div>
+<div id="casino-modal" class="modal"><div class="modal-content"><div class="modal-header"><h2>🎰 CASINO</h2></div><div class="modal-body" id="casino-body"></div><div class="modal-footer"><button class="close-btn" onclick="closeModal('casino-modal')">SCHLIESSEN</button></div></div></div>
+
+<script>
+    // ================================ HILFSFUNKTIONEN ================================
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    function showAchievementToast(name) {
+        const toast = document.createElement('div');
+        toast.className = 'achievement-toast';
+        toast.innerHTML = `🏆 ERFOLG! ${name} 🏆`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    // ================================ SOUND MANAGER ================================
+    class SoundManager {
+        constructor() { this.audioCtx = null; this.enabled = true; }
+        init() { if (!this.audioCtx && this.enabled) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        _playTone(freq, gainVal, duration) {
+            if (!this.audioCtx) return;
+            const osc = this.audioCtx.createOscillator();
+            const gain = this.audioCtx.createGain();
+            osc.connect(gain); gain.connect(this.audioCtx.destination);
+            osc.frequency.value = freq; gain.gain.value = gainVal;
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.00001, this.audioCtx.currentTime + duration);
+            osc.stop(this.audioCtx.currentTime + duration);
+        }
+        _playSweep(startFreq, endFreq, gainVal, duration) {
+            if (!this.audioCtx) return;
+            const osc = this.audioCtx.createOscillator();
+            const gain = this.audioCtx.createGain();
+            osc.connect(gain); gain.connect(this.audioCtx.destination);
+            osc.frequency.value = startFreq; gain.gain.value = gainVal;
+            osc.start();
+            osc.frequency.exponentialRampToValueAtTime(endFreq, this.audioCtx.currentTime + duration);
+            gain.gain.exponentialRampToValueAtTime(0.00001, this.audioCtx.currentTime + duration);
+            osc.stop(this.audioCtx.currentTime + duration);
+        }
+        playSword() { this._playTone(800, 0.2, 0.2); }
+        playHit() { this._playTone(200, 0.3, 0.15); }
+        playHeal() { this._playSweep(440, 880, 0.2, 0.3); }
+        playLevel() { [523, 659, 784].forEach((f, i) => setTimeout(() => this._playTone(f, 0.15, 0.25), i * 120)); }
+        playAchievement() { [659, 784, 987].forEach((f, i) => setTimeout(() => this._playTone(f, 0.1, 0.2), i * 100)); }
+        playFind() { [523, 659, 784, 987].forEach((f, i) => setTimeout(() => this._playTone(f, 0.1, 0.2), i * 80)); }
+        toggle() { this.enabled = !this.enabled; if (!this.enabled && this.audioCtx) this.audioCtx.close(); this.audioCtx = null; }
+    }
+    const sound = new SoundManager();
+
+    // ================================ HAUSTIERE ================================
+    const PETS = [
+        { id: "funkel", name: "Funkel", icon: "✨", bonusType: "attack", bonusValue: 8, desc: "+8 Angriff" },
+        { id: "krall", name: "Krall", icon: "🐾", bonusType: "defense", bonusValue: 6, desc: "+6 Verteidigung" },
+        { id: "glibber", name: "Glibber", icon: "💧", bonusType: "crit", bonusValue: 10, desc: "+10% Krit-Chance" },
+        { id: "feder", name: "Feder", icon: "🪶", bonusType: "manaReg", bonusValue: 5, desc: "+5 Mana pro Runde" },
+        { id: "schimmer", name: "Schimmer", icon: "🌟", bonusType: "luck", bonusValue: 5, desc: "+5 Glück" }
+    ];
+    let ownedPets = [];
+    let activePet = null;
+
+    function addPet(petId) {
+        if (!ownedPets.includes(petId)) {
+            ownedPets.push(petId);
+            addLog(`🐾 Neues Haustier erhalten: ${PETS.find(p=>p.id===petId).name}!`, 'event');
+            addJournalEntry(`Haustier erhalten: ${PETS.find(p=>p.id===petId).name}`);
+            if (!activePet) setActivePet(petId);
+            updatePetUI();
+        }
+    }
+
+    function setActivePet(petId) {
+        activePet = PETS.find(p => p.id === petId);
+        if (activePet) {
+            addLog(`🐾 ${activePet.name} ist jetzt dein aktives Haustier!`, 'heal');
+            addJournalEntry(`Haustier gewechselt: ${activePet.name}`);
+            document.getElementById('pet-icon').textContent = activePet.icon;
+            document.getElementById('pet-name').textContent = activePet.name;
+            if (player) player.updateUI();
+        } else {
+            activePet = null;
+            document.getElementById('pet-icon').textContent = '';
+            document.getElementById('pet-name').textContent = 'Keins';
+            if (player) player.updateUI();
+        }
+    }
+
+    function updatePetUI() {
+        const container = document.getElementById('pets-list');
+        if (!container) return;
+        container.innerHTML = '<div class="item-list"></div>';
+        const list = container.querySelector('.item-list');
+        PETS.forEach(pet => {
+            const owned = ownedPets.includes(pet.id);
+            const active = activePet && activePet.id === pet.id;
+            const div = document.createElement('div');
+            div.className = 'item-entry';
+            div.innerHTML = `
+                <div><strong>${pet.icon} ${pet.name}</strong><br><small>${pet.desc}</small></div>
+                <div>
+                    ${owned ? (active ? `<button class="equip-btn active" disabled>Aktiv</button>` : `<button class="equip-btn" data-id="${pet.id}">Aktivieren</button>`) : `<span style="color:#ff5252">🔒 Nicht besessen</span>`}
+                </div>
+            `;
+            list.appendChild(div);
+        });
+        list.querySelectorAll('.equip-btn[data-id]').forEach(btn => {
+            btn.onclick = () => setActivePet(btn.dataset.id);
+        });
+    }
+
+    // ================================ AUSRÜSTUNG ================================
+    let allItems = [];
+
+    function addItem(item) {
+        if (!allItems.find(i => i.id === item.id)) {
+            allItems.push(item);
+            addLog(`✨ Neuer Gegenstand gefunden: ${item.name}!`, 'event');
+            addJournalEntry(`Gegenstand gefunden: ${item.name}`);
+            document.getElementById('player-pixel').classList.add('find');
+            setTimeout(() => document.getElementById('player-pixel').classList.remove('find'), 500);
+            sound.playFind();
+        }
+    }
+
+    function updateEquipmentUI() {
+        const container = document.getElementById('equipment-list');
+        if (!container) return;
+        container.innerHTML = '<div class="item-list"></div>';
+        const list = container.querySelector('.item-list');
+        allItems.forEach(item => {
+            const isEquipped = (item.type === 'weapon' && player.equippedWeapon?.id === item.id) ||
+                               (item.type === 'armor' && player.equippedArmor?.id === item.id) ||
+                               (item.type === 'ring' && player.equippedRing?.id === item.id);
+            const stats = `⚔️${item.attackBonus>0?'+'+item.attackBonus:item.attackBonus} 🛡️${item.defenseBonus>0?'+'+item.defenseBonus:item.defenseBonus} ⭐${item.critBonus>0?'+'+item.critBonus:item.critBonus} 💙${item.manaBonus>0?'+'+item.manaBonus:item.manaBonus}`;
+            const div = document.createElement('div');
+            div.className = 'item-entry';
+            div.innerHTML = `
+                <div><strong>${item.name}</strong><br><span class="item-stats">${stats}</span><br><small>${item.desc}</small></div>
+                <div>
+                    ${!isEquipped ? `<button class="equip-btn" data-id="${item.id}">Ausrüsten</button>` : `<button class="equip-btn active" disabled>Ausgerüstet</button><button class="equip-btn" data-id="${item.id}" data-unequip="true">Ablegen</button>`}
+                </div>
+            `;
+            list.appendChild(div);
+        });
+        list.querySelectorAll('.equip-btn').forEach(btn => {
+            const id = btn.dataset.id;
+            const item = allItems.find(i => i.id == id);
+            if (!item) return;
+            if (btn.dataset.unequip) {
+                btn.onclick = () => {
+                    if (item.type === 'weapon') player.equippedWeapon = null;
+                    else if (item.type === 'armor') player.equippedArmor = null;
+                    else if (item.type === 'ring') player.equippedRing = null;
+                    player.updateUI();
+                    addLog(`⚔️ ${item.name} abgelegt.`, 'normal');
+                    updateEquipmentUI();
+                    updateFrameSymbols();
+                };
+            } else {
+                btn.onclick = () => {
+                    if (item.type === 'weapon') player.equippedWeapon = item;
+                    else if (item.type === 'armor') player.equippedArmor = item;
+                    else if (item.type === 'ring') player.equippedRing = item;
+                    player.updateUI();
+                    addLog(`🛡️ ${item.name} ausgerüstet!`, 'heal');
+                    updateEquipmentUI();
+                    updateFrameSymbols();
+                };
+            }
+        });
+    }
+
+    function updateFrameSymbols() {
+        const pixel = document.getElementById('player-pixel');
+        pixel.setAttribute('data-weapon', player.equippedWeapon ? (player.equippedWeapon.attackBonus > 0 ? '⚔️' : (player.equippedWeapon.attackBonus < 0 ? '💔' : '🗡️')) : '');
+        pixel.setAttribute('data-armor', player.equippedArmor ? (player.equippedArmor.defenseBonus > 0 ? '🛡️' : (player.equippedArmor.defenseBonus < 0 ? '💢' : '🧥')) : '');
+        const ringSym = document.getElementById('ring-symbol');
+        ringSym.textContent = player.equippedRing ? (player.equippedRing.critBonus > 0 ? '⭐' : (player.equippedRing.critBonus < 0 ? '🌀' : '💍')) : '';
+    }
+
+    // ================================ TAGEBUCH & ACHIEVEMENTS ================================
+    let journalEntries = [];
+
+    function addJournalEntry(text) {
+        const time = new Date().toLocaleTimeString();
+        journalEntries.unshift(`[${time}] ${text}`);
+        if (journalEntries.length > 40) journalEntries.pop();
+    }
+
+    let achievements = {
+        firstBlood: { name: "🏆 Erstes Blut", desc: "Besiege deinen ersten Gegner", unlocked: false },
+        level5: { name: "⭐ Aufsteiger", desc: "Erreiche Level 5", unlocked: false },
+        level10: { name: "🌟 Meister", desc: "Erreiche Level 10", unlocked: false },
+        rich: { name: "💰 Reich", desc: "Besitze 1000 Gold", unlocked: false },
+        potionMaster: { name: "💊 Apotheker", desc: "Benutze 10 Heiltränke", unlocked: false, count: 0 },
+        criticalMaster: { name: "⚡ Kritischer Treffer", desc: "Land 20 kritische Treffer", unlocked: false, count: 0 },
+        eliteSlayer: { name: "👹 Elite-Jäger", desc: "Besiege 3 Elite-Gegner", unlocked: false, count: 0 },
+        pathfinder: { name: "🛤️ Pfadfinder", desc: "Schließe 10 Pfade ab", unlocked: false, count: 0 },
+        petCollector: { name: "🐾 Tierfreund", desc: "Habe ein Haustier", unlocked: false },
+        lucky: { name: "🍀 Glückspilz", desc: "Erreiche 20 Glück", unlocked: false },
+        manaMaster: { name: "💙 Manameister", desc: "Nutze 1000 Mana insgesamt", unlocked: false, count: 0 },
+        miniGameMaster: { name: "🎮 Spielmeister", desc: "Schließe 5 Minispiele ab", unlocked: false, count: 0 },
+        comboMaster: { name: "⚡ Kombomeister", desc: "Erreiche einen 3er-Kombo", unlocked: false }
+    };
+
+    function unlockAchievement(id) {
+        if (!achievements[id].unlocked) {
+            achievements[id].unlocked = true;
+            addLog(`🏆 ERFOLG FREIGESCHALTET: ${achievements[id].name} - ${achievements[id].desc}`, 'achievement');
+            addJournalEntry(`🏆 Erfolg freigeschaltet: ${achievements[id].name}`);
+            sound.playAchievement();
+            showAchievementToast(achievements[id].name);
+        }
+    }
+
+    function updateAchievements() {
+        if (!achievements.firstBlood.unlocked && player.totalKills >= 1) unlockAchievement('firstBlood');
+        if (!achievements.level5.unlocked && player.level >= 5) unlockAchievement('level5');
+        if (!achievements.level10.unlocked && player.level >= 10) unlockAchievement('level10');
+        if (!achievements.rich.unlocked && player.gold >= 1000) unlockAchievement('rich');
+        if (!achievements.eliteSlayer.unlocked && player.eliteKills >= 3) unlockAchievement('eliteSlayer');
+        if (!achievements.pathfinder.unlocked && player.completedPaths >= 10) unlockAchievement('pathfinder');
+        if (!achievements.petCollector.unlocked && activePet) unlockAchievement('petCollector');
+        if (!achievements.lucky.unlocked && player.luck >= 20) unlockAchievement('lucky');
+        if (!achievements.manaMaster.unlocked && player.totalManaUsed >= 1000) unlockAchievement('manaMaster');
+        if (!achievements.miniGameMaster.unlocked && player.miniGamesWon >= 5) unlockAchievement('miniGameMaster');
+        if (!achievements.comboMaster.unlocked && player.maxCombo >= 3) unlockAchievement('comboMaster');
+    }
+
+    // ================================ MINI-SPIELE (Reaktion, Gedächtnis, Präzision, Tippspiel) ================================
+    function startMiniGame(type, onComplete) {
+        if (type === 'reaction') showReactionGame(onComplete);
+        else if (type === 'memory') showMemoryGame(onComplete);
+        else if (type === 'precision') showPrecisionGame(onComplete);
+        else if (type === 'typing') showTypingGame(onComplete);
+    }
+
+    function createModal(title, bodyHtml) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'flex';
+        modal.innerHTML = `<div class="modal-content"><div class="modal-header"><h2>${title}</h2></div><div class="modal-body">${bodyHtml}</div><div class="modal-footer"><button class="close-btn" onclick="this.closest('.modal').remove()">SCHLIESSEN</button></div></div>`;
+        document.body.appendChild(modal);
+        return modal;
+    }
+
+    function showReactionGame(onComplete) {
+        const modal = createModal('⚡ REAKTIONSSPIEL', '<div id="reaction-target" style="width:100px;height:100px;background:#ff5252;border-radius:50%;margin:20px auto;cursor:pointer;transition:0.05s;"></div><div id="reaction-status" style="color:#ffd966;margin-top:10px">Warte auf Start...</div>');
+        let startTime = null, clicked = false;
+        const target = modal.querySelector('#reaction-target');
+        const statusDiv = modal.querySelector('#reaction-status');
+        setTimeout(() => {
+            if (!clicked) {
+                startTime = Date.now();
+                statusDiv.textContent = "JETZT KLICKEN!";
+                target.style.background = "#7ec850";
+                target.onclick = () => {
+                    if (startTime && !clicked) {
+                        clicked = true;
+                        const reaction = Date.now() - startTime;
+                        if (reaction < 500) {
+                            statusDiv.textContent = `✅ Geschafft! (${reaction} ms)`;
+                            setTimeout(() => { modal.remove(); onComplete(true, 50, 80); }, 1000);
+                        } else {
+                            statusDiv.textContent = `❌ Zu langsam (${reaction} ms)!`;
+                            setTimeout(() => { modal.remove(); onComplete(false, 0, 0); }, 1000);
+                        }
+                    }
+                };
+            }
+        }, Math.random() * 2000 + 1000);
+    }
+
+    function showMemoryGame(onComplete) {
+        const sequence = ['🔴', '🔵', '🟢', '🟡'];
+        const pattern = [];
+        for (let i = 0; i < 4; i++) pattern.push(sequence[Math.floor(Math.random() * 4)]);
+        let step = 0, playerTurn = false;
+        const modal = createModal('🧠 GEDÄCHTNISSPIEL', `<div id="memory-display" style="font-size:40px;margin:20px;text-align:center">${pattern[0]}</div><div id="memory-grid" style="display:grid;grid-template-columns:repeat(4,60px);gap:10px;justify-content:center;margin:20px 0"></div><div id="memory-status" style="color:#ffd966;margin-top:10px;text-align:center"></div>`);
+        const grid = modal.querySelector('#memory-grid');
+        sequence.forEach(sym => {
+            const btn = document.createElement('div');
+            btn.className = 'memory-card';
+            btn.textContent = sym;
+            btn.style.cssText = 'background:#4a3f2c;width:60px;height:60px;display:flex;align-items:center;justify-content:center;font-size:30px;cursor:pointer;border-radius:8px';
+            btn.onclick = () => {
+                if (!playerTurn) return;
+                if (sym === pattern[step]) {
+                    step++;
+                    if (step === pattern.length) { modal.remove(); onComplete(true, 100, 150); }
+                    else modal.querySelector('#memory-status').textContent = `Richtig! ${step}/${pattern.length}`;
+                } else { modal.remove(); onComplete(false, 0, 0); }
+            };
+            grid.appendChild(btn);
+        });
+        let idx = 0;
+        const display = modal.querySelector('#memory-display');
+        const interval = setInterval(() => {
+            if (idx < pattern.length) { display.textContent = pattern[idx]; idx++; }
+            else { clearInterval(interval); display.textContent = "👀 DEINE REIHE!"; playerTurn = true; modal.querySelector('#memory-status').textContent = "Wähle die Farben in der richtigen Reihenfolge."; }
+        }, 800);
+    }
+
+    function showPrecisionGame(onComplete) {
+        const modal = createModal('🎯 PRÄZISIONSSPIEL', '<div id="precision-area" style="position:relative;width:300px;height:200px;background:#1e212e;margin:20px auto;border-radius:8px;cursor:crosshair"></div><div id="precision-timer" style="color:#ffd966;margin-top:10px;text-align:center">Zeit: 3s</div>');
+        const area = modal.querySelector('#precision-area');
+        let dot = document.createElement('div');
+        dot.className = 'precision-dot';
+        dot.style.cssText = 'position:absolute;width:40px;height:40px;background:#ff5252;border-radius:50%;cursor:pointer';
+        area.appendChild(dot);
+        let timeLeft = 3, success = false;
+        const timer = setInterval(() => {
+            timeLeft -= 0.1;
+            modal.querySelector('#precision-timer').textContent = `Zeit: ${timeLeft.toFixed(1)}s`;
+            if (timeLeft <= 0) { clearInterval(timer); clearInterval(moveInterval); if (!success) { modal.remove(); onComplete(false, 0, 0); } }
+        }, 100);
+        const moveInterval = setInterval(() => {
+            const maxX = area.clientWidth - 40;
+            const maxY = area.clientHeight - 40;
+            dot.style.left = Math.random() * maxX + 'px';
+            dot.style.top = Math.random() * maxY + 'px';
+        }, 500);
+        dot.onclick = (e) => {
+            e.stopPropagation();
+            if (!success) {
+                success = true;
+                clearInterval(timer);
+                clearInterval(moveInterval);
+                modal.remove();
+                onComplete(true, 80, 120);
+            }
+        };
+    }
+
+    function showTypingGame(onComplete) {
+        const sentences = [
+            "Pixel Quest ist cool!",
+            "Schnell tippen gewinnt!",
+            "Abenteuer wartet auf dich.",
+            "Kämpfe und siegreich sein.",
+            "Mana ist wichtig im Kampf."
+        ];
+        const target = sentences[Math.floor(Math.random() * sentences.length)];
+        const modal = createModal('⌨️ SCHNELLTIPPSPIEL', `<p>Gib den folgenden Satz ein:</p><p style="font-size:18px;background:#1e212e;padding:10px;border-radius:8px">${target}</p><input type="text" id="typing-input" style="width:100%;padding:8px;margin:10px 0;background:#1e212e;border:2px solid #d4af37;color:#ffd966;font-family:monospace"><div id="typing-status" style="color:#ffd966;margin-top:10px">Zeit: 10s</div>`);
+        const input = modal.querySelector('#typing-input');
+        const statusDiv = modal.querySelector('#typing-status');
+        let timeLeft = 10;
+        const timer = setInterval(() => {
+            timeLeft -= 0.1;
+            statusDiv.textContent = `Zeit: ${timeLeft.toFixed(1)}s`;
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                modal.remove();
+                onComplete(false, 0, 0);
+            }
+        }, 100);
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                if (input.value.trim() === target) {
+                    clearInterval(timer);
+                    modal.remove();
+                    onComplete(true, 60, 100);
+                } else {
+                    statusDiv.textContent = "❌ Falscher Text! Versuche es noch einmal.";
+                    input.value = '';
+                }
+            }
+        });
+        input.focus();
+    }
+
+    // ================================ CASINO (Würfel & Slot) ================================
+    function showCasino() {
+        const modal = document.getElementById('casino-modal');
+        const body = document.getElementById('casino-body');
+        body.innerHTML = `
+            <h3>🎲 Würfelspiel</h3>
+            <div class="dice-area">
+                <div id="dice-result" class="dice">🎲</div>
+                <div>
+                    <label>Einsatz: <input type="number" id="dice-bet" class="bet-input" min="10" max="${player.gold}" value="50"></label>
+                    <select id="dice-choice">
+                        <option value="high">Hoch (7-12)</option>
+                        <option value="low">Niedrig (1-6)</option>
+                        <option value="exact">Exakte Zahl (1-12)</option>
+                    </select>
+                    <button id="roll-dice" class="pixel-btn">Würfeln</button>
+                </div>
+                <div id="dice-message" style="margin-top:10px"></div>
+            </div>
+            <hr style="border-color:#4a3f2c; margin:20px 0">
+            <h3>🎰 Slot-Machine</h3>
+            <div class="slot-machine">
+                <div class="slot-reel" id="reel1">🍒</div>
+                <div class="slot-reel" id="reel2">🍒</div>
+                <div class="slot-reel" id="reel3">🍒</div>
+            </div>
+            <div>
+                <label>Einsatz: <input type="number" id="slot-bet" class="bet-input" min="10" max="${player.gold}" value="50"></label>
+                <button id="pull-lever" class="pixel-btn">🎰 Ziehen</button>
+                <div id="slot-message" style="margin-top:10px"></div>
+            </div>
+        `;
+        modal.style.display = 'flex';
+
+        // Würfelspiel Logik
+        document.getElementById('roll-dice').onclick = () => {
+            let bet = parseInt(document.getElementById('dice-bet').value);
+            if (isNaN(bet)) bet = 10;
+            if (bet < 10) bet = 10;
+            if (bet > player.gold) bet = player.gold;
+            const choice = document.getElementById('dice-choice').value;
+            const roll = Math.floor(Math.random() * 12) + 1; // 1-12
+            document.getElementById('dice-result').textContent = roll;
+            let win = false;
+            let multiplier = 0;
+            if (choice === 'high' && roll >= 7) { win = true; multiplier = 2; }
+            else if (choice === 'low' && roll <= 6) { win = true; multiplier = 2; }
+            else if (choice === 'exact') {
+                const exactNum = prompt("Welche Zahl (1-12)?", "7");
+                const num = parseInt(exactNum);
+                if (!isNaN(num) && num >= 1 && num <= 12 && num === roll) { win = true; multiplier = 10; }
+                else if (!isNaN(num) && num >= 1 && num <= 12) { win = false; }
+                else { addLog("Ungültige Eingabe!", 'damage'); return; }
+            }
+            if (win) {
+                const winGold = bet * multiplier;
+                player.gold += winGold;
+                addLog(`🎲 Würfel: ${roll}! Du gewinnst ${winGold} Gold!`, 'heal');
+                addJournalEntry(`Würfelspiel gewonnen: +${winGold} Gold`);
+                document.getElementById('dice-message').innerHTML = `🎉 Gewonnen! +${winGold} Gold! 🎉`;
+            } else {
+                player.gold -= bet;
+                addLog(`🎲 Würfel: ${roll}. Du verlierst ${bet} Gold.`, 'damage');
+                addJournalEntry(`Würfelspiel verloren: -${bet} Gold`);
+                document.getElementById('dice-message').innerHTML = `😞 Verloren! -${bet} Gold.`;
+            }
+            player.updateUI();
+            document.getElementById('dice-bet').max = player.gold;
+            document.getElementById('slot-bet').max = player.gold;
+        };
+
+        // Slot-Machine Logik
+        const symbols = ['🍒', '🍋', '🍊', '🔔', '💎', '7️⃣'];
+        const payouts = {
+            '🍒🍒🍒': 5,
+            '🍋🍋🍋': 10,
+            '🍊🍊🍊': 10,
+            '🔔🔔🔔': 20,
+            '💎💎💎': 50,
+            '7️⃣7️⃣7️⃣': 100
+        };
+        document.getElementById('pull-lever').onclick = () => {
+            let bet = parseInt(document.getElementById('slot-bet').value);
+            if (isNaN(bet)) bet = 10;
+            if (bet < 10) bet = 10;
+            if (bet > player.gold) bet = player.gold;
+            const reel1 = symbols[Math.floor(Math.random() * symbols.length)];
+            const reel2 = symbols[Math.floor(Math.random() * symbols.length)];
+            const reel3 = symbols[Math.floor(Math.random() * symbols.length)];
+            document.getElementById('reel1').textContent = reel1;
+            document.getElementById('reel2').textContent = reel2;
+            document.getElementById('reel3').textContent = reel3;
+            const combo = reel1 + reel2 + reel3;
+            const multiplier = payouts[combo] || 0;
+            if (multiplier > 0) {
+                const winGold = bet * multiplier;
+                player.gold += winGold;
+                addLog(`🎰 Slot: ${combo}! Du gewinnst ${winGold} Gold!`, 'heal');
+                addJournalEntry(`Slot gewonnen: +${winGold} Gold`);
+                document.getElementById('slot-message').innerHTML = `🎉 Gewonnen! +${winGold} Gold! 🎉`;
+            } else {
+                player.gold -= bet;
+                addLog(`🎰 Slot: ${combo}. Du verlierst ${bet} Gold.`, 'damage');
+                addJournalEntry(`Slot verloren: -${bet} Gold`);
+                document.getElementById('slot-message').innerHTML = `😞 Verloren! -${bet} Gold.`;
+            }
+            player.updateUI();
+            document.getElementById('dice-bet').max = player.gold;
+            document.getElementById('slot-bet').max = player.gold;
+        };
+    }
+
+    // ================================ PFAD-SYSTEM ================================
+    let pathSegments = [], currentSegmentIndex = 0, waitingForChoice = false, player, enemy, gameActive = true;
+
+    // ERWEITERTE GEGNER (12 Stufen, bessere Skalierung)
+    const enemyTypes = {
+        // Level 1-2
+        goblin: { name: '👺 Goblin', hp: 60, attack: 12, gold: 25, xp: 35, icon: '👺', level: 1, elite: false },
+        wolf: { name: '🐺 Wolf', hp: 80, attack: 15, gold: 35, xp: 45, icon: '🐺', level: 1, elite: false },
+        bat: { name: '🦇 Vampirfledermaus', hp: 50, attack: 18, gold: 30, xp: 40, icon: '🦇', level: 2, elite: false },
+        // Level 2-3
+        orc: { name: '👹 Ork', hp: 120, attack: 22, gold: 55, xp: 80, icon: '👹', level: 2, elite: false },
+        skeleton: { name: '💀 Skelett', hp: 100, attack: 20, gold: 50, xp: 70, icon: '💀', level: 3, elite: false },
+        // Level 3-4
+        troll: { name: '🧌 Troll', hp: 180, attack: 28, gold: 80, xp: 110, icon: '🧌', level: 3, elite: false },
+        harpy: { name: '🦅 Harpyie', hp: 140, attack: 30, gold: 70, xp: 100, icon: '🦅', level: 4, elite: false },
+        // Level 4-5
+        ogre: { name: '👹 Oger', hp: 220, attack: 35, gold: 100, xp: 140, icon: '👹', level: 4, elite: false },
+        shadow: { name: '🌑 Schatten', hp: 160, attack: 38, gold: 90, xp: 130, icon: '🌑', level: 5, elite: false },
+        // Level 5-6
+        wyvern: { name: '🐉 Wyvern', hp: 280, attack: 42, gold: 130, xp: 180, icon: '🐉', level: 5, elite: false },
+        lich: { name: '🧙 Lich', hp: 240, attack: 45, gold: 120, xp: 170, icon: '🧙', level: 6, elite: false },
+        // Level 6-7
+        dragon: { name: '🐉 Junger Drache', hp: 320, attack: 50, gold: 160, xp: 220, icon: '🐉', level: 6, elite: false },
+        demon: { name: '👿 Feuerdämon', hp: 300, attack: 55, gold: 180, xp: 250, icon: '👿', level: 7, elite: false },
+        // Level 7-8
+        ancientDragon: { name: '🐉★ Uralter Drache', hp: 400, attack: 62, gold: 250, xp: 350, icon: '🐉✨', level: 7, elite: true },
+        archdemon: { name: '👿★ Erzdämon', hp: 380, attack: 65, gold: 240, xp: 340, icon: '👿✨', level: 8, elite: true },
+        // Boss
+        boss: { name: '👑 Drachenkönig', hp: 500, attack: 75, gold: 600, xp: 800, icon: '👑', level: 8, elite: false, isBoss: true }
+    };
+
+    const epicEvents = {
+        merchant: { title: '🧙 REISENDER HÄNDLER', desc: 'Ein Händler bietet seltene Waren an.', icon: '🧙',
+            choices: (p) => [
+                { text: '💎 Edelstein kaufen (200💰)', action: () => { if(p.gold>=200){ p.gold-=200; let gain = 300 + Math.floor(p.luck/2); p.gold += gain; addLog(`✨ Edelstein! +${gain} Gold`,'heal'); addJournalEntry(`Edelstein: +${gain} Gold`);} else addLog('💰 Zu wenig!','damage'); } },
+                { text: '📜 Geheimtipp (50💰)', action: () => { if(p.gold>=50){ p.gold-=50; let xp = 80 + Math.floor(p.luck/2); p.addXp(xp); addLog(`📜 +${xp} XP`,'heal'); addJournalEntry(`Geheimtipp: +${xp} XP`);} else addLog('💰 Zu wenig!','damage'); } },
+                { text: '🚶 Weiter', action: () => addLog('🍃 Weiter...','normal') }
+            ] },
+        fountain: { title: '⛲ MAGISCHE QUELLE', desc: 'Heiliges Wasser.', icon: '⛲',
+            choices: (p) => [
+                { text: '💧 Trinken (+50 HP)', action: () => { p.heal(50); addLog('💚 +50 HP','heal'); addJournalEntry('Geheilt'); p.updateUI(); } },
+                { text: '🧪 Füllen (+2 Tränke)', action: () => { p.potions += 2; addLog('💊 +2 Tränke','heal'); addJournalEntry('+2 Tränke'); p.updateUI(); } },
+                { text: '✨ Segen (+20% XP)', action: () => { p.xpBoost = true; addLog('✨ XP-Boost','heal'); addJournalEntry('XP-Boost'); } }
+            ] },
+        petShop: { title: '🐾 VERIRRTER BEGLEITER', desc: 'Ein Wesen sucht einen Freund.', icon: '🐣',
+            choices: (p) => [
+                { text: '🐶 Aufnehmen (Haustier)', action: () => { if(!activePet){ const newPet = PETS[Math.floor(Math.random()*PETS.length)]; addPet(newPet.id); } else addLog('🐾 Du hast bereits ein Haustier!','normal'); } },
+                { text: '🍎 Füttern (50 Gold)', action: () => { if(p.gold>=50){ p.gold-=50; p.addXp(100); addLog('🍎 +100 XP','heal'); addJournalEntry('Haustier gefüttert'); } else addLog('💰 Zu wenig!','damage'); } }
+            ] }
+    };
+
+    function generatePathSegment(depth) {
+        const segment = { depth, branches: [], cleared: false };
+        const hasBranch = depth >= 2 && Math.random() < 0.6;
+        const branchCount = hasBranch ? 2 : 1;
+        for (let i = 0; i < branchCount; i++) {
+            let typeRand = Math.random();
+            let branch = { id: `${depth}_${i}_${Date.now()}_${Math.random()}`, completed: false };
+            // Minispiele (12% Chance)
+            if (typeRand < 0.12 && player && player.level >= 2) {
+                const games = ['reaction','memory','precision','typing'];
+                const game = games[Math.floor(Math.random()*games.length)];
+                branch.type = 'minigame'; branch.content = game; branch.icon = '🎮'; branch.name = game==='reaction'?'Reaktionsspiel':(game==='memory'?'Gedächtnisspiel':(game==='precision'?'Präzisionsspiel':'Schnelltippspiel'));
+            } else if (typeRand < 0.45) {
+                // Gegner, angepasst an Spielerlevel
+                let available = Object.values(enemyTypes).filter(e => e.level <= Math.min(player.level+2, 8));
+                if (player.level >= 3 && Math.random() < 0.15 + player.luck/200) {
+                    let elites = available.filter(e => e.elite === true);
+                    if (elites.length) available = elites;
+                }
+                const enemyData = available[Math.floor(Math.random() * available.length)];
+                branch.type = 'fight'; branch.content = {...enemyData}; branch.icon = enemyData.icon; branch.name = enemyData.name;
+            } else if (typeRand < 0.7) {
+                const keys = Object.keys(epicEvents);
+                const key = keys[Math.floor(Math.random()*keys.length)];
+                branch.type = 'event'; branch.content = key; branch.icon = epicEvents[key].icon; branch.name = epicEvents[key].title;
+            } else {
+                const gold = 50 + Math.floor(Math.random()*100) + Math.floor(player.luck);
+                branch.type = 'treasure'; branch.content = { gold, potions: Math.random()>0.8?1:0 }; branch.icon = '📦'; branch.name = 'Schatzkiste';
+            }
+            segment.branches.push(branch);
+        }
+        return segment;
+    }
+
+    function renderPath() {
+        const wrapper = document.getElementById('path-wrapper');
+        wrapper.innerHTML = '';
+        for (let i = 0; i < pathSegments.length; i++) {
+            const seg = pathSegments[i];
+            const isActive = (i === currentSegmentIndex && !seg.cleared);
+            const isPast = (i < currentSegmentIndex);
+            const segDiv = document.createElement('div'); segDiv.className = 'segment-block';
+            const titleSpan = document.createElement('div'); titleSpan.className = 'segment-title';
+            titleSpan.textContent = `📍 ABSCHNITT ${i+1} ${isPast?'✓':(isActive?'⚔️':'🔒')}`;
+            segDiv.appendChild(titleSpan);
+            const branchContainer = document.createElement('div'); branchContainer.className = 'branch-container';
+            seg.branches.forEach(branch => {
+                const branchDiv = document.createElement('div'); branchDiv.className = 'branch-card';
+                let canSelect = false;
+                if (branch.completed) branchDiv.classList.add('completed');
+                else if (isPast) branchDiv.classList.add('completed');
+                else if (i > currentSegmentIndex) branchDiv.classList.add('locked');
+                else if (isActive && !seg.cleared && !branch.completed && !waitingForChoice && !enemy && gameActive) {
+                    branchDiv.classList.add('available'); canSelect = true;
+                } else branchDiv.classList.add('locked');
+                branchDiv.innerHTML = `<div class="branch-icon">${branch.icon}</div><div class="branch-name">${branch.name}</div><div class="branch-type">${branch.completed?'✓ BESUCHT':(canSelect?'➤ KLICKEN':(isActive&&!seg.cleared?'⏳ AKTIV':'🔒'))}</div>`;
+                if (canSelect) branchDiv.onclick = () => activateBranch(branch, seg);
+                branchContainer.appendChild(branchDiv);
+            });
+            segDiv.appendChild(branchContainer);
+            wrapper.appendChild(segDiv);
+            if (i < pathSegments.length-1) { const arrow = document.createElement('div'); arrow.className = 'connector-arrow'; arrow.textContent = '→'; wrapper.appendChild(arrow); }
+        }
+        setTimeout(() => { const target = wrapper.children[currentSegmentIndex*2]; if(target) target.scrollIntoView({ behavior:'smooth', block:'nearest', inline:'center' }); }, 50);
+    }
+
+    function activateBranch(branch, segment) {
+        if (!gameActive || waitingForChoice || enemy || segment.cleared) return;
+        waitingForChoice = true;
+        if (branch.type === 'fight') {
+            enemy = new Enemy(branch.content);
+            addLog(`⚔️ ${branch.content.name} erscheint!`, 'event');
+            addJournalEntry(`Kampf: ${branch.content.name}`);
+            waitingForChoice = false;
+            renderPath();
+        } else if (branch.type === 'event') {
+            const ev = epicEvents[branch.content];
+            const choices = ev.choices(player);
+            showChoiceModal(ev.title, ev.desc, choices.map(c => ({ text:c.text, action:()=>{ c.action(); completeBranch(branch,segment); } })));
+        } else if (branch.type === 'treasure') {
+            if (branch.content.gold) { player.gold += branch.content.gold; addLog(`💰 +${branch.content.gold} Gold!`,'heal'); addJournalEntry(`Schatz: +${branch.content.gold} Gold`); }
+            if (branch.content.potions) { player.potions += branch.content.potions; addLog(`💊 +${branch.content.potions} Trank!`,'heal'); addJournalEntry(`Schatz: +${branch.content.potions} Trank`); }
+            player.updateUI();
+            completeBranch(branch, segment);
+        } else if (branch.type === 'minigame') {
+            addLog(`🎮 Minispiel: ${branch.name} beginnt!`, 'event');
+            startMiniGame(branch.content, (success, gold, xp) => {
+                if (success) {
+                    player.gold += gold; player.addXp(xp);
+                    addLog(`🎉 Minispiel gewonnen! +${gold} Gold, +${xp} XP!`,'heal');
+                    addJournalEntry(`Minispiel "${branch.name}" gewonnen`);
+                    player.miniGamesWon = (player.miniGamesWon||0)+1;
+                    updateAchievements();
+                } else { addLog(`😵 Minispiel verloren...`,'damage'); addJournalEntry(`Minispiel "${branch.name}" verloren`); }
+                completeBranch(branch, segment);
+            });
+        }
+    }
+
+    function completeBranch(branch, segment) {
+        branch.completed = true; segment.cleared = true;
+        player.completedPaths = (player.completedPaths||0)+1;
+        updateAchievements();
+        addLog(`✅ Pfad "${branch.name}" abgeschlossen!`, 'heal');
+        addJournalEntry(`Pfad abgeschlossen: ${branch.name}`);
+        if (currentSegmentIndex+1 < pathSegments.length) currentSegmentIndex++;
+        else { pathSegments.push(generatePathSegment(pathSegments.length)); currentSegmentIndex++; }
+        waitingForChoice = false;
+        renderPath();
+        if (player.completedPaths % 5 === 0 && player.completedPaths > 0 && !player.miniBossSpawned) {
+            player.miniBossSpawned = true;
+            addLog(`⚠️ Ein Mini‑Boss erscheint! Besiege ihn für besondere Belohnung!`, 'critical');
+            const miniBossData = { name: '🔥 Mini‑Boss 🔥', hp: Math.floor(300 + player.level*20), attack: Math.floor(40 + player.level*5), gold: 300, xp: 400, icon: '🔥', elite: true };
+            enemy = new Enemy(miniBossData);
+            addJournalEntry(`Mini‑Boss erschienen: ${miniBossData.name}`);
+        } else if (player.completedPaths % 5 !== 0) player.miniBossSpawned = false;
+    }
+
+    function showChoiceModal(title, desc, choices) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'flex';
+        modal.innerHTML = `<div class="modal-content"><div class="modal-header"><h2>${title}</h2></div><div class="modal-body"><p>${desc}</p><div class="choice-grid" id="modal-choices"></div></div></div>`;
+        const grid = modal.querySelector('#modal-choices');
+        choices.forEach(choice => {
+            const btn = document.createElement('div'); btn.className = 'choice-card'; btn.textContent = choice.text;
+            btn.onclick = () => { document.body.removeChild(modal); choice.action(); };
+            grid.appendChild(btn);
+        });
+        document.body.appendChild(modal);
+    }
+
+    // ================================ SPIELER & GEGNER ================================
+    class Player {
+        constructor(isNewGamePlus = false) {
+            this.level = 1; this.xp = 0; this.maxHp = 100; this.hp = 100;
+            this.baseAttack = 25; this.baseDefense = 10; this.baseCrit = 15; this.luck = 5;
+            this.maxMana = 100; this.mana = 100;
+            this.gold = isNewGamePlus ? 300 : 150; this.potions = 3;
+            this.attackBonus = 0; this.defenseBonus = 0; this.critBonus = 0;
+            this.equippedWeapon = null; this.equippedArmor = null; this.equippedRing = null;
+            this.skillCooldown = 0; this.totalKills = 0; this.eliteKills = 0; this.completedPaths = 0;
+            this.bossKilled = false; this.xpBoost = false;
+            this.totalManaUsed = 0; this.miniGamesWon = 0; this.combo = 0; this.maxCombo = 0;
+            this.miniBossSpawned = false;
+        }
+        get attack() {
+            let bonus = this.attackBonus + (this.equippedWeapon?.attackBonus||0);
+            if (activePet && activePet.bonusType === 'attack') bonus += activePet.bonusValue;
+            return this.baseAttack + bonus;
+        }
+        get defense() {
+            let bonus = this.defenseBonus + (this.equippedArmor?.defenseBonus||0);
+            if (activePet && activePet.bonusType === 'defense') bonus += activePet.bonusValue;
+            return this.baseDefense + bonus;
+        }
+        get critChance() {
+            let bonus = this.critBonus + (this.equippedRing?.critBonus||0);
+            if (activePet && activePet.bonusType === 'crit') bonus += activePet.bonusValue;
+            return Math.min(50, this.baseCrit + bonus);
+        }
+        get manaRegen() {
+            let reg = 10;
+            if (activePet && activePet.bonusType === 'manaReg') reg += activePet.bonusValue;
+            return reg;
+        }
+        get luckBonus() {
+            let bonus = this.luck;
+            if (activePet && activePet.bonusType === 'luck') bonus += activePet.bonusValue;
+            return bonus;
+        }
+        get xpForNextLevel() { return Math.floor(100 * Math.pow(1.2, this.level-1)); }
+        addXp(amount) {
+            let final = Math.floor(amount * (this.xpBoost?1.2:1));
+            this.xp += final; this.xpBoost=false;
+            let leveled=false;
+            while(this.xp >= this.xpForNextLevel){
+                this.xp -= this.xpForNextLevel; this.level++;
+                this.maxHp = Math.floor(100+(this.level-1)*15); this.hp=this.maxHp;
+                this.maxMana = Math.floor(100+(this.level-1)*5); this.mana=this.maxMana;
+                leveled=true;
+                addLog(`🌟 LEVEL UP! Jetzt Level ${this.level}! 🌟`,'heal');
+                addJournalEntry(`Level ${this.level} erreicht!`);
+                sound.playLevel();
+                this.showLevelUp();
+                updateAchievements();
+            }
+            if(leveled) this.updateUI();
+            return leveled;
+        }
+        showLevelUp() {
+            const choices = [
+                { name:'💪 Stärke', desc:'+8 Angriff', action:()=>{ this.baseAttack+=8; addLog(`💪 Angriff +8 (${this.attack})`,'heal'); addJournalEntry(`Angriff +8`); } },
+                { name:'🛡️ Schutz', desc:'+5 Verteidigung', action:()=>{ this.baseDefense+=5; addLog(`🛡️ Verteidigung +5 (${this.defense})`,'heal'); addJournalEntry(`Verteidigung +5`); } },
+                { name:'❤️ Vitalität', desc:'+30 Leben', action:()=>{ this.maxHp+=30; this.hp=this.maxHp; addLog(`❤️ Leben +30 (${this.maxHp})`,'heal'); addJournalEntry(`Leben +30`); } },
+                { name:'⭐ Glück', desc:'+5% Krit', action:()=>{ this.baseCrit+=5; addLog(`⭐ Krit-Chance +5% (${this.critChance}%)`,'heal'); addJournalEntry(`Krit-Chance +5%`); } },
+                { name:'🍀 Glücksstern', desc:'+3 Glück', action:()=>{ this.luck+=3; addLog(`🍀 Glück +3 (${this.luck})`,'heal'); addJournalEntry(`Glück +3`); } },
+                { name:'💙 Mana', desc:'+15 Max-Mana', action:()=>{ this.maxMana+=15; this.mana=this.maxMana; addLog(`💙 Max-Mana +15 (${this.maxMana})`,'heal'); addJournalEntry(`Mana +15`); } },
+                { name:'🗡️ Legendäre Waffe', desc:'Erhalte Ausrüstung', action:()=>{
+                    const items = [
+                        { id:'leg_sword', name:'Drachenklinge', type:'weapon', attackBonus:15, defenseBonus:0, critBonus:0, manaBonus:0, icon:'⚔️', desc:'Mächtige Klinge +15 Angriff' },
+                        { id:'leg_armor', name:'Drachenrüstung', type:'armor', attackBonus:0, defenseBonus:12, critBonus:0, manaBonus:0, icon:'🛡️', desc:'Schwerer Schutz +12 Verteidigung' },
+                        { id:'leg_ring', name:'Drachenring', type:'ring', attackBonus:0, defenseBonus:0, critBonus:15, manaBonus:0, icon:'⭐', desc:'+15% Krit-Chance' }
+                    ];
+                    const item = items[Math.floor(Math.random()*items.length)];
+                    addItem(item);
+                    this.updateUI();
+                }}
+            ];
+            const modal = document.getElementById('levelup-modal');
+            const grid = document.getElementById('level-choices');
+            grid.innerHTML = '';
+            choices.forEach(c=>{
+                const card = document.createElement('div'); card.className='choice-card';
+                card.innerHTML = `<strong>${c.name}</strong><br><small>${c.desc}</small>`;
+                card.onclick = ()=>{ c.action(); this.updateUI(); modal.style.display='none'; };
+                grid.appendChild(card);
+            });
+            modal.style.display='flex';
+        }
+        takeDamage(dmg){ this.hp = Math.max(0, this.hp - Math.max(1,dmg)); return Math.max(1,dmg); }
+        heal(amount){ const old=this.hp; this.hp = Math.min(this.maxHp, this.hp+amount); return this.hp-old; }
+        useMana(amount){ if(this.mana>=amount){ this.mana-=amount; this.totalManaUsed+=amount; updateAchievements(); return true; } return false; }
+        regenMana(){ this.mana = Math.min(this.maxMana, this.mana+this.manaRegen); }
+        updateUI(){
+            document.getElementById('player-level').textContent = this.level;
+            document.getElementById('player-xp').textContent = this.xp;
+            document.getElementById('next-xp').textContent = this.xpForNextLevel;
+            document.getElementById('player-max-hp').textContent = this.maxHp;
+            document.getElementById('player-hp').textContent = this.hp;
+            document.getElementById('player-attack').textContent = this.attack;
+            document.getElementById('player-defense').textContent = this.defense;
+            document.getElementById('player-crit').textContent = this.critChance;
+            document.getElementById('player-luck').textContent = this.luckBonus;
+            document.getElementById('player-mana').textContent = this.mana;
+            document.getElementById('player-max-mana').textContent = this.maxMana;
+            document.getElementById('gold').textContent = this.gold;
+            document.getElementById('potion-count').textContent = this.potions;
+            document.getElementById('pet-name').textContent = activePet ? activePet.name : 'Keins';
+            const hpPercent = (this.hp/this.maxHp)*100;
+            document.getElementById('player-hp-fill').style.width = `${hpPercent}%`;
+            const manaPercent = (this.mana/this.maxMana)*100;
+            document.getElementById('player-mana-fill').style.width = `${manaPercent}%`;
+            const skillBtn = document.getElementById('skill-btn');
+            if(this.skillCooldown>0){ skillBtn.disabled=true; skillBtn.textContent=`🌀 COOLDOWN (${this.skillCooldown})`; }
+            else{ skillBtn.disabled=false; skillBtn.textContent=`🌀 DRACHENKLAUE (30💙)`; }
+            const healBtn = document.getElementById('heal-btn');
+            healBtn.disabled = (this.mana < 20);
+        }
+        updateCooldown(){ if(this.skillCooldown>0){ this.skillCooldown--; this.updateUI(); } }
+    }
+
+    class Enemy {
+        constructor(data) {
+            this.current = { ...data, maxHp: data.hp };
+            this.updateUI();
+            document.getElementById('enemy-pixel').textContent = data.icon || '🐉';
+        }
+        takeDamage(dmg){ this.current.hp = Math.max(0, this.current.hp - dmg); return dmg; }
+        isAlive(){ return this.current.hp > 0; }
+        updateUI(){
+            document.getElementById('enemy-name').textContent = this.current.name;
+            document.getElementById('enemy-hp').textContent = this.current.hp;
+            document.getElementById('enemy-max-hp').textContent = this.current.maxHp;
+            document.getElementById('enemy-attack').textContent = this.current.attack;
+            document.getElementById('enemy-gold').textContent = this.current.gold;
+            const hpPercent = (this.current.hp/this.current.maxHp)*100;
+            document.getElementById('enemy-hp-fill').style.width = `${hpPercent}%`;
+        }
+    }
+
+    // ================================ KAMPF ================================
+    function addLog(msg, type='normal') {
+        const log = document.getElementById('event-log');
+        const entry = document.createElement('div'); entry.className=`event-message ${type}`;
+        entry.textContent = msg;
+        log.appendChild(entry);
+        entry.scrollIntoView({ behavior:'smooth', block:'nearest' });
+        while(log.children.length>50) log.removeChild(log.firstChild);
+    }
+
+    function animatePlayer(type){ const el=document.getElementById('player-pixel'); el.classList.add(type); setTimeout(()=>el.classList.remove(type),300); }
+    function animateEnemy(type){ const el=document.getElementById('enemy-pixel'); el.classList.add(type); setTimeout(()=>el.classList.remove(type),300); }
+    function calculateDamage(attack, isCrit){ let dmg = Math.floor(Math.random()*(attack-5))+5; if(isCrit) dmg=Math.floor(dmg*1.5); return Math.max(1,dmg); }
+
+    function attack(){
+        if(!gameActive){ addLog('💀 Spiel beendet – starte neu!','damage'); return; }
+        if(!enemy||!enemy.isAlive()){ addLog('❌ Kein Gegner!','damage'); return; }
+        if(player.hp<=0) return;
+        const isCrit = Math.random()*100 < player.critChance;
+        let dmg = calculateDamage(player.attack, isCrit);
+        player.combo++;
+        if(player.combo>1) dmg = Math.floor(dmg * (1 + (player.combo-1)*0.1));
+        if(player.combo>player.maxCombo){ player.maxCombo=player.combo; updateAchievements(); }
+        enemy.takeDamage(dmg);
+        if(isCrit){
+            achievements.criticalMaster.count++;
+            if(achievements.criticalMaster.count>=20) unlockAchievement('criticalMaster');
+            addLog(`⚡ KRITISCH! ${dmg} Schaden! (Kombo ${player.combo})`,'critical');
+            animateEnemy('critical');
+            addJournalEntry(`Kritischer Treffer: ${dmg} Schaden`);
+        } else {
+            addLog(`⚔️ ${dmg} Schaden! (Kombo ${player.combo})`,'damage');
+            animateEnemy('hit');
+        }
+        sound.playSword();
+        enemy.updateUI();
+        if(!enemy.isAlive()){
+            player.totalKills++;
+            if(enemy.current.elite){ player.eliteKills++; addJournalEntry(`Elite besiegt: ${enemy.current.name}`); }
+            const isBoss = enemy.current.name.includes('Drachenkönig');
+            if(isBoss){ player.bossKilled=true; showVictory(); return; }
+            addLog(`🎉 ${enemy.current.name} besiegt! +${enemy.current.gold} Gold, +${enemy.current.xp} EP!`,'heal');
+            player.gold += enemy.current.gold;
+            player.addXp(enemy.current.xp);
+            player.updateUI();
+            updateAchievements();
+            const curSeg = pathSegments[currentSegmentIndex];
+            if(curSeg && !curSeg.cleared){
+                const active = curSeg.branches.find(b=>!b.completed);
+                if(active){ active.completed=true; curSeg.cleared=true; player.completedPaths++; addLog(`✅ Pfad "${active.name}" abgeschlossen!`,'heal'); addJournalEntry(`Pfad abgeschlossen: ${active.name}`);
+                    if(currentSegmentIndex+1<pathSegments.length) currentSegmentIndex++;
+                    else{ pathSegments.push(generatePathSegment(pathSegments.length)); currentSegmentIndex++; }
+                }
+            }
+            player.combo=0;
+            enemy=null; renderPath(); waitingForChoice=false;
+            return;
+        }
+        setTimeout(()=>enemyAttack(),300);
+    }
+
+    function specialAttack(){
+        if(!gameActive) return;
+        if(player.skillCooldown>0){ addLog(`🌀 Bereit in ${player.skillCooldown} Runden!`,'damage'); return; }
+        if(!enemy||!enemy.isAlive()){ addLog('❌ Kein Gegner!','damage'); return; }
+        if(player.hp<=0) return;
+        if(!player.useMana(30)){ addLog('💙 Nicht genug Mana!','damage'); return; }
+        const dmg = calculateDamage(player.attack*1.5, false);
+        enemy.takeDamage(dmg);
+        addLog(`🌀 DRACHENKLAUE! ${dmg} Schaden!`,'skill');
+        animateEnemy('critical');
+        sound.playSword();
+        enemy.updateUI();
+        player.skillCooldown=3;
+        player.updateUI();
+        if(!enemy.isAlive()){
+            player.totalKills++;
+            if(enemy.current.elite){ player.eliteKills++; addJournalEntry(`Elite besiegt: ${enemy.current.name}`); }
+            const isBoss = enemy.current.name.includes('Drachenkönig');
+            if(isBoss){ player.bossKilled=true; showVictory(); return; }
+            addLog(`🎉 ${enemy.current.name} besiegt! +${enemy.current.gold} Gold, +${enemy.current.xp} EP!`,'heal');
+            player.gold += enemy.current.gold;
+            player.addXp(enemy.current.xp);
+            player.updateUI();
+            const curSeg = pathSegments[currentSegmentIndex];
+            if(curSeg && !curSeg.cleared){
+                const active = curSeg.branches.find(b=>!b.completed);
+                if(active){ active.completed=true; curSeg.cleared=true; player.completedPaths++; addLog(`✅ Pfad "${active.name}" abgeschlossen!`,'heal'); addJournalEntry(`Pfad abgeschlossen: ${active.name}`);
+                    if(currentSegmentIndex+1<pathSegments.length) currentSegmentIndex++;
+                    else{ pathSegments.push(generatePathSegment(pathSegments.length)); currentSegmentIndex++; }
+                }
+            }
+            player.combo=0;
+            enemy=null; renderPath(); waitingForChoice=false;
+            return;
+        }
+        setTimeout(()=>enemyAttack(),300);
+    }
+
+    function enemyAttack(){
+        if(player.hp>0 && enemy && enemy.isAlive()){
+            const isCrit = Math.random()<0.1;
+            let dmg = calculateDamage(enemy.current.attack, isCrit);
+            const reduction = Math.max(1, Math.floor(dmg*(1-player.defense/100)));
+            player.takeDamage(reduction);
+            addLog(isCrit?`⚡ ${enemy.current.name} kritisch! ${reduction} Schaden!`:`🐉 ${enemy.current.name} trifft! ${reduction} Schaden!`,'damage');
+            animatePlayer('hit');
+            sound.playHit();
+            player.updateUI();
+            if(player.hp<=0) gameOver();
+            player.combo=0;
+        }
+        player.updateCooldown();
+        player.regenMana();
+        player.updateUI();
+    }
+
+    function heal(){
+        if(!gameActive) return;
+        if(player.hp<=0) return;
+        if(player.hp===player.maxHp){ addLog('💚 Bereits voll!','heal'); return; }
+        if(!player.useMana(20)){ addLog('💙 Nicht genug Mana!','damage'); return; }
+        const healed = player.heal(25);
+        addLog(`💚 +${healed} HP geheilt!`,'heal');
+        animatePlayer('heal');
+        sound.playHeal();
+        player.updateUI();
+        addJournalEntry(`Geheilt: +${healed} HP`);
+        player.combo=0;
+    }
+
+    function usePotion(){
+        if(!gameActive) return;
+        if(player.potions<=0){ addLog('❌ Keine Heiltränke!','damage'); return; }
+        if(player.hp<=0) return;
+        if(player.hp===player.maxHp){ addLog('💚 Bereits voll!','heal'); return; }
+        const healed = player.heal(50);
+        player.potions--;
+        achievements.potionMaster.count++;
+        if(achievements.potionMaster.count>=10) unlockAchievement('potionMaster');
+        addLog(`🧪 Heiltrank: +${healed} HP!`,'heal');
+        animatePlayer('heal');
+        sound.playHeal();
+        player.updateUI();
+        addJournalEntry(`Heiltrank: +${healed} HP`);
+        player.combo=0;
+    }
+
+    function gameOver(){
+        gameActive = false;
+        addLog('💀 GAME OVER! Klicke auf Neustart!','damage');
+        addJournalEntry('GAME OVER');
+        document.getElementById('attack-btn').disabled=true;
+        document.getElementById('skill-btn').disabled=true;
+        document.getElementById('heal-btn').disabled=true;
+    }
+
+    function showVictory(){
+        const modal = document.getElementById('victory-modal');
+        const statsDiv = document.getElementById('victory-stats');
+        statsDiv.innerHTML = `
+            <p>🏆 Du hast den Drachenkönig besiegt!</p>
+            <p>📊 STATISTIK:</p>
+            <ul><li>Kämpfe: ${player.totalKills}</li><li>Elite: ${player.eliteKills}</li><li>Pfade: ${player.completedPaths}</li><li>Level: ${player.level}</li><li>Minispiele: ${player.miniGamesWon||0}</li><li>Mana genutzt: ${player.totalManaUsed}</li><li>Höchste Kombo: ${player.maxCombo}</li></ul>
+            <p>Was möchtest du tun?</p>
+        `;
+        const choicesDiv = document.getElementById('victory-choices');
+        choicesDiv.innerHTML = '';
+        const newGameBtn = document.createElement('div'); newGameBtn.className='choice-card'; newGameBtn.textContent='✨ NEUES SPIEL+ (schwerer, Bonus)';
+        newGameBtn.onclick = ()=>{ modal.style.display='none'; startNewGamePlus(); };
+        const normalReset = document.createElement('div'); normalReset.className='choice-card'; normalReset.textContent='🔄 NORMALER NEUSTART';
+        normalReset.onclick = ()=>{ modal.style.display='none'; resetGame(); };
+        choicesDiv.appendChild(newGameBtn); choicesDiv.appendChild(normalReset);
+        modal.style.display='flex';
+    }
+
+    function startNewGamePlus(){
+        for(let k in enemyTypes){
+            if(enemyTypes[k].isBoss) continue;
+            enemyTypes[k].hp = Math.floor(enemyTypes[k].hp*1.3);
+            enemyTypes[k].attack = Math.floor(enemyTypes[k].attack*1.2);
+            enemyTypes[k].gold = Math.floor(enemyTypes[k].gold*1.2);
+            enemyTypes[k].xp = Math.floor(enemyTypes[k].xp*1.2);
+        }
+        player = new Player(true);
+        pathSegments = [generatePathSegment(0), generatePathSegment(1)];
+        currentSegmentIndex=0; enemy=null; waitingForChoice=false; gameActive=true;
+        player.updateUI(); renderPath();
+        addLog('🔥 NEUES SPIEL+ gestartet! Gegner stärker, Bonusgold.','event');
+        addJournalEntry('=== NEUES SPIEL+ ===');
+        document.getElementById('attack-btn').disabled=false;
+        document.getElementById('skill-btn').disabled=false;
+        document.getElementById('heal-btn').disabled=false;
+        document.getElementById('enemy-pixel').textContent='❓';
+        Object.keys(achievements).forEach(k=>{ achievements[k].unlocked=false; if(achievements[k].count) achievements[k].count=0; });
+        ownedPets = []; activePet = null; updatePetUI(); updateFrameSymbols();
+    }
+
+    // Shop & UI
+    function buyPotion(){ if(!gameActive) return; if(player.gold>=50){ player.gold-=50; player.potions++; addLog('🛒 Heiltrank gekauft!','heal'); addJournalEntry('Trank gekauft'); player.updateUI(); updateAchievements(); } else addLog('💰 Zu wenig!','damage'); }
+    function buyAttack(){ if(!gameActive) return; if(player.gold>=100){ player.gold-=100; player.attackBonus+=5; addLog(`⚔️ Angriff +5 (${player.attack})`,'heal'); addJournalEntry(`Angriff +5`); player.updateUI(); } else addLog('💰 Zu wenig!','damage'); }
+    function buyDefense(){ if(!gameActive) return; if(player.gold>=100){ player.gold-=100; player.defenseBonus+=3; addLog(`🛡️ Verteidigung +3 (${player.defense})`,'heal'); addJournalEntry(`Verteidigung +3`); player.updateUI(); } else addLog('💰 Zu wenig!','damage'); }
+    function buyCrit(){ if(!gameActive) return; if(player.gold>=150){ player.gold-=150; player.critBonus+=5; addLog(`⭐ Krit-Chance +5% (${player.critChance}%)`,'heal'); addJournalEntry(`Krit +5%`); player.updateUI(); } else addLog('💰 Zu wenig!','damage'); }
+    function buyLuck(){ if(!gameActive) return; if(player.gold>=200){ player.gold-=200; player.luck+=3; addLog(`🍀 Glück +3 (${player.luck})`,'heal'); addJournalEntry(`Glück +3`); player.updateUI(); updateAchievements(); } else addLog('💰 Zu wenig!','damage'); }
+    function buyMana(){ if(!gameActive) return; if(player.gold>=150){ player.gold-=150; player.maxMana+=10; player.mana=player.maxMana; addLog(`💙 Max-Mana +10 (${player.maxMana})`,'heal'); addJournalEntry(`Mana +10`); player.updateUI(); } else addLog('💰 Zu wenig!','damage'); }
+    function buyRandomPet(){ if(!gameActive) return; if(player.gold>=300){ player.gold-=300; const newPet = PETS[Math.floor(Math.random()*PETS.length)]; addPet(newPet.id); player.updateUI(); } else addLog('💰 Zu wenig Gold!','damage'); }
+
+    function showEquipment(){ updateEquipmentUI(); document.getElementById('equipment-modal').style.display='flex'; }
+    function showPets(){ updatePetUI(); document.getElementById('pets-modal').style.display='flex'; }
+    function showAchievements(){
+        const list = document.getElementById('achievements-list');
+        list.innerHTML = '';
+        Object.entries(achievements).forEach(([k,ach])=>{
+            const div = document.createElement('div'); div.style.cssText='margin:10px 0; padding:8px; background:#1e212e; border-radius:4px; color:#e0e0e0;';
+            div.innerHTML = `<strong>${ach.name}</strong><br><small>${ach.desc}</small><br><span style="color:${ach.unlocked?'#7ec850':'#ff5252'}">${ach.unlocked?'✓ FREIGESCHALTET':'🔒 GESPERRT'}</span>`;
+            list.appendChild(div);
+        });
+        document.getElementById('achievements-modal').style.display='flex';
+    }
+    function showJournal(){
+        const textDiv = document.getElementById('journal-text');
+        if(journalEntries.length===0) textDiv.innerHTML='<p>Noch keine Einträge.</p>';
+        else textDiv.innerHTML=journalEntries.map(e=>`<div style="margin:5px 0; border-left:2px solid #d4af37; padding-left:8px; color:#ffd966;">${e}</div>`).join('');
+        document.getElementById('journal-modal').style.display='flex';
+    }
+    function showStats(){
+        const textDiv = document.getElementById('stats-text');
+        textDiv.innerHTML = `
+            <ul style="color:#ffd966;">
+                <li>Kämpfe gewonnen: ${player.totalKills}</li>
+                <li>Elite-Gegner besiegt: ${player.eliteKills}</li>
+                <li>Pfade abgeschlossen: ${player.completedPaths}</li>
+                <li>Minispiele gewonnen: ${player.miniGamesWon||0}</li>
+                <li>Mana verbraucht: ${player.totalManaUsed}</li>
+                <li>Höchste Kombo: ${player.maxCombo}</li>
+                <li>Erreichtes Level: ${player.level}</li>
+                <li>Gesammelte Gegenstände: ${allItems.length}</li>
+                <li>Haustier: ${activePet?activePet.name:'Keins'}</li>
+            </ul>
+        `;
+        document.getElementById('stats-modal').style.display='flex';
+    }
+    function showHandbook(){
+        const textDiv = document.getElementById('handbook-text');
+        textDiv.innerHTML = `
+            <h3>🎮 Spielprinzip</h3><p>Du wanderst von links nach rechts durch Pfad-Segmente. Jedes Segment bietet einen oder zwei Pfade. Du darfst nur einen Pfad pro Segment wählen – nach Abschluss ist das Segment erledigt und du schreitest voran.</p>
+            <h3>⚔️ Kampf & Mana</h3><p>Angriff (kostenlos) baut eine Kombo auf (max. 30% mehr Schaden). Spezialangriff (30 Mana, 3 Runden Cooldown) und Heilen (20 Mana) kosten Mana. Mana regeneriert sich pro Runde (Basis 10, plus Haustierbonus).</p>
+            <h3>🍀 Glück</h3><p>Erhöht Chance auf bessere Belohnungen, Elite-Gegner und Events.</p>
+            <h3>🐾 Haustiere</h3><p>Fünf verschiedene Haustiere mit individuellen Boni (Angriff, Verteidigung, Krit, Manareg, Glück). Du kannst sie jederzeit wechseln.</p>
+            <h3>🎮 Minispiele</h3><p>Ab Level 2 erscheinen Minispiele: Reaktion, Gedächtnis, Präzision und Schnelltippspiel. Gewinne Gold und XP.</p>
+            <h3>🎰 Casino</h3><p>Würfelspiel (Hoch/Tief oder exakte Zahl) und Slot‑Machine – riskiere Gold für hohe Gewinne!</p>
+            <h3>💾 Speichern / Laden</h3><p>Dein Fortschritt wird automatisch gespeichert, du kannst aber auch manuell speichern und laden.</p>
+            <h3>👑 Ende & New Game+</h3><p>Nach dem Drachenkönig siehst du deine Statistik und kannst New Game+ starten – Gegner stärker, Startbonus.</p>
+            <h3>💡 Tipps</h3><ul><li>Kombo hoch halten für mehr Schaden.</li><li>Mana managen – heile nur bei Bedarf.</li><li>Ausrüstung und Haustiere strategisch wählen.</li><li>Minispiele und Casino lohnen sich oft.</li></ul>
+        `;
+        document.getElementById('handbook-modal').style.display='flex';
+    }
+
+    function saveGame(){
+        const save = {
+            player: {
+                level: player.level, xp: player.xp, maxHp: player.maxHp, hp: player.hp,
+                baseAttack: player.baseAttack, baseDefense: player.baseDefense, baseCrit: player.baseCrit,
+                luck: player.luck, maxMana: player.maxMana, mana: player.mana,
+                gold: player.gold, potions: player.potions,
+                attackBonus: player.attackBonus, defenseBonus: player.defenseBonus, critBonus: player.critBonus,
+                totalKills: player.totalKills, eliteKills: player.eliteKills, completedPaths: player.completedPaths,
+                bossKilled: player.bossKilled, miniGamesWon: player.miniGamesWon, totalManaUsed: player.totalManaUsed,
+                maxCombo: player.maxCombo, pet: activePet ? activePet.id : null,
+                ownedPets: ownedPets
+            },
+            equipment: {
+                weapon: player.equippedWeapon, armor: player.equippedArmor, ring: player.equippedRing
+            },
+            allItems: allItems,
+            pathSegments: pathSegments,
+            currentSegmentIndex: currentSegmentIndex,
+            achievements: achievements,
+            journalEntries: journalEntries.slice(0, 30)
+        };
+        localStorage.setItem('pixelQuestSave', JSON.stringify(save));
+        addLog('💾 Spielstand gespeichert!', 'heal');
+    }
+
+    function loadGame(){
+        const raw = localStorage.getItem('pixelQuestSave');
+        if (!raw) { addLog('❌ Kein Spielstand gefunden!', 'damage'); return; }
+        try {
+            const save = JSON.parse(raw);
+            player.level = save.player.level; player.xp = save.player.xp; player.maxHp = save.player.maxHp; player.hp = save.player.hp;
+            player.baseAttack = save.player.baseAttack; player.baseDefense = save.player.baseDefense; player.baseCrit = save.player.baseCrit;
+            player.luck = save.player.luck; player.maxMana = save.player.maxMana; player.mana = save.player.mana;
+            player.gold = save.player.gold; player.potions = save.player.potions;
+            player.attackBonus = save.player.attackBonus; player.defenseBonus = save.player.defenseBonus; player.critBonus = save.player.critBonus;
+            player.totalKills = save.player.totalKills; player.eliteKills = save.player.eliteKills; player.completedPaths = save.player.completedPaths;
+            player.bossKilled = save.player.bossKilled; player.miniGamesWon = save.player.miniGamesWon; player.totalManaUsed = save.player.totalManaUsed;
+            player.maxCombo = save.player.maxCombo;
+            ownedPets = save.player.ownedPets || [];
+            if (save.player.pet) setActivePet(save.player.pet);
+            else activePet = null;
+            allItems = save.allItems || [];
+            player.equippedWeapon = save.equipment.weapon;
+            player.equippedArmor = save.equipment.armor;
+            player.equippedRing = save.equipment.ring;
+            pathSegments = save.pathSegments;
+            currentSegmentIndex = save.currentSegmentIndex;
+            achievements = save.achievements;
+            journalEntries = save.journalEntries || [];
+            player.updateUI();
+            renderPath();
+            updateEquipmentUI();
+            updatePetUI();
+            addLog('📂 Spielstand geladen!', 'heal');
+            addJournalEntry('Spielstand geladen');
+            gameActive = true;
+            document.getElementById('attack-btn').disabled = false;
+            document.getElementById('skill-btn').disabled = false;
+            document.getElementById('heal-btn').disabled = false;
+        } catch(e) { addLog('⚠️ Fehler beim Laden!', 'damage'); }
+    }
+
+    function resetGame(){
+        gameActive = true;
+        player = new Player(false);
+        pathSegments = [generatePathSegment(0), generatePathSegment(1)];
+        currentSegmentIndex=0; enemy=null; waitingForChoice=false;
+        player.updateUI(); renderPath();
+        addLog('🔄 Spiel neugestartet! Wähle deinen ersten Pfad...','heal');
+        addJournalEntry('=== NEUES SPIEL ===');
+        document.getElementById('attack-btn').disabled=false;
+        document.getElementById('skill-btn').disabled=false;
+        document.getElementById('heal-btn').disabled=false;
+        document.getElementById('enemy-pixel').textContent='❓';
+        Object.keys(achievements).forEach(k=>{ achievements[k].unlocked=false; if(achievements[k].count) achievements[k].count=0; });
+        allItems=[];
+        ownedPets=[]; activePet=null;
+        updatePetUI();
+        updateFrameSymbols();
+    }
+
+    function checkDailyBonus(){
+        const last = localStorage.getItem('lastDaily');
+        const today = new Date().toDateString();
+        if(last !== today){
+            localStorage.setItem('lastDaily', today);
+            player.gold += 100;
+            player.potions += 2;
+            addLog(`🎁 Täglicher Bonus! +100 Gold und 2 Heiltränke!`,'heal');
+            addJournalEntry(`Täglicher Bonus erhalten`);
+            player.updateUI();
+        }
+    }
+
+    // Initialisierung
+    player = new Player(false);
+    pathSegments = [generatePathSegment(0), generatePathSegment(1)];
+    renderPath(); player.updateUI();
+    addLog('✨ Klicke auf den ersten Pfad, um deine Reise zu beginnen!','normal');
+    addJournalEntry('Spiel gestartet');
+    checkDailyBonus();
+    updatePetUI();
+
+    // Event-Listener
+    document.getElementById('attack-btn').addEventListener('click', attack);
+    document.getElementById('skill-btn').addEventListener('click', specialAttack);
+    document.getElementById('heal-btn').addEventListener('click', heal);
+    document.getElementById('reset-btn').addEventListener('click', resetGame);
+    document.getElementById('use-potion').addEventListener('click', usePotion);
+    document.getElementById('buy-potion').addEventListener('click', buyPotion);
+    document.getElementById('buy-attack').addEventListener('click', buyAttack);
+    document.getElementById('buy-defense').addEventListener('click', buyDefense);
+    document.getElementById('buy-crit').addEventListener('click', buyCrit);
+    document.getElementById('buy-luck').addEventListener('click', buyLuck);
+    document.getElementById('buy-mana').addEventListener('click', buyMana);
+    document.getElementById('buy-pet').addEventListener('click', buyRandomPet);
+    document.getElementById('show-equipment').addEventListener('click', showEquipment);
+    document.getElementById('show-pets').addEventListener('click', showPets);
+    document.getElementById('show-achievements').addEventListener('click', showAchievements);
+    document.getElementById('show-stats').addEventListener('click', showStats);
+    document.getElementById('show-journal').addEventListener('click', showJournal);
+    document.getElementById('show-casino').addEventListener('click', showCasino);
+    document.getElementById('handbook-btn').addEventListener('click', showHandbook);
+    document.getElementById('save-btn').addEventListener('click', saveGame);
+    document.getElementById('load-btn').addEventListener('click', loadGame);
+    document.body.addEventListener('click', () => sound.init(), { once: true });
+    window.onclick = (e) => { if (e.target.classList.contains('modal')) e.target.style.display = 'none'; };
+</script>
+</body>
+</html>

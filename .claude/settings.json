@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npm start *)",
+      "PowerShell($tries = 0; while \\($tries -lt 20\\) { try { $r = Invoke-WebRequest -Uri \"http://localhost:4299\" -TimeoutSec 2 -ErrorAction Stop; if \\($r.StatusCode -eq 200\\) { Write-Output \"UP\"; break } } catch {} Start-Sleep -Seconds 2; $tries++ }; if \\($tries -ge 20\\) { Write-Output \"TIMEOUT\" })",
+      "Bash(npx ng *)",
+      "Bash(node -e ' *)"
+    ],
+    "additionalDirectories": [
+      "C:\\"
+    ]
+  }
+}

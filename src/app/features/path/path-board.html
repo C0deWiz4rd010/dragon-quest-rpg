@@ -12,70 +12,50 @@
 
   <div class="path-weather-layer" aria-hidden="true"></div>
 
-  <div class="board-header">
-    <div class="header-stat">
-      <span>📍 Tiefe</span><strong>{{ path.currentDepth() + 1 }}</strong>
+  <!-- ── COMPACT TOOLBAR ──────────────────────────────────────── -->
+  <div class="board-bar">
+    <div class="bar-pills">
+      <span class="pill"><i>📍</i>T{{ path.currentDepth() + 1 }}</span>
+      <span
+        class="pill boss-pill"
+        [class.imminent]="5 - (path.currentDepth() % 5) === 1"
+        [class.close]="5 - (path.currentDepth() % 5) === 2"
+        ><i>🐉</i>{{ 5 - (path.currentDepth() % 5) }}</span
+      >
+      <span class="pill"><i>🌤</i>{{ weatherLabel() }}</span>
+      <span class="pill prep-pill" [class.ready]="gameState.bossPrepScore() >= 70"
+        ><i>🎯</i>{{ gameState.bossPrepScore() }}%</span
+      >
+      <span class="pill"><i>✅</i>{{ gameState.player().completedPaths }}</span>
     </div>
-    <div class="header-stat">
-      <span>✅ Pfade</span><strong>{{ gameState.player().completedPaths }}</strong>
-    </div>
-    <div class="header-stat">
-      <span>⚡ Status</span><strong>{{ gameState.enemy() ? 'Kampf' : 'Erkunden' }}</strong>
-    </div>
-    <div class="header-stat">
-      <span>🐉 Boss in</span><strong>{{ 5 - (path.currentDepth() % 5) }}</strong>
-    </div>
-    <div class="header-stat">
-      <span>🌤 Wetter</span><strong>{{ weatherLabel() }}</strong>
-    </div>
-    <div class="header-stat prep-stat" [class.ready]="gameState.bossPrepScore() >= 70">
-      <span>🎯 Prep</span><strong>{{ gameState.bossPrepScore() }}%</strong>
-    </div>
-  </div>
 
-  <div class="contract-bar-row">
-    <div class="contract-info">
-      <span class="contract-icon">📋</span>
-      <div>
-        <strong>{{ gameState.player().activeContract.title }}</strong>
-        <small>{{ gameState.player().activeContract.description }}</small>
-      </div>
-      <span class="contract-count">
-        {{ gameState.player().activeContract.progress }}/{{ gameState.player().activeContract.target }}
+    <div class="contract-mini" [class.complete]="gameState.player().activeContract.completed">
+      <span class="contract-mini-icon">📋</span>
+      <span class="contract-mini-title">{{ gameState.player().activeContract.title }}</span>
+      <span class="contract-mini-count"
+        >{{ gameState.player().activeContract.progress }}/{{
+          gameState.player().activeContract.target
+        }}</span
+      >
+      <span class="contract-mini-track">
+        <span
+          class="contract-mini-fill"
+          [class.complete]="gameState.player().activeContract.completed"
+          [style.width.%]="gameState.contractProgressPercent()"
+        ></span>
       </span>
     </div>
-    <div class="contract-track">
-      <div
-        class="contract-fill"
-        [class.complete]="gameState.player().activeContract.completed"
-        [style.width.%]="gameState.contractProgressPercent()"
-      ></div>
-    </div>
   </div>
 
-  <div class="route-summary">
-    <div>
-      <p>Aktive Route</p>
-      <strong>Tiefe {{ path.currentDepth() + 1 }} wird gewählt</strong>
-    </div>
-    <div>
-      <p>Navigation</p>
-      <strong>{{
-        gameState.enemy() ? 'Im Kampf gesperrt' : 'Horizontal scrollen und Branch wählen'
-      }}</strong>
-    </div>
-    <div>
-      <p>Taktik</p>
-      <strong
-        >{{ routeAdvisorSummary() }}. Serie {{ gameState.player().routeStreak }}, Segen
-        {{ gameState.activeBlessingCount() }}, Relics {{ gameState.player().ownedRelics.length }},
-        Shards {{ gameState.player().dragonShards }}.</strong
-      >
-    </div>
-  </div>
+  <p class="advisor-line">
+    <span class="advisor-tag">Taktik</span>{{ routeAdvisorSummary() }}
+  </p>
 
+  <!-- ── NODE MAP ─────────────────────────────────────────────── -->
   <div #routeViewport class="route-viewport" aria-label="Roguelike path route">
     <div class="route">
+      <div class="route-spine" aria-hidden="true"></div>
+
       @for (entry of path.visibleSegments(); track entry.segment.id) {
         @let segment = entry.segment;
         @let i = entry.index;
@@ -86,33 +66,33 @@
           [class.current]="i === path.currentDepth()"
           [class.past]="i < path.currentDepth()"
         >
-          <header class="segment-head">
-            <div class="segment-kicker">
-              {{
-                i === path.currentDepth()
-                  ? 'Aktiv'
-                  : i < path.currentDepth()
-                    ? 'Geklärt'
-                    : 'Vorschau'
-              }}
-            </div>
-            <div class="segment-label">Tiefe {{ segment.depth + 1 }}</div>
-            <div class="segment-meta">{{ segment.branches.length }} Wege</div>
-          </header>
+          <span class="segment-tag">
+            <small>{{
+              i === path.currentDepth()
+                ? 'Aktiv'
+                : i < path.currentDepth()
+                  ? 'Klar'
+                  : 'Bald'
+            }}</small>
+            <strong>T{{ segment.depth + 1 }}</strong>
+          </span>
 
-          <div class="branches">
+          <div class="node-stack">
             @for (branch of segment.branches; track branch.id) {
               @let advice = branchAdvice(branch);
               <button
                 type="button"
-                class="branch tip"
+                class="node tip"
                 [attr.data-tip]="
+                  branch.name +
+                  ' · ' +
                   branch.description +
                   ' | ' +
                   advice.reason +
                   ' | Risiko ' +
                   branch.threat +
                   '/5' +
+                  (branch.rewardHint ? ' | ' + branch.rewardHint : '') +
                   (branch.modifierHint ? ' | ' + branch.modifierHint : '')
                 "
                 [class.advice-danger]="advice.tone === 'danger'"
@@ -128,12 +108,6 @@
                 [class.type-rest]="branch.type === 'rest'"
                 [class.type-sanctuary]="branch.type === 'sanctuary'"
                 [class.type-treasure]="branch.type === 'treasure'"
-                [class.biome-ember]="branch.biome === 'ember'"
-                [class.biome-frost]="branch.biome === 'frost'"
-                [class.biome-grove]="branch.biome === 'grove'"
-                [class.biome-ruin]="branch.biome === 'ruin'"
-                [class.biome-sanctum]="branch.biome === 'sanctum'"
-                [class.biome-storm]="branch.biome === 'storm'"
                 [class.selected]="branch.id === gameState.selectedBranchId()"
                 [class.done]="branch.completed"
                 [class.locked]="branch.locked && !branch.completed"
@@ -146,49 +120,8 @@
                 "
                 (click)="path.chooseBranch(branch)"
               >
-                <span class="branch-topline">
-                  <span class="branch-type">{{ branchTypeLabel(branch.type) }}</span>
-                  <span class="branch-risk">{{
-                    branch.riskLabel ?? 'Risiko ' + branch.threat + '/5'
-                  }}</span>
-                </span>
-
-                <span class="branch-forecast">
-                  <span>{{ weatherLabelFor(branch.weatherPreview) }}</span>
-                  <span
-                    class="biome-chip"
-                    [class.ember]="branch.biome === 'ember'"
-                    [class.frost]="branch.biome === 'frost'"
-                    [class.grove]="branch.biome === 'grove'"
-                    [class.ruin]="branch.biome === 'ruin'"
-                    [class.sanctum]="branch.biome === 'sanctum'"
-                    [class.storm]="branch.biome === 'storm'"
-                    >{{ biomeLabel(branch.biome) }}</span
-                  >
-                  @if (branch.enemyRole) {
-                    <span>{{ branch.enemyRole }}</span>
-                  }
-                  @if (branch.eliteRoute) {
-                    <span class="modifier-chip">Elite</span>
-                  }
-                  @if (modifierLabel(branch.modifier); as modifier) {
-                    <span class="modifier-chip">{{ modifier }}</span>
-                  }
-                  @if (contractHint(branch); as hint) {
-                    <span class="contract-chip">{{ hint }}</span>
-                  }
-                  <span
-                    class="advice-chip"
-                    [class.danger]="advice.tone === 'danger'"
-                    [class.prep]="advice.tone === 'prep'"
-                    [class.recommended]="advice.tone === 'recommended'"
-                  >
-                    {{ advice.label }} {{ advice.score }}
-                  </span>
-                </span>
-
-                <span class="branch-visual">
-                  <span class="branch-icon">
+                <span class="node-dot">
+                  <span class="node-icon">
                     @if (branch.sprite; as sprite) {
                       <span
                         class="unit-sprite branch-sprite"
@@ -203,26 +136,30 @@
                       {{ branch.icon }}
                     }
                   </span>
-                </span>
 
-                <span class="branch-copy">
-                  <span class="branch-name">{{ branch.name }}</span>
-                  <span class="branch-desc">{{ branch.description }}</span>
-                  @if (branch.rewardHint) {
-                    <span class="branch-reward">{{ branch.rewardHint }}</span>
+                  @if (branch.completed) {
+                    <span class="node-flag done-flag">✓</span>
+                  } @else if (branch.locked) {
+                    <span class="node-flag lock-flag">🔒</span>
+                  } @else if (advice.tone === 'recommended') {
+                    <span class="node-flag star-flag">★</span>
+                  } @else if (advice.tone === 'danger') {
+                    <span class="node-flag warn-flag">!</span>
                   }
                 </span>
 
-                <span class="branch-footer">
-                  <span class="threat" [style.--threat]="branch.threat"></span>
-                  @if (branch.locked && !branch.completed) {
-                    <span class="lock-pill">Gesperrt</span>
-                  } @else if (branch.completed) {
-                    <span class="lock-pill success">Geklärt</span>
-                  } @else if (i === path.currentDepth()) {
-                    <span class="lock-pill ready">Wählbar</span>
-                  } @else {
-                    <span class="lock-pill muted">Bald</span>
+                <span class="node-caption">
+                  <span class="node-name">{{ branch.name }}</span>
+                  <span class="node-sub">
+                    <span class="node-type">{{ branchTypeLabel(branch.type) }}</span>
+                    <span class="risk-dots" [attr.data-threat]="branch.threat">
+                      @for (dot of [1, 2, 3, 4, 5]; track dot) {
+                        <i [class.on]="dot <= branch.threat"></i>
+                      }
+                    </span>
+                  </span>
+                  @if (branch.rewardHint) {
+                    <span class="node-reward">{{ branch.rewardHint }}</span>
                   }
                 </span>
               </button>
