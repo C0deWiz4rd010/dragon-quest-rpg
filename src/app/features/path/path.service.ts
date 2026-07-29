@@ -258,28 +258,77 @@ export class Path {
     }
 
     if (branch.type === 'forge') {
-      const forgedPlayer = this.gameState.player();
-      const attackBoost =
-        (forgedPlayer.equippedWeapon ? 2 : 0) +
-        (!forgedPlayer.equippedWeapon && !forgedPlayer.equippedArmor ? 2 : 0);
-      const defenseBoost =
-        (forgedPlayer.equippedArmor ? 2 : 0) +
-        (!forgedPlayer.equippedWeapon && !forgedPlayer.equippedArmor ? 1 : 0);
-      const critBoost = forgedPlayer.equippedRing ? 4 : 0;
+      const source = 'Schmiede';
+      const p0 = this.gameState.player();
+      const hasWeapon = !!p0.equippedWeapon;
+      const hasArmor = !!p0.equippedArmor;
+      const canTransmute = p0.gold >= 60;
 
-      this.gameState.updatePlayer((player) => ({
-        ...player,
-        attackBonus: player.attackBonus + attackBoost,
-        defenseBonus: player.defenseBonus + defenseBoost,
-        critBonus: player.critBonus + critBoost,
-        mana: Math.min(player.maxMana, player.mana + 12),
-      }));
-      this.gameState.addLog(
-        `Schmiede: +${attackBoost} ATK, +${defenseBoost} DEF, +${critBoost}% Krit und etwas Mana-Tempo.`,
-        'achievement',
-      );
-      this.gameState.addDragonShards(1, branch.name);
-      this.completeSelectedBranch();
+      this.encounters.launchDilemma({
+        source,
+        subtitle: 'Der Schmied bietet dir drei Handwerke an.',
+        flavor: 'Funken sprühen über den Amboss. Wähle, was du schmieden willst.',
+        icon: '🔨',
+        choices: [
+          {
+            id: 'upgrade',
+            title: 'Ausrüstung schärfen',
+            description: 'Verstärke Waffe und Rüstung dauerhaft.',
+            tone: 'reward',
+            rewardLabel: hasWeapon || hasArmor ? '+4 ATK, +4 DEF' : '+3 ATK, +3 DEF',
+          },
+          {
+            id: 'transmute',
+            title: 'Gold zu Splittern',
+            description: 'Schmelze 60 Gold zu 3 Dragon Shards ein.',
+            tone: 'risk',
+            riskLabel: '−60 Gold',
+            rewardLabel: '+3 Dragon Shards',
+            disabled: !canTransmute,
+          },
+          {
+            id: 'synthesis',
+            title: 'Runen-Synthese',
+            description: 'Feine Klingenschärfe für kritische Treffer.',
+            tone: 'reward',
+            rewardLabel: '+6% Krit, +18 Mana',
+          },
+        ],
+        onResolve: (choiceId) => {
+          if (choiceId === 'transmute' && canTransmute) {
+            this.gameState.updatePlayer((p) => ({ ...p, gold: p.gold - 60 }));
+            this.gameState.addDragonShards(3, source);
+            this.gameState.addLog(
+              `${source}: 60 Gold zu 3 Dragon Shards transmutiert.`,
+              'achievement',
+            );
+          } else if (choiceId === 'synthesis') {
+            this.gameState.updatePlayer((p) => ({
+              ...p,
+              critBonus: p.critBonus + 6,
+              mana: Math.min(p.maxMana, p.mana + 18),
+            }));
+            this.gameState.addLog(
+              `${source}: Runen-Synthese — +6% Krit, +18 Mana.`,
+              'achievement',
+            );
+          } else {
+            const atk = hasWeapon ? 4 : 3;
+            const def = hasArmor ? 4 : 3;
+            this.gameState.updatePlayer((p) => ({
+              ...p,
+              attackBonus: p.attackBonus + atk,
+              defenseBonus: p.defenseBonus + def,
+            }));
+            this.gameState.addLog(
+              `${source}: Ausrüstung geschärft — +${atk} ATK, +${def} DEF.`,
+              'achievement',
+            );
+          }
+          this.gameState.addDragonShards(1, branch.name);
+          this.completeSelectedBranch();
+        },
+      });
       return;
     }
 
