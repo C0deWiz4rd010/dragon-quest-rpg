@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component, ElementRef, ViewChild, computed, effect, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, ViewChild, computed, effect, inject, signal } from '@angular/core';
 import { GameState } from '../game-state/game-state.service';
+
+type LogFilter = 'all' | 'combat' | 'progress';
 
 @Component({
   selector: 'app-event-log',
@@ -10,13 +12,29 @@ import { GameState } from '../game-state/game-state.service';
 })
 export class EventLog {
   protected readonly gameState = inject(GameState);
+  protected readonly filter = signal<LogFilter>('all');
+  protected readonly filteredLogs = computed(() => {
+    const filter = this.filter();
+    const logs = this.gameState.logs();
+    if (filter === 'all') {
+      return logs;
+    }
+    if (filter === 'combat') {
+      return logs.filter((entry) => entry.type === 'damage' || entry.type === 'critical');
+    }
+    return logs.filter((entry) => entry.type === 'event' || entry.type === 'achievement' || entry.type === 'heal');
+  });
   protected readonly latestLogId = computed(() => this.gameState.logs().at(-1)?.id ?? null);
 
   @ViewChild('entriesEl') private entriesEl?: ElementRef<HTMLElement>;
 
+  protected setFilter(filter: LogFilter): void {
+    this.filter.set(filter);
+  }
+
   constructor() {
     effect(() => {
-      this.gameState.logs(); // subscribe to changes
+      this.filteredLogs(); // subscribe to changes
       setTimeout(() => {
         const el = this.entriesEl?.nativeElement;
         const latestEntry = el?.lastElementChild as HTMLElement | null;

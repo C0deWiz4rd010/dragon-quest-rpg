@@ -23,12 +23,12 @@ Am Ende: Version-Bump.
 
 ## Phase C — Neue Game-Systeme
 
-- [ ] C1 · 4 Charakterklassen am Run-Start (Warrior/Mage/Rogue/Paladin)
-- [ ] C2 · Skill-Unlock-System beim Level-Up
-- [ ] C3 · Achievement-System (30 Achievements, localStorage)
-- [ ] C4 · Forge-Crafting (Upgrade/Transmute/Synthesis)
-- [ ] C5 · 3 Save-Slots + Slot-Picker
-- [ ] C6 · Tutorial First-Run-Onboarding
+- [x] C1 · 4 Charakterklassen am Run-Start (Warrior/Mage/Rogue/Paladin)
+- [x] C2 · Skill-Unlock-System beim Level-Up
+- [x] C3 · Achievement-System (30 Achievements, localStorage)
+- [x] C4 · Forge-Crafting (Upgrade/Transmute/Synthesis)
+- [x] C5 · 3 Save-Slots + Slot-Picker
+- [x] C6 · Tutorial First-Run-Onboarding
 
 ## Phase D — UI/UX-Polish
 

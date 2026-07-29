@@ -1,5 +1,32 @@
+<div class="log-filters" role="tablist" aria-label="Ereignis-Filter">
+  <button
+    type="button"
+    class="log-filter"
+    [class.active]="filter() === 'all'"
+    (click)="setFilter('all')"
+  >
+    Alle
+  </button>
+  <button
+    type="button"
+    class="log-filter"
+    [class.active]="filter() === 'combat'"
+    (click)="setFilter('combat')"
+  >
+    ⚔ Kampf
+  </button>
+  <button
+    type="button"
+    class="log-filter"
+    [class.active]="filter() === 'progress'"
+    (click)="setFilter('progress')"
+  >
+    ◆ Verlauf
+  </button>
+</div>
+
 <div class="entries" #entriesEl role="log" aria-live="polite" aria-atomic="false">
-  @for (entry of gameState.logs(); track entry.id) {
+  @for (entry of filteredLogs(); track entry.id) {
     <article class="entry-card" [class]="entry.type" [class.latest]="entry.id === latestLogId()">
       <span class="entry-rail" aria-hidden="true"></span>
       <header>
