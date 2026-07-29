@@ -990,6 +990,61 @@
   }
 }
 
+.handbook-ach-title {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  margin-top: 16px !important;
+}
+
+.handbook-ach-count {
+  background: rgba(250, 204, 21, 0.14);
+  border-radius: 999px;
+  color: #fde047;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0;
+  padding: 2px 9px;
+}
+
+.achievement-grid {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  margin-top: 4px;
+}
+
+.achievement-cell {
+  align-items: center;
+  background: rgba(250, 204, 21, 0.08);
+  border: 1px solid rgba(250, 204, 21, 0.28);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 4px;
+  text-align: center;
+
+  &.locked {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+    opacity: 0.55;
+  }
+}
+
+.achievement-cell-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.achievement-cell-name {
+  color: #e8eef8;
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
 /* ═══════════════════════════════════════════════════════
    MOBILE TABS
 ═══════════════════════════════════════════════════════ */
