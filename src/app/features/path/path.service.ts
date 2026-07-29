@@ -385,7 +385,7 @@ export class Path {
         hp: Math.max(1, p.hp - Math.floor(p.maxHp * frac)),
       }));
 
-    const archetypes = ['shrine', 'coin', 'cache'] as const;
+    const archetypes = ['shrine', 'coin', 'cache', 'wanderer', 'soldier', 'dragonghost', 'keeper', 'bard'] as const;
     const kind = archetypes[Math.floor(Math.random() * archetypes.length)];
 
     const effects: Record<string, () => void> = {};
@@ -484,7 +484,7 @@ export class Path {
           'heal',
         );
       };
-    } else {
+    } else if (kind === 'cache') {
       icon = '📦';
       source = 'Uralter Hort';
       flavor = 'Eine versiegelte Truhe summt vor Energie. Das Schloss könnte eine Falle sein.';
@@ -532,6 +532,190 @@ export class Path {
           `${source}: Sorgfalt zahlt sich aus — ${blessingLabel(blessing.type)} und Mana.`,
           'event',
         );
+      };
+    } else if (kind === 'wanderer') {
+      icon = '🧙';
+      source = 'Wandernder Händler';
+      flavor = 'Ein verhüllter Händler breitet seltene Ware aus und bietet dir einen Handel an.';
+      choices.push(
+        {
+          id: 'risk',
+          title: 'Relikt erhandeln',
+          description: 'Gib Gold für ein unbekanntes Relikt aus seinem Beutel.',
+          tone: 'risk',
+          riskLabel: `Kosten: ${goldBase + 30} Gold`,
+          rewardLabel: 'Zufälliges Relikt',
+          disabled: this.gameState.player().gold < goldBase + 30,
+        },
+        {
+          id: 'reward',
+          title: 'Vorräte kaufen',
+          description: 'Nimm Tränke und einen Manaschluck.',
+          tone: 'reward',
+          rewardLabel: '+2 Tränke, +18 Mana',
+        },
+      );
+      effects['risk'] = () => {
+        this.gameState.updatePlayer((p) => ({ ...p, gold: Math.max(0, p.gold - (goldBase + 30)) }));
+        this.grantRouteRelic({ ...branch, guaranteedRelicId: undefined }, source);
+        this.gameState.addLog(`${source}: Der Handel gelingt — ein Relikt wechselt den Besitzer.`, 'achievement');
+      };
+      effects['reward'] = () => {
+        this.gameState.updatePlayer((p) => ({
+          ...p,
+          potions: p.potions + 2,
+          mana: Math.min(p.maxMana, p.mana + 18),
+        }));
+        this.gameState.addLog(`${source}: Du deckst dich mit Vorräten ein — +2 Tränke, +18 Mana.`, 'heal');
+      };
+    } else if (kind === 'soldier') {
+      icon = '🪖';
+      source = 'Verlorener Soldat';
+      flavor = 'Ein verwundeter Soldat lehnt an einem Felsen und bittet dich um Hilfe.';
+      choices.push(
+        {
+          id: 'risk',
+          title: 'Wunden versorgen',
+          description: 'Teile Vorräte und Zeit — er dankt es dir mit einem Segen.',
+          tone: 'reward',
+          riskLabel: 'Kosten: -1 Trank',
+          rewardLabel: 'Kampf-Segen + Gold',
+          disabled: this.gameState.player().potions < 1,
+        },
+        {
+          id: 'reward',
+          title: 'Weiterziehen',
+          description: 'Nimm nur, was am Wegesrand liegt.',
+          tone: 'safe',
+          rewardLabel: `+${Math.floor(goldBase * 0.5)} Gold`,
+        },
+      );
+      effects['risk'] = () => {
+        this.gameState.updatePlayer((p) => ({
+          ...p,
+          potions: Math.max(0, p.potions - 1),
+          gold: p.gold + goldBase,
+        }));
+        this.gameState.grantBlessing('battle', 2, source);
+        this.gameState.addLog(`${source}: Dankbar teilt er Kampfwissen — Segen und +${goldBase} Gold.`, 'achievement');
+      };
+      effects['reward'] = () => {
+        this.gameState.updatePlayer((p) => ({ ...p, gold: p.gold + Math.floor(goldBase * 0.5) }));
+        this.gameState.addLog(`${source}: Du ziehst weiter und findest etwas Gold.`, 'event');
+      };
+    } else if (kind === 'dragonghost') {
+      icon = '🐉';
+      source = 'Geist des Urdrachen';
+      flavor = 'Ein schimmernder Drachengeist prüft deinen Mut mit einer uralten Frage.';
+      const challengeChance = Math.min(75, 55 + Math.floor(luck * 0.9));
+      choices.push(
+        {
+          id: 'risk',
+          title: 'Herausforderung annehmen',
+          description: 'Stelle dich der Prüfung des Geistes.',
+          tone: 'risk',
+          chance: challengeChance,
+          riskLabel: 'Fehlschlag: -20% HP',
+          rewardLabel: 'Dauerhaft +2 ATK + Shard',
+        },
+        {
+          id: 'reward',
+          title: 'Um Weisheit bitten',
+          description: 'Bescheidenheit bringt ruhige Gaben.',
+          tone: 'reward',
+          rewardLabel: '+3 Resolve-Fokus, Mana',
+        },
+      );
+      effects['risk'] = () => {
+        if (Math.random() * 100 < challengeChance) {
+          this.gameState.updatePlayer((p) => ({
+            ...p,
+            baseAttack: p.baseAttack + 2,
+          }));
+          this.gameState.addDragonShards(1, source);
+          this.gameState.addLog(`${source}: Du bestehst die Prüfung — dauerhaft +2 ATK und ein Shard!`, 'achievement');
+        } else {
+          hurt(0.2);
+          this.gameState.addLog(`${source}: Die Prüfung überwältigt dich — der Geist entzieht Lebenskraft.`, 'damage');
+        }
+      };
+      effects['reward'] = () => {
+        this.gameState.updatePlayer((p) => ({
+          ...p,
+          mana: Math.min(p.maxMana, p.mana + 22),
+          resolve: Math.min(p.maxResolve, p.resolve + 1),
+        }));
+        this.gameState.grantBlessing('focus', 2, source);
+        this.gameState.addLog(`${source}: Weisheit fließt zu dir — Fokus, Mana und Resolve.`, 'heal');
+      };
+    } else if (kind === 'keeper') {
+      icon = '⛩';
+      source = 'Drachenschrein-Hüter';
+      flavor = 'Ein stiller Hüter bietet dir vollständige Heilung — gegen eine Opfergabe.';
+      choices.push(
+        {
+          id: 'risk',
+          title: 'Opfergabe leisten',
+          description: 'Lege Gold auf den Altar für vollständige Erholung.',
+          tone: 'reward',
+          riskLabel: 'Kosten: 60 Gold',
+          rewardLabel: 'Voll-Heilung + Reinigung',
+          disabled: this.gameState.player().gold < 60,
+        },
+        {
+          id: 'reward',
+          title: 'Nur rasten',
+          description: 'Nimm eine bescheidene Erholung ohne Gabe.',
+          tone: 'safe',
+          rewardLabel: '+20% HP, +12 Mana',
+        },
+      );
+      effects['risk'] = () => {
+        this.gameState.updatePlayer((p) => ({
+          ...p,
+          gold: Math.max(0, p.gold - 60),
+          hp: p.maxHp,
+          mana: p.maxMana,
+          statusEffect: null,
+        }));
+        this.gameState.addLog(`${source}: Der Altar leuchtet — volle HP, volles Mana, Status gereinigt.`, 'heal');
+      };
+      effects['reward'] = () => {
+        this.gameState.updatePlayer((p) => ({
+          ...p,
+          hp: Math.min(p.maxHp, p.hp + Math.floor(p.maxHp * 0.2)),
+          mana: Math.min(p.maxMana, p.mana + 12),
+        }));
+        this.gameState.addLog(`${source}: Eine kurze Rast stärkt dich etwas.`, 'event');
+      };
+    } else {
+      icon = '🎵';
+      source = 'Wandernder Barde';
+      flavor = 'Ein Barde besingt deine Taten und hebt die Moral der Reise.';
+      choices.push(
+        {
+          id: 'risk',
+          title: 'Zuhören & mitfeiern',
+          description: 'Lass dich vom Lied mitreißen — Mut und Glück steigen.',
+          tone: 'reward',
+          rewardLabel: 'Glücks-Segen + Gold',
+        },
+        {
+          id: 'reward',
+          title: 'Höflich weiterziehen',
+          description: 'Ein kurzer Applaus, dann geht es weiter.',
+          tone: 'safe',
+          rewardLabel: '+10 Mana',
+        },
+      );
+      effects['risk'] = () => {
+        this.gameState.updatePlayer((p) => ({ ...p, gold: p.gold + Math.floor(goldBase * 0.7) }));
+        this.gameState.grantBlessing('fortune', 2, source);
+        this.gameState.addLog(`${source}: Das Lied beflügelt dich — Glücks-Segen und +${Math.floor(goldBase * 0.7)} Gold.`, 'achievement');
+      };
+      effects['reward'] = () => {
+        this.gameState.updatePlayer((p) => ({ ...p, mana: Math.min(p.maxMana, p.mana + 10) }));
+        this.gameState.addLog(`${source}: Die Melodie klärt deinen Geist — +10 Mana.`, 'event');
       };
     }
 
