@@ -32,12 +32,12 @@ Am Ende: Version-Bump.
 
 ## Phase D — UI/UX-Polish
 
-- [ ] D1 · combat-panel Schwäche-Badge + Combo-Visualizer
-- [ ] D2 · path-board Biom-Visuals + Fortschrittsleiste
-- [ ] D3 · event-log Filter + Entry-Grouping (Memory-Leak-Fix)
-- [ ] D4 · Handbook Bestiary/Codex/Achievement-Galerie
-- [ ] D5 · Settings-Panel (Particles/Animations/Font-Size)
-- [ ] D6 · New Game+ Modus mit skalierender Schwierigkeit
+- [x] D1 · combat-panel Schwäche-Badge + Combo-Visualizer
+- [x] D2 · path-board Biom-Visuals + Fortschrittsleiste
+- [x] D3 · event-log Filter + Entry-Grouping (Memory-Leak-Fix)
+- [x] D4 · Handbook Bestiary/Codex/Achievement-Galerie
+- [x] D5 · Settings-Panel (Particles/Animations/Font-Size)
+- [x] D6 · New Game+ Modus mit skalierender Schwierigkeit
 
 ## Verifikation pro Phase
 

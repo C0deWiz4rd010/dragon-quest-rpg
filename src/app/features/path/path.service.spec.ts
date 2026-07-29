@@ -248,9 +248,11 @@ describe('Path', () => {
 
     expect(encounters.activeEncounter()).toBeTruthy();
 
-    const focusOffer = encounters
-      .activeEncounter()
-      ?.offers.find((offer) => offer.id.includes('focus'));
+    const encounter = encounters.activeEncounter();
+    const focusOffer =
+      encounter?.type === 'merchant'
+        ? encounter.offers.find((offer) => offer.id.includes('focus'))
+        : undefined;
     expect(focusOffer).toBeTruthy();
 
     encounters.resolve(focusOffer?.id ?? null);
@@ -281,6 +283,10 @@ describe('Path', () => {
     service.currentDepth.set(0);
 
     service.chooseBranch(branch);
+
+    expect(encounters.activeEncounter()?.type).toBe('dilemma');
+
+    encounters.resolve('upgrade');
 
     expect(gameState.player().attackBonus).toBeGreaterThan(0);
     expect(gameState.player().defenseBonus).toBeGreaterThan(0);

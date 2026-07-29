@@ -58,6 +58,8 @@ function createEnemy(overrides: Partial<Enemy> = {}): Enemy {
     icon: 'T',
     level: 1,
     elite: false,
+    weakness: null,
+    telegraphedAbility: null,
     ...overrides,
   };
 }
@@ -119,6 +121,7 @@ function createPlayer(overrides: Partial<Player> = {}): Player {
     miniGamesWon: 0,
     combo: 0,
     maxCombo: 0,
+    comboFever: false,
     ...overrides,
   };
 }

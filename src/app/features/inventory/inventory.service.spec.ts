@@ -176,6 +176,8 @@ describe('Inventory', () => {
       hp: 10,
       maxHp: 10,
       isBoss: false,
+      weakness: null,
+      telegraphedAbility: null,
     });
     service.awardLoot({
       id: 'slime-test',
@@ -192,6 +194,8 @@ describe('Inventory', () => {
       hp: 10,
       maxHp: 10,
       isBoss: false,
+      weakness: null,
+      telegraphedAbility: null,
     });
 
     expect(gameState.player().dragonShards).toBe(1);

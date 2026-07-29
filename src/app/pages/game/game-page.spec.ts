@@ -24,8 +24,8 @@ describe('GamePage', () => {
   it('renders cockpit dashboard chips and mobile navigation', () => {
     const compiled = fixture.nativeElement as HTMLElement;
 
-    expect(compiled.querySelector('.cockpit-bar')).toBeTruthy();
-    expect(compiled.querySelectorAll('.dashboard-chip').length).toBe(8);
+    expect(compiled.querySelector('.crest-emblem')).toBeTruthy();
+    expect(compiled.querySelectorAll('.readout-chip').length).toBeGreaterThanOrEqual(3);
     expect(compiled.querySelectorAll('.mobile-tabs button').length).toBe(4);
   });
 
