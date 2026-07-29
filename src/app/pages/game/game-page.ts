@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { CombatPanel } from '../../features/combat/combat-panel';
 import { RunEncounterOverlay } from '../../features/encounters/run-encounter-overlay';
 import { GameState } from '../../features/game-state/game-state.service';
+import { AchievementService } from '../../features/game-state/achievement.service';
 import { Inventory } from '../../features/inventory/inventory.service';
 import { InventoryPanel } from '../../features/inventory/inventory-panel';
 import { EventLog } from '../../features/log/event-log';
@@ -40,6 +41,7 @@ export class GamePage {
   protected readonly gameState = inject(GameState);
   protected readonly path = inject(Path);
   protected readonly inventory = inject(Inventory);
+  protected readonly achievements = inject(AchievementService);
   private readonly storage = inject(StorageService);
   protected readonly handbookOpen = signal(false);
   protected readonly mobileTab = signal<MobileTab>('combat');

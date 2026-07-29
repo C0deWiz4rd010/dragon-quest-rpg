@@ -312,3 +312,14 @@
 
 <app-mini-game-overlay />
 <app-run-encounter-overlay />
+
+@if (achievements.recentUnlock(); as ach) {
+  <div class="achievement-toast" role="status" aria-live="polite">
+    <span class="ach-badge" aria-hidden="true">{{ ach.icon }}</span>
+    <div class="ach-body">
+      <strong>Erfolg freigeschaltet</strong>
+      <span class="ach-name">{{ ach.name }}</span>
+      <span class="ach-desc">{{ ach.description }}</span>
+    </div>
+  </div>
+}

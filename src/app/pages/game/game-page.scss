@@ -3,6 +3,78 @@
 }
 
 /* ═══════════════════════════════════════════════════════
+   ACHIEVEMENT TOAST
+═══════════════════════════════════════════════════════ */
+.achievement-toast {
+  align-items: center;
+  backdrop-filter: blur(10px);
+  background: linear-gradient(135deg, rgba(20, 30, 20, 0.94), rgba(12, 20, 14, 0.94));
+  border: 1px solid rgba(250, 204, 21, 0.55);
+  border-radius: 14px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.55), 0 0 24px rgba(250, 204, 21, 0.25);
+  color: #eafbe7;
+  display: flex;
+  gap: 12px;
+  left: 50%;
+  max-width: min(360px, 90vw);
+  padding: 12px 16px;
+  position: fixed;
+  top: 16px;
+  transform: translateX(-50%);
+  z-index: 1200;
+  animation: achToastIn 320ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+.ach-badge {
+  align-items: center;
+  background: rgba(250, 204, 21, 0.16);
+  border: 1px solid rgba(250, 204, 21, 0.5);
+  border-radius: 50%;
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: 24px;
+  height: 46px;
+  justify-content: center;
+  width: 46px;
+}
+
+.ach-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+
+  strong {
+    color: #fde047;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+}
+
+.ach-name {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.ach-desc {
+  color: #a7c4b0;
+  font-size: 11px;
+}
+
+@keyframes achToastIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -18px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
    SHELL
 ═══════════════════════════════════════════════════════ */
 .game-shell {
