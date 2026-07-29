@@ -323,3 +323,36 @@
     </div>
   </div>
 }
+
+@if (tutorial.active()) {
+  <div class="tutorial-scrim" role="dialog" aria-modal="true" aria-label="Tutorial">
+    <div class="tutorial-card">
+      <button
+        type="button"
+        class="tutorial-skip"
+        title="Tutorial überspringen"
+        (click)="tutorial.finish()"
+      >
+        ✕ Überspringen
+      </button>
+      <span class="tutorial-icon" aria-hidden="true">{{ tutorial.currentStep().icon }}</span>
+      <h2 class="tutorial-title">{{ tutorial.currentStep().title }}</h2>
+      <p class="tutorial-body">{{ tutorial.currentStep().body }}</p>
+
+      <div class="tutorial-dots" aria-hidden="true">
+        @for (step of tutorial.steps; track $index) {
+          <span class="tutorial-dot" [class.active]="$index === tutorial.stepIndex()"></span>
+        }
+      </div>
+
+      <div class="tutorial-nav">
+        @if (tutorial.stepIndex() > 0) {
+          <button type="button" class="tutorial-btn ghost" (click)="tutorial.back()">Zurück</button>
+        }
+        <button type="button" class="tutorial-btn primary" (click)="tutorial.next()">
+          {{ tutorial.isLastStep() ? 'Los geht’s!' : 'Weiter' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

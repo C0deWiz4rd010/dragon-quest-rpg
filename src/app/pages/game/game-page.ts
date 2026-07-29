@@ -3,6 +3,7 @@ import { CombatPanel } from '../../features/combat/combat-panel';
 import { RunEncounterOverlay } from '../../features/encounters/run-encounter-overlay';
 import { GameState } from '../../features/game-state/game-state.service';
 import { AchievementService } from '../../features/game-state/achievement.service';
+import { TutorialService } from '../../features/game-state/tutorial.service';
 import { Inventory } from '../../features/inventory/inventory.service';
 import { InventoryPanel } from '../../features/inventory/inventory-panel';
 import { EventLog } from '../../features/log/event-log';
@@ -42,6 +43,7 @@ export class GamePage {
   protected readonly path = inject(Path);
   protected readonly inventory = inject(Inventory);
   protected readonly achievements = inject(AchievementService);
+  protected readonly tutorial = inject(TutorialService);
   private readonly storage = inject(StorageService);
   protected readonly handbookOpen = signal(false);
   protected readonly mobileTab = signal<MobileTab>('combat');
@@ -189,6 +191,8 @@ export class GamePage {
     window.render_game_to_text = () => this.renderGameToText();
     window.advanceTime = (ms: number) =>
       new Promise((resolve) => window.setTimeout(resolve, Math.max(0, ms)));
+
+    this.tutorial.maybeStart();
 
     // Auto-save on every player state change (debounced to depth changes)
     effect(() => {
