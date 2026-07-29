@@ -46,7 +46,18 @@
         <span class="btn-text">⚔ Neues Spiel</span>
       </button>
       @if (hasSave()) {
-        <button class="btn-load" type="button" (click)="loadGame()">📂 Weiterspielen</button>
+        <div class="slot-list" aria-label="Speicherstände">
+          @for (info of slots(); track info.slot) {
+            <button class="btn-load" type="button" (click)="loadSlot(info.slot)">
+              <span class="slot-lead">📂 Slot {{ info.slot }}</span>
+              <span class="slot-meta">
+                {{ classLabel(info.characterClass) }} · Lvl {{ info.level }} ·
+                {{ info.completedPaths }} Pfade
+              </span>
+              <span class="slot-time">{{ formatSaved(info.savedAt) }}</span>
+            </button>
+          }
+        </div>
       }
     </div>
 

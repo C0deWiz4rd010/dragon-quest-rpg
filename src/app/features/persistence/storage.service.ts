@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import {
   createInitialContract,
   GameState,
@@ -21,6 +21,16 @@ type LegacySaveGame = Partial<Omit<SaveGame, 'version'>> & {
   };
 };
 
+export type SaveSlot = 1 | 2 | 3;
+
+export interface SlotInfo {
+  slot: SaveSlot;
+  savedAt: string;
+  level: number;
+  completedPaths: number;
+  characterClass?: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -29,7 +39,15 @@ export class StorageService {
   private readonly path = inject(Path);
   private readonly saveKey = 'dragonQuestRpgSave';
 
-  save(): void {
+  /** The slot most recently saved to or loaded from. */
+  readonly currentSlot = signal<SaveSlot>(1);
+
+  private keyFor(slot: SaveSlot): string {
+    // Slot 1 keeps the legacy key so old saves migrate seamlessly.
+    return slot === 1 ? this.saveKey : `${this.saveKey}_${slot}`;
+  }
+
+  save(slot: SaveSlot = this.currentSlot()): void {
     const save: SaveGame = {
       version: 3,
       savedAt: new Date().toISOString(),
@@ -47,12 +65,13 @@ export class StorageService {
       },
     };
 
-    localStorage.setItem(this.saveKey, JSON.stringify(save));
-    this.gameState.addLog('Spiel gespeichert.', 'event');
+    localStorage.setItem(this.keyFor(slot), JSON.stringify(save));
+    this.currentSlot.set(slot);
+    this.gameState.addLog(`Spiel in Slot ${slot} gespeichert.`, 'event');
   }
 
-  load(): boolean {
-    const raw = localStorage.getItem(this.saveKey);
+  load(slot: SaveSlot = this.currentSlot()): boolean {
+    const raw = localStorage.getItem(this.keyFor(slot));
 
     if (!raw) {
       this.gameState.addLog('Kein Speicherstand gefunden.', 'damage');
@@ -67,6 +86,7 @@ export class StorageService {
 
       this.gameState.restore(save.state);
       this.path.restore(save.path);
+      this.currentSlot.set(slot);
       this.gameState.addLog(
         `Spielstand geladen: ${new Date(save.savedAt).toLocaleTimeString()}.`,
         'event',
@@ -75,6 +95,34 @@ export class StorageService {
     } catch {
       this.gameState.addLog('Speicherstand konnte nicht gelesen werden.', 'damage');
       return false;
+    }
+  }
+
+  hasSlot(slot: SaveSlot): boolean {
+    try {
+      return !!localStorage.getItem(this.keyFor(slot));
+    } catch {
+      return false;
+    }
+  }
+
+  slotInfo(slot: SaveSlot): SlotInfo | null {
+    try {
+      const raw = localStorage.getItem(this.keyFor(slot));
+      if (!raw) {
+        return null;
+      }
+      const parsed = JSON.parse(raw) as LegacySaveGame;
+      const player = parsed.state?.player;
+      return {
+        slot,
+        savedAt: parsed.savedAt ?? '',
+        level: player?.level ?? 1,
+        completedPaths: player?.completedPaths ?? 0,
+        characterClass: player?.characterClass,
+      };
+    } catch {
+      return null;
     }
   }
 }

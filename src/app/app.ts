@@ -19,7 +19,7 @@ export class App {
 
   protected onSplashStart(event: SplashStartEvent): void {
     if (event.action === 'load') {
-      this.storage.load();
+      this.storage.load(event.slot);
     } else {
       this.gameState.reset(event.characterClass);
     }
