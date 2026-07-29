@@ -14,6 +14,7 @@ import {
 } from './combat-rules';
 import { createLevelUpChoices, GameState, LevelUpChoiceId } from '../game-state/game-state.service';
 import { getBlessingCharges, spendBlessing } from '../game-state/run-blessings';
+import { rollUnlearnedSkill, skillGoldMultiplier, skillXpMultiplier, skillLifestealPct } from '../game-state/skills';
 import { Inventory } from '../inventory/inventory.service';
 import { relicManaRegenBonus, relicSpecialDamageMultiplier } from '../inventory/relics';
 import { PetTrigger } from '../inventory/pet.model';
@@ -309,6 +310,19 @@ export class Combat {
 
     const overkillDamage = Math.max(0, actualDamage - enemy.hp);
     const hp = Math.max(0, enemy.hp - actualDamage);
+
+    // Blood-magic skills siphon a fraction of the dealt damage back as HP
+    const lifesteal = skillLifestealPct(this.gameState.player());
+    if (lifesteal > 0) {
+      const healed = Math.round(actualDamage * lifesteal);
+      if (healed > 0) {
+        this.gameState.updatePlayer((player) => ({
+          ...player,
+          hp: Math.min(player.maxHp, player.hp + healed),
+        }));
+        this.showFloatingText('hero', `+${healed}`, 'heal');
+      }
+    }
 
     // Check telegraph thresholds (only when no active telegraph and enemy survives the hit)
     const noneActive = !enemy.telegraphedAbility;
@@ -643,7 +657,7 @@ export class Combat {
     this.gameState.updatePlayer((player) => {
       const resolvePreservedBonus =
         player.resolve === player.maxResolve ? 12 + Math.max(0, enemy.level - 1) * 2 : 0;
-      let xp = player.xp + enemy.xp;
+      let xp = player.xp + Math.round(enemy.xp * skillXpMultiplier(player));
       let level = player.level;
       let maxHp = player.maxHp;
       let maxMana = player.maxMana;
@@ -662,8 +676,19 @@ export class Combat {
         this.gameState.addLog(`Level up! Du erreichst Level ${level}.`, 'heal');
       }
 
+      let learnedSkills = player.learnedSkills;
       if (leveled) {
         this.gameState.levelUpChoices.set(createLevelUpChoices());
+        if (Math.random() < 0.3) {
+          const skill = rollUnlearnedSkill(player);
+          if (skill) {
+            learnedSkills = [...(player.learnedSkills ?? []), skill.id];
+            this.gameState.addLog(
+              `Neue Fähigkeit erlernt: ${skill.icon} ${skill.name} — ${skill.description}`,
+              'achievement',
+            );
+          }
+        }
       }
 
       return {
@@ -673,7 +698,10 @@ export class Combat {
         maxHp,
         hp,
         maxMana,
-        gold: player.gold + enemy.gold + resolvePreservedBonus + overkill.gold,
+        learnedSkills,
+        gold:
+          player.gold +
+          Math.round((enemy.gold + resolvePreservedBonus + overkill.gold) * skillGoldMultiplier(player)),
         mana: Math.min(maxMana, mana + overkill.mana),
         dragonShards: player.dragonShards + overkill.dragonShards,
         totalKills: player.totalKills + 1,

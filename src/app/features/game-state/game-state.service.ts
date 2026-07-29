@@ -17,6 +17,11 @@ import {
 import { GameLogEntry, GameLogType } from '../log/game-log-entry.model';
 import { blessingLabel, getBlessingCharges, mergeBlessing } from './run-blessings';
 import { applyCharacterClass, CharacterClassId } from './character-classes';
+import {
+  skillAttackMultiplier,
+  skillCritFlat,
+  skillDefenseMultiplier,
+} from './skills';
 
 export type LevelUpChoiceId = 'attack' | 'defense' | 'crit' | 'mana' | 'heal';
 
@@ -49,18 +54,22 @@ export class GameState {
       (player.equippedWeapon?.attackBonus ?? 0) +
       petBonus(player, 'attack') +
       relicAttackBonus(player);
-    const multiplier = (elementSetActive(player) ? 1.1 : 1) * relicSynergyAttackMultiplier(player);
+    const multiplier =
+      (elementSetActive(player) ? 1.1 : 1) *
+      relicSynergyAttackMultiplier(player) *
+      skillAttackMultiplier(player);
     return Math.round(base * multiplier);
   });
 
   readonly playerDefense = computed(() => {
     const player = this.player();
-    return (
-      player.baseDefense +
-      player.defenseBonus +
-      (player.equippedArmor?.defenseBonus ?? 0) +
-      petBonus(player, 'defense') +
-      relicDefenseBonus(player)
+    return Math.round(
+      (player.baseDefense +
+        player.defenseBonus +
+        (player.equippedArmor?.defenseBonus ?? 0) +
+        petBonus(player, 'defense') +
+        relicDefenseBonus(player)) *
+        skillDefenseMultiplier(player),
     );
   });
 
@@ -71,7 +80,8 @@ export class GameState {
       player.critBonus +
       (player.equippedRing?.critBonus ?? 0) +
       petBonus(player, 'crit') +
-      relicCritBonus(player)
+      relicCritBonus(player) +
+      skillCritFlat(player)
     );
   });
 
