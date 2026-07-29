@@ -16,9 +16,9 @@ import { createLevelUpChoices, GameState, LevelUpChoiceId } from '../game-state/
 import { getBlessingCharges, spendBlessing } from '../game-state/run-blessings';
 import { Inventory } from '../inventory/inventory.service';
 import { relicManaRegenBonus, relicSpecialDamageMultiplier } from '../inventory/relics';
+import { PetTrigger } from '../inventory/pet.model';
 import { Path } from '../path/path.service';
 import { Enemy } from './enemy.model';
-
 export type CombatAnimationTarget = 'hero' | 'enemy';
 export type CombatAnimationType = 'attack' | 'hit' | 'crit' | 'heal' | 'death' | 'skill';
 
@@ -101,6 +101,11 @@ export class Combat {
     }
     if (skillResetAt8) {
       this.gameState.addLog('Perfekte Combo! Drachenklaue sofort bereit.', 'achievement');
+    }
+
+    this.triggerPet('onAttack');
+    if (isCrit) {
+      this.triggerPet('onCrit');
     }
 
     this.damageEnemy(
@@ -231,6 +236,7 @@ export class Combat {
       'Du gehst in Deckung, tankst Mana und beschleunigst die Drachenklaue.',
       'event',
     );
+    this.triggerPet('onGuard');
     this.afterPlayerAction('guard');
   }
 
@@ -584,11 +590,34 @@ export class Combat {
     return this.gameState.gameActive() && playerHp > 0;
   }
 
+  private triggerPet(trigger: PetTrigger): void {
+    const ability = this.gameState.player().activePet?.activeAbility;
+
+    if (!ability || ability.trigger !== trigger) {
+      return;
+    }
+
+    if (ability.shard) {
+      this.gameState.addDragonShards(ability.shard, ability.label);
+    }
+
+    this.gameState.updatePlayer((player) => ({
+      ...player,
+      hp: ability.heal ? Math.min(player.maxHp, player.hp + ability.heal) : player.hp,
+      mana: ability.mana ? Math.min(player.maxMana, player.mana + ability.mana) : player.mana,
+      skillCooldown: ability.cooldownReduce
+        ? Math.max(0, player.skillCooldown - ability.cooldownReduce)
+        : player.skillCooldown,
+      riposteCharges: ability.riposteCharge
+        ? Math.min(3, player.riposteCharges + ability.riposteCharge)
+        : player.riposteCharges,
+    }));
+  }
+
   private defeatEnemy(enemy: Enemy | null, overkillDamage = 0): void {
     if (!enemy) {
       return;
     }
-
     const overkill = overkillReward(overkillDamage, enemy.role);
     this.gameState.addLog(`${enemy.name} besiegt. +${enemy.gold} Gold, +${enemy.xp} XP.`, 'heal');
     if (overkillDamage > 0) {
@@ -598,6 +627,7 @@ export class Combat {
       );
     }
     this.gameState.setEnemy(null);
+    this.triggerPet('onKill');
     this.inventory.awardLoot(enemy);
     const luckShardBonus = enemy.isBoss
       ? Math.floor(this.gameState.playerLuck() / 7)
