@@ -438,6 +438,13 @@
   &[data-grade='B'] { color: #38bdf8; border-color: rgba(56, 189, 248, 0.45); }
 }
 
+.ngplus-tag {
+  background: rgba(168, 85, 247, 0.14);
+  border: 1px solid rgba(168, 85, 247, 0.5);
+  color: #d8b4fe;
+  font-weight: 800;
+}
+
 /* ── Controls cluster ── */
 .cockpit-controls {
   align-items: center;
@@ -1328,6 +1335,24 @@
   font-family: var(--dq-font-display);
   font-size: 14px;
   font-weight: 700;
+  padding: 12px 32px;
+  transition: filter 120ms, transform 80ms;
+
+  &:hover { filter: brightness(1.12); }
+  &:active { transform: scale(0.97); }
+}
+
+.outcome-ngplus-btn {
+  background: linear-gradient(135deg, #7c3aed, #a855f7 55%, #6d28d9);
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 0 22px rgba(168, 85, 247, 0.4);
+  color: #f5f3ff;
+  cursor: pointer;
+  font-family: var(--dq-font-display);
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 10px;
   padding: 12px 32px;
   transition: filter 120ms, transform 80ms;
 

@@ -28,6 +28,9 @@
               <span class="tag grade-tag" [attr.data-grade]="gameState.runGrade()">
                 Note {{ gameState.runGrade() }}
               </span>
+              @if (player().newGamePlus) {
+                <span class="tag ngplus-tag">NG+{{ player().newGamePlus }}</span>
+              }
             </div>
           </div>
         </div>
@@ -412,6 +415,11 @@
           <div class="outcome-stat"><span>MiniGames</span><strong>{{ player().miniGamesWon }}</strong></div>
           <div class="outcome-stat"><span>Tiefe</span><strong>{{ path.currentDepth() + 1 }}</strong></div>
         </div>
+        @if (outcome === 'victory') {
+          <button type="button" class="outcome-ngplus-btn" (click)="startNewGamePlus()">
+            ⚔ New Game+ {{ (player().newGamePlus ?? 0) + 1 }}
+          </button>
+        }
         <button type="button" class="outcome-restart-btn" (click)="resetRun()">
           ↺ Neuer Run
         </button>

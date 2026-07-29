@@ -78,6 +78,7 @@ export class Path {
         this.gameState.player().level,
         branch.type === 'boss',
         branch.threat,
+        this.gameState.player().newGamePlus ?? 0,
       );
       this.gameState.setEnemy(enemy);
       this.gameState.addLog(
@@ -1849,18 +1850,22 @@ function weaknessForRole(role: EnemyRole): EnemyElement {
   }
 }
 
-function createEnemy(enemyId: string, playerLevel: number, forceBoss = false, threat = 1): Enemy {
+function createEnemy(enemyId: string, playerLevel: number, forceBoss = false, threat = 1, newGamePlus = 0): Enemy {
   const blueprint = ENEMY_BLUEPRINTS[forceBoss ? 'boss' : enemyId] ?? ENEMY_BLUEPRINTS['slime'];
   const scaling = Math.max(0, playerLevel - blueprint.level);
-  const maxHp = (forceBoss ? 500 : 45 + blueprint.level * 26) + scaling * 18;
-  const rewardScale = roleLootMultiplier(blueprint.role) + Math.max(0, threat - 1) * 0.08;
+  // New Game+ tightens the screws: +22% enemy HP and +18% damage per cycle.
+  const ngHpMult = 1 + newGamePlus * 0.22;
+  const ngAtkMult = 1 + newGamePlus * 0.18;
+  const ngRewardMult = 1 + newGamePlus * 0.15;
+  const maxHp = Math.round(((forceBoss ? 500 : 45 + blueprint.level * 26) + scaling * 18) * ngHpMult);
+  const rewardScale = (roleLootMultiplier(blueprint.role) + Math.max(0, threat - 1) * 0.08) * ngRewardMult;
 
   return {
     ...blueprint,
     id: `${enemyId}-${crypto.randomUUID()}`,
     hp: maxHp,
     maxHp,
-    attack: blueprint.attack + scaling * 3,
+    attack: Math.round((blueprint.attack + scaling * 3) * ngAtkMult),
     gold: Math.floor((blueprint.gold + scaling * 10) * rewardScale),
     xp: Math.floor((blueprint.xp + scaling * 12) * rewardScale),
     weakness: weaknessForRole(blueprint.role),

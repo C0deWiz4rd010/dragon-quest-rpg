@@ -96,4 +96,5 @@ export interface Player {
   comboFever: boolean;
   characterClass?: string;
   learnedSkills?: string[];
+  newGamePlus?: number;
 }

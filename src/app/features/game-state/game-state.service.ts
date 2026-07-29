@@ -347,6 +347,35 @@ export class GameState {
     ]);
   }
 
+  /**
+   * Starts a New Game+ cycle: keeps the character class and skills, resets the run
+   * and raises the difficulty tier by one.
+   */
+  startNewGamePlus(): void {
+    const prev = this.player();
+    const tier = (prev.newGamePlus ?? 0) + 1;
+    const base = createInitialPlayer();
+    const carried = prev.characterClass
+      ? applyCharacterClass(base, prev.characterClass as CharacterClassId)
+      : base;
+    this.player.set({
+      ...carried,
+      newGamePlus: tier,
+      learnedSkills: prev.learnedSkills ?? [],
+      // A veteran's edge to offset the tougher foes.
+      gold: carried.gold + tier * 100,
+      dragonShards: carried.dragonShards + tier * 2,
+      potions: carried.potions + 1,
+    });
+    this.enemy.set(null);
+    this.gameActive.set(true);
+    this.selectedBranchId.set(null);
+    this.levelUpChoices.set([]);
+    this.logs.set([
+      createLogEntry(`New Game+ ${tier} gestartet. Die Feinde sind stärker — und so bist du es.`, 'achievement'),
+    ]);
+  }
+
   restore(
     snapshot: Pick<
       GameStateSnapshot,

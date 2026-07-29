@@ -220,6 +220,11 @@ export class GamePage {
     this.path.reset();
   }
 
+  protected startNewGamePlus(): void {
+    this.gameState.startNewGamePlus();
+    this.path.reset();
+  }
+
   protected weatherLabel(): string {
     return this.weatherLabelFor(this.path.weather());
   }
