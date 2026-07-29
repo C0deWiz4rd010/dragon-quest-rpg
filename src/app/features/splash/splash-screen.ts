@@ -7,6 +7,12 @@ import {
 } from '@angular/core';
 import { StorageService } from '../persistence/storage.service';
 import { SplashBackground } from './splash-background/splash-background';
+import { CHARACTER_CLASSES, CharacterClassId } from '../game-state/character-classes';
+
+export interface SplashStartEvent {
+  action: 'new' | 'load';
+  characterClass?: CharacterClassId;
+}
 
 @Component({
   selector: 'app-splash-screen',
@@ -17,18 +23,24 @@ import { SplashBackground } from './splash-background/splash-background';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SplashScreen {
-  readonly start = output<'new' | 'load'>();
+  readonly start = output<SplashStartEvent>();
 
   private readonly storage = inject(StorageService);
 
   protected readonly hasSave = signal(this.detectSave());
+  protected readonly classes = CHARACTER_CLASSES;
+  protected readonly selectedClass = signal<CharacterClassId>('warrior');
+
+  protected selectClass(id: CharacterClassId): void {
+    this.selectedClass.set(id);
+  }
 
   protected startNew(): void {
-    this.start.emit('new');
+    this.start.emit({ action: 'new', characterClass: this.selectedClass() });
   }
 
   protected loadGame(): void {
-    this.start.emit('load');
+    this.start.emit({ action: 'load' });
   }
 
   private detectSave(): boolean {

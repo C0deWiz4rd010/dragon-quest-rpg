@@ -16,6 +16,7 @@ import {
 } from '../inventory/relics';
 import { GameLogEntry, GameLogType } from '../log/game-log-entry.model';
 import { blessingLabel, getBlessingCharges, mergeBlessing } from './run-blessings';
+import { applyCharacterClass, CharacterClassId } from './character-classes';
 
 export type LevelUpChoiceId = 'attack' | 'defense' | 'crit' | 'mana' | 'heal';
 
@@ -324,8 +325,9 @@ export class GameState {
     this.addLog(`Neuer Auftrag angenommen: ${nextContract.title}.`, 'event');
   }
 
-  reset(): void {
-    this.player.set(createInitialPlayer());
+  reset(characterClass?: CharacterClassId): void {
+    const base = createInitialPlayer();
+    this.player.set(characterClass ? applyCharacterClass(base, characterClass) : base);
     this.enemy.set(null);
     this.gameActive.set(true);
     this.selectedBranchId.set(null);

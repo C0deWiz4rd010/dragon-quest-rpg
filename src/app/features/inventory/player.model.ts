@@ -94,4 +94,6 @@ export interface Player {
   combo: number;
   maxCombo: number;
   comboFever: boolean;
+  characterClass?: string;
+  learnedSkills?: string[];
 }

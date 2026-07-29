@@ -6,20 +6,20 @@ Am Ende: Version-Bump.
 
 ## Phase A — Content / Datenbeschaffung (Primärfokus)
 
-- [ ] A1 · Enemy-Bestiary auf 25 biome-basierte Varianten erweitern
-- [ ] A2 · Item-Pool auf 24 Stücke mit Rarity-Tiers (common/rare/legendary) + Set-Bonus
-- [ ] A3 · Pets auf 14 mit aktiven Fähigkeiten (Trigger-basiert)
-- [ ] A4 · Relikte auf 18 mit Synergie-Paaren
-- [ ] A5 · Event-Bibliothek auf 50+ inkl. NPC-Begegnungen
+- [x] A1 · Enemy-Bestiary auf 25 biome-basierte Varianten erweitern
+- [x] A2 · Item-Pool auf 24 Stücke mit Rarity-Tiers (common/rare/legendary) + Set-Bonus
+- [x] A3 · Pets auf 14 mit aktiven Fähigkeiten (Trigger-basiert)
+- [x] A4 · Relikte auf 18 mit Synergie-Paaren
+- [x] A5 · Event-Bibliothek auf 50+ inkl. NPC-Begegnungen
 
 ## Phase B — Mobile-First CSS aller Views
 
-- [ ] B1 · CSS-Token-System (clamp-basierte Space/Font-Scales, 44px Touch-Targets, Hover-Guard)
-- [ ] B2 · game-page responsive Tabs + gestapeltes Layout
-- [ ] B3 · combat-panel Action-Grid + Touch-Targets
-- [ ] B4 · path-board Scroll-Snap + contract-mini Fix
-- [ ] B5 · inventory + event-log responsive Grids
-- [ ] B6 · minigame Overlay responsive Canvas-Größen
+- [x] B1 · CSS-Token-System (clamp-basierte Space/Font-Scales, 44px Touch-Targets, Hover-Guard)
+- [x] B2 · game-page responsive Tabs + gestapeltes Layout
+- [x] B3 · combat-panel Action-Grid + Touch-Targets
+- [x] B4 · path-board Scroll-Snap + contract-mini Fix
+- [x] B5 · inventory + event-log responsive Grids
+- [x] B6 · minigame Overlay responsive Canvas-Größen
 
 ## Phase C — Neue Game-Systeme
 

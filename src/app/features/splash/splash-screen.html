@@ -18,6 +18,28 @@
     <h1 class="splash-title">Dragon Quest<br /><span>RPG</span></h1>
     <p class="splash-tagline">Wähle deinen Pfad. Besiege den Drachenkönig.</p>
 
+    <div class="class-picker" role="radiogroup" aria-label="Charakterklasse wählen">
+      @for (cls of classes; track cls.id) {
+        <button
+          type="button"
+          class="class-chip"
+          role="radio"
+          [class.active]="selectedClass() === cls.id"
+          [attr.aria-checked]="selectedClass() === cls.id"
+          (click)="selectClass(cls.id)"
+        >
+          <span class="class-icon" aria-hidden="true">{{ cls.icon }}</span>
+          <span class="class-name">{{ cls.name }}</span>
+          <span class="class-tagline">{{ cls.tagline }}</span>
+          <span class="class-perks">
+            @for (perk of cls.perks; track perk) {
+              <small>{{ perk }}</small>
+            }
+          </span>
+        </button>
+      }
+    </div>
+
     <div class="splash-actions">
       <button class="btn-start" type="button" (click)="startNew()">
         <span class="btn-glow" aria-hidden="true"></span>

@@ -168,6 +168,75 @@
   opacity: 0.85;
 }
 
+.class-picker {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 4px 0 2px;
+  width: 100%;
+}
+
+.class-chip {
+  align-items: center;
+  background: rgba(8, 14, 22, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  color: #dbe7f5;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 44px;
+  padding: 10px 8px;
+  text-align: center;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    transform 120ms ease,
+    box-shadow 150ms ease;
+
+  &:hover {
+    border-color: rgba(250, 204, 21, 0.45);
+    transform: translateY(-1px);
+  }
+
+  &.active {
+    border-color: rgba(250, 204, 21, 0.85);
+    background: rgba(250, 204, 21, 0.12);
+    box-shadow: 0 0 18px rgba(250, 204, 21, 0.25);
+  }
+}
+
+.class-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.class-name {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.class-tagline {
+  color: #9fb3c8;
+  font-size: 10px;
+  line-height: 1.25;
+}
+
+.class-perks {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 2px;
+
+  small {
+    color: #86efac;
+    font-size: 9px;
+    font-weight: 600;
+  }
+}
+
 .splash-actions {
   display: flex;
   flex-direction: column;
