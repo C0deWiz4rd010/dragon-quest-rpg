@@ -152,7 +152,7 @@
   gap: 5px;
   justify-content: center;
   letter-spacing: 0.04em;
-  min-height: 38px;
+  min-height: 44px;
   min-width: 0;
   padding: 5px 8px;
   position: relative;
@@ -469,7 +469,7 @@
 .level-up-grid {
   display: grid;
   gap: 10px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   height: calc(100% - 28px);
 }
 
@@ -551,6 +551,12 @@
 }
 
 /* Wide combat panels keep all commands visible in one row. */
+@media (min-width: 480px) {
+  .level-up-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @media (min-width: 600px) {
   .actions {
     grid-template-columns: repeat(6, minmax(0, 1fr));
