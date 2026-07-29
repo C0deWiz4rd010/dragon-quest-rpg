@@ -11,6 +11,7 @@ import {
   relicAttackBonus,
   relicCritBonus,
   relicDefenseBonus,
+  relicSynergyAttackMultiplier,
   relicWardChargeBonus,
 } from '../inventory/relics';
 import { GameLogEntry, GameLogType } from '../log/game-log-entry.model';
@@ -47,7 +48,8 @@ export class GameState {
       (player.equippedWeapon?.attackBonus ?? 0) +
       petBonus(player, 'attack') +
       relicAttackBonus(player);
-    return Math.round(base * (elementSetActive(player) ? 1.1 : 1));
+    const multiplier = (elementSetActive(player) ? 1.1 : 1) * relicSynergyAttackMultiplier(player);
+    return Math.round(base * multiplier);
   });
 
   readonly playerDefense = computed(() => {
