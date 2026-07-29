@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   HostListener,
+  computed,
   effect,
   inject,
   signal,
@@ -38,6 +39,12 @@ export class CombatPanel {
   /** Drives a brief "engage" transition each time a fresh enemy appears. */
   protected readonly engaged = signal(false);
   private lastEnemyKey = '';
+
+  /** Visual pip meter for the current combo (8 pips, filled by combo count). */
+  protected readonly comboPips = computed(() => {
+    const combo = this.gameState.player().combo;
+    return Array.from({ length: 8 }, (_, index) => index < combo);
+  });
 
   constructor() {
     effect(() => {

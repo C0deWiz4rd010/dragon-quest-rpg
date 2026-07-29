@@ -311,6 +311,58 @@
   white-space: nowrap;
 }
 
+/* Visual combo meter */
+.combo-meter {
+  align-items: center;
+  background: rgba(8, 14, 22, 0.5);
+  border: 1px solid rgba(250, 204, 21, 0.22);
+  border-radius: 8px;
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 5px 9px;
+
+  &.fever {
+    animation: comboFeverBadge 0.7s ease-in-out infinite;
+    border-color: rgba(239, 68, 68, 0.55);
+  }
+}
+
+.combo-meter-label {
+  color: #cbd5e1;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.combo-pips {
+  display: flex;
+  flex: 1;
+  gap: 3px;
+}
+
+.combo-pip {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  flex: 1;
+  height: 6px;
+  transition: background 180ms ease, box-shadow 180ms ease;
+
+  &.filled {
+    background: linear-gradient(90deg, #facc15, #f97316);
+    box-shadow: 0 0 6px rgba(250, 204, 21, 0.5);
+  }
+}
+
+.combo-meter-count {
+  color: #fde047;
+  font-size: 12px;
+  font-weight: 900;
+  min-width: 26px;
+  text-align: right;
+}
+
 /* Elemental weakness badge */
 .weakness-badge {
   background: rgba(100, 116, 139, 0.14);

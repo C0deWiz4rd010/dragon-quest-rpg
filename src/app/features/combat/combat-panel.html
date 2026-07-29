@@ -45,6 +45,18 @@
     }
   </div>
 
+  @if (gameState.enemy() && gameState.player().combo > 0) {
+    <div class="combo-meter" [class.fever]="gameState.player().comboFever">
+      <span class="combo-meter-label">Combo</span>
+      <div class="combo-pips" aria-hidden="true">
+        @for (pip of comboPips(); track $index) {
+          <span class="combo-pip" [class.filled]="pip"></span>
+        }
+      </div>
+      <strong class="combo-meter-count">{{ gameState.player().combo }}×</strong>
+    </div>
+  }
+
   @if (telegraphWarning(); as telegraph) {
     <div class="telegraph-warning" role="alert">
       <span class="telegraph-icon">⚠</span>
