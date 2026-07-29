@@ -180,7 +180,7 @@
   display: flex;
   flex: 1;
   gap: 6px;
-  min-width: 180px;
+  min-width: min(150px, 100%);
   overflow: hidden;
   padding: 4px 6px 4px 9px;
 
@@ -270,6 +270,7 @@
   min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;
+  scroll-snap-type: x proximity;
   scrollbar-gutter: stable;
   /* Fade the left/right edges so off-screen stations read as "more to explore" */
   -webkit-mask: linear-gradient(
@@ -374,6 +375,7 @@
   min-width: 0;
   opacity: 0.5;
   position: relative;
+  scroll-snap-align: center;
   transition:
     opacity 160ms ease,
     transform 160ms ease;
