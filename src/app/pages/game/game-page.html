@@ -72,6 +72,14 @@
             >
               <span class="tool-glyph">📖</span>
             </button>
+            <button
+              type="button"
+              class="tool-btn settings-btn"
+              title="Einstellungen"
+              (click)="settingsOpen.set(!settingsOpen())"
+            >
+              <span class="tool-glyph">⚙</span>
+            </button>
             <button type="button" class="tool-btn reset-btn" title="Neustart" (click)="resetRun()">
               <span class="tool-glyph">↺</span>
             </button>
@@ -228,6 +236,87 @@
       </button>
     </nav>
   </section>
+
+  <!-- ── SETTINGS OVERLAY ─────────────────────────────────────── -->
+  @if (settingsOpen()) {
+    <aside class="settings-panel" aria-label="Einstellungen">
+      <button type="button" title="Schliessen" (click)="settingsOpen.set(false)">✕ Schliessen</button>
+      <h2>⚙ Einstellungen</h2>
+
+      <label class="setting-row">
+        <span class="setting-label">✨ Partikel-Effekte</span>
+        <button
+          type="button"
+          class="setting-toggle"
+          [class.on]="settings.particles()"
+          [attr.aria-pressed]="settings.particles()"
+          (click)="settings.toggleParticles()"
+        >
+          <span class="toggle-knob"></span>
+        </button>
+      </label>
+
+      <label class="setting-row">
+        <span class="setting-label">🎞 Animationen</span>
+        <button
+          type="button"
+          class="setting-toggle"
+          [class.on]="settings.animations()"
+          [attr.aria-pressed]="settings.animations()"
+          (click)="settings.toggleAnimations()"
+        >
+          <span class="toggle-knob"></span>
+        </button>
+      </label>
+
+      <label class="setting-row">
+        <span class="setting-label">🌗 Hoher Kontrast</span>
+        <button
+          type="button"
+          class="setting-toggle"
+          [class.on]="settings.highContrast()"
+          [attr.aria-pressed]="settings.highContrast()"
+          (click)="settings.toggleHighContrast()"
+        >
+          <span class="toggle-knob"></span>
+        </button>
+      </label>
+
+      <div class="setting-row">
+        <span class="setting-label">🔠 UI-Größe</span>
+        <div class="font-scale-group">
+          <button
+            type="button"
+            class="font-scale-btn"
+            [class.active]="settings.fontScale() === 'sm'"
+            (click)="settings.setFontScale('sm')"
+          >
+            A−
+          </button>
+          <button
+            type="button"
+            class="font-scale-btn"
+            [class.active]="settings.fontScale() === 'md'"
+            (click)="settings.setFontScale('md')"
+          >
+            A
+          </button>
+          <button
+            type="button"
+            class="font-scale-btn"
+            [class.active]="settings.fontScale() === 'lg'"
+            (click)="settings.setFontScale('lg')"
+          >
+            A+
+          </button>
+        </div>
+      </div>
+
+      <button type="button" class="settings-tutorial-btn" (click)="settingsOpen.set(false); tutorial.open()">
+        📘 Tutorial erneut ansehen
+      </button>
+    </aside>
+  }
 
   <!-- ── HANDBOOK OVERLAY ─────────────────────────────────────── -->
   @if (handbookOpen()) {

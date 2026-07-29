@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { Application, Graphics } from 'pixi.js';
 import { Path, type PathWeather } from '../../path/path.service';
+import { SettingsService } from '../../game-state/settings.service';
 import { isHeadlessCanvas } from '../headless-canvas';
 
 interface Ember {
@@ -49,6 +50,7 @@ export class PixiBackground {
   @ViewChild('canvas') private canvasRef!: ElementRef<HTMLCanvasElement>;
 
   private readonly path = inject(Path);
+  private readonly settings = inject(SettingsService);
   private readonly destroyRef = inject(DestroyRef);
 
   private app: Application | null = null;
@@ -59,6 +61,13 @@ export class PixiBackground {
     effect(() => {
       this.path.weather(); // signal dependency
       this.updateEmberColors();
+    });
+
+    // Partikel-Einstellung aus → vorhandene Embers entfernen
+    effect(() => {
+      if (!this.settings.particles()) {
+        this.clearEmbers();
+      }
     });
 
     afterNextRender(async () => {
@@ -89,8 +98,10 @@ export class PixiBackground {
     });
 
     // Initiale Embers verteilt über die gesamte Höhe
-    for (let i = 0; i < 70; i++) {
-      this.spawnEmber(true);
+    if (this.settings.particles()) {
+      for (let i = 0; i < 70; i++) {
+        this.spawnEmber(true);
+      }
     }
 
     this.app.ticker.add(() => this.onTick());
@@ -168,8 +179,21 @@ export class PixiBackground {
     }
 
     // Anzahl aufrecht erhalten
-    while (this.embers.length < 70) {
-      this.spawnEmber(false);
+    if (this.settings.particles()) {
+      while (this.embers.length < 70) {
+        this.spawnEmber(false);
+      }
     }
+  }
+
+  private clearEmbers(): void {
+    if (!this.app) {
+      return;
+    }
+    for (const e of this.embers) {
+      this.app.stage.removeChild(e.g);
+      e.g.destroy();
+    }
+    this.embers = [];
   }
 }

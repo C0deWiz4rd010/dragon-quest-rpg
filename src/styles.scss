@@ -35,6 +35,29 @@
   --dq-font-md: clamp(13px, 2.8vw, 15px);
   --dq-font-lg: clamp(16px, 3.6vw, 20px);
   --dq-font-xl: clamp(20px, 5vw, 30px);
+  --dq-font-scale: 1;
+}
+
+// --- Accessibility / performance settings toggles ---
+html.dq-reduce-motion *,
+html.dq-reduce-motion *::before,
+html.dq-reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+html.dq-no-particles .ember-bg,
+html.dq-no-particles .splash-scanline {
+  display: none !important;
+}
+
+html.dq-high-contrast {
+  --dq-line-strong: rgba(243, 203, 98, 0.7);
+  --dq-line-soft: rgba(255, 255, 255, 0.24);
+  --dq-ink-soft: #f1f6ff;
+  --dq-ink-muted: #c3cede;
 }
 
 html {

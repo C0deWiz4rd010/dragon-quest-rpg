@@ -4,6 +4,7 @@ import { RunEncounterOverlay } from '../../features/encounters/run-encounter-ove
 import { GameState } from '../../features/game-state/game-state.service';
 import { AchievementService } from '../../features/game-state/achievement.service';
 import { TutorialService } from '../../features/game-state/tutorial.service';
+import { SettingsService } from '../../features/game-state/settings.service';
 import { Inventory } from '../../features/inventory/inventory.service';
 import { InventoryPanel } from '../../features/inventory/inventory-panel';
 import { EventLog } from '../../features/log/event-log';
@@ -44,8 +45,10 @@ export class GamePage {
   protected readonly inventory = inject(Inventory);
   protected readonly achievements = inject(AchievementService);
   protected readonly tutorial = inject(TutorialService);
+  protected readonly settings = inject(SettingsService);
   private readonly storage = inject(StorageService);
   protected readonly handbookOpen = signal(false);
+  protected readonly settingsOpen = signal(false);
   protected readonly mobileTab = signal<MobileTab>('combat');
   protected readonly savedAt = signal<string | null>(null);
   protected readonly player = computed(() => this.gameState.player());

@@ -215,6 +215,7 @@
 ═══════════════════════════════════════════════════════ */
 .game-shell {
   min-height: 100dvh;
+  zoom: var(--dq-font-scale, 1);
   overflow-y: auto;
   background:
     linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
@@ -1043,6 +1044,139 @@
   font-size: 8px;
   font-weight: 700;
   line-height: 1.2;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SETTINGS PANEL
+═══════════════════════════════════════════════════════ */
+.settings-panel {
+  background: linear-gradient(160deg, rgba(14, 18, 32, 0.99), rgba(7, 10, 20, 0.99));
+  border: 1px solid rgba(125, 211, 252, 0.42);
+  border-radius: 16px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  color: #eaf3ff;
+  max-height: calc(100dvh - 80px);
+  max-width: min(340px, calc(100vw - 24px));
+  overflow-y: auto;
+  padding: 16px;
+  position: fixed;
+  right: 10px;
+  top: 70px;
+  z-index: 5;
+
+  h2 {
+    color: #7dd3fc;
+    font-family: var(--dq-font-display);
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    margin: 0 0 14px;
+    text-transform: uppercase;
+  }
+
+  > button:first-of-type {
+    background: rgba(125, 211, 252, 0.1);
+    border: 1px solid rgba(125, 211, 252, 0.35);
+    border-radius: 999px;
+    color: #7dd3fc;
+    cursor: pointer;
+    float: right;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 4px 10px;
+    transition: background 120ms;
+
+    &:hover {
+      background: rgba(125, 211, 252, 0.2);
+    }
+  }
+}
+
+.setting-row {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 6px 0;
+}
+
+.setting-label {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.setting-toggle {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  cursor: pointer;
+  flex-shrink: 0;
+  height: 26px;
+  padding: 2px;
+  position: relative;
+  transition: background 160ms ease, border-color 160ms ease;
+  width: 46px;
+
+  .toggle-knob {
+    background: #cbd5e1;
+    border-radius: 50%;
+    display: block;
+    height: 20px;
+    transition: transform 160ms ease, background 160ms ease;
+    width: 20px;
+  }
+
+  &.on {
+    background: rgba(74, 222, 128, 0.35);
+    border-color: rgba(74, 222, 128, 0.6);
+
+    .toggle-knob {
+      background: #4ade80;
+      transform: translateX(20px);
+    }
+  }
+}
+
+.font-scale-group {
+  display: flex;
+  gap: 4px;
+}
+
+.font-scale-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  color: #dbe7f5;
+  cursor: pointer;
+  font-weight: 800;
+  min-height: 36px;
+  min-width: 40px;
+  transition: background 140ms ease, border-color 140ms ease;
+
+  &.active {
+    background: rgba(125, 211, 252, 0.18);
+    border-color: rgba(125, 211, 252, 0.55);
+    color: #e0f2fe;
+  }
+}
+
+.settings-tutorial-btn {
+  background: rgba(250, 204, 21, 0.1);
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  border-radius: 10px;
+  color: #fde047;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 14px;
+  min-height: 44px;
+  padding: 10px;
+  transition: background 140ms ease;
+  width: 100%;
+
+  &:hover {
+    background: rgba(250, 204, 21, 0.2);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════
