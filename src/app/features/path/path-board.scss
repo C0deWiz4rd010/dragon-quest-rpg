@@ -252,6 +252,49 @@
   white-space: nowrap;
 }
 
+.boss-progress {
+  display: flex;
+  gap: 4px;
+  margin: 2px 0 6px;
+}
+
+.boss-progress-seg {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  display: flex;
+  flex: 1;
+  height: 7px;
+  justify-content: center;
+  transition: background 200ms ease, box-shadow 200ms ease;
+
+  i {
+    font-size: 9px;
+    font-style: normal;
+    line-height: 1;
+    opacity: 0.55;
+  }
+
+  &.done {
+    background: linear-gradient(90deg, #34d399, #10b981);
+  }
+
+  &.current {
+    background: linear-gradient(90deg, #facc15, #f97316);
+    box-shadow: 0 0 8px rgba(250, 204, 21, 0.5);
+  }
+
+  &.boss {
+    background: rgba(239, 68, 68, 0.16);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    flex: 0 0 22px;
+
+    i {
+      opacity: 0.85;
+    }
+  }
+}
+
 .advisor-tag {
   background: rgba(250, 204, 21, 0.14);
   border: 1px solid rgba(250, 204, 21, 0.3);

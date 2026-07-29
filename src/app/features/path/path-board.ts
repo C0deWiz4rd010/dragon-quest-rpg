@@ -34,6 +34,26 @@ export class PathBoard {
   @ViewChildren('segmentEl') private segmentElements?: QueryList<ElementRef<HTMLElement>>;
 
   /**
+   * Five-step progress toward the next boss stage. Each entry is the visual
+   * state of a segment along the current etappe.
+   */
+  protected readonly bossProgressSteps = computed<('done' | 'current' | 'upcoming' | 'boss')[]>(() => {
+    const step = this.path.currentDepth() % 5;
+    return Array.from({ length: 5 }, (_, index) => {
+      if (index === 4) {
+        return index === step ? 'current' : 'boss';
+      }
+      if (index < step) {
+        return 'done';
+      }
+      if (index === step) {
+        return 'current';
+      }
+      return 'upcoming';
+    });
+  });
+
+  /**
    * Best choosable branch at the current station, ranked by advisor score.
    * Drives the "Empfohlen" highlight so the next move always reads clearly —
    * decision support without changing the underlying mechanics.

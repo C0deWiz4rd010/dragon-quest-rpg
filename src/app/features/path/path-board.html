@@ -47,6 +47,19 @@
     </div>
   </div>
 
+  <div class="boss-progress" aria-label="Fortschritt zur Boss-Etappe">
+    @for (step of bossProgressSteps(); track $index) {
+      <span
+        class="boss-progress-seg"
+        [class.done]="step === 'done'"
+        [class.current]="step === 'current'"
+        [class.boss]="step === 'boss'"
+      >
+        @if (step === 'boss') { <i>🐉</i> }
+      </span>
+    }
+  </div>
+
   <p class="advisor-line">
     <span class="advisor-tag">Taktik</span>{{ routeAdvisorSummary() }}
   </p>
