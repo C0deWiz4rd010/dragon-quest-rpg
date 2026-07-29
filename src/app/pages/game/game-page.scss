@@ -311,8 +311,8 @@
   display: inline-flex;
   gap: 4px;
   justify-content: center;
-  min-height: 32px;
-  min-width: 34px;
+  min-height: 36px;
+  min-width: 38px;
   padding: 4px 9px;
   transition: background 120ms, border-color 120ms, transform 120ms;
 
@@ -978,7 +978,7 @@
 }
 
 @media (max-width: 639px) {
-  .game-shell { padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
+  .game-shell { padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)); }
   .side-zone { grid-template-columns: 1fr; }
 
   .layout[data-tab='combat'] .path-zone,
@@ -1015,6 +1015,8 @@
       flex: 1;
       flex-direction: column;
       gap: 3px;
+      min-height: 52px;
+      justify-content: center;
       padding: 8px 4px;
       transition: color 120ms;
 
@@ -1024,7 +1026,7 @@
       }
     }
 
-    .tab-icon { font-size: 16px; line-height: 1; }
+    .tab-icon { font-size: 18px; line-height: 1; }
     .tab-label { font-size: 8px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
   }
 }
