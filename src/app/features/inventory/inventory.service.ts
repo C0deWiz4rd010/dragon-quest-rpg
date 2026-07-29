@@ -285,7 +285,7 @@ export class Inventory {
       return;
     }
 
-    const item = randomMissing(this.lootItems, player.ownedItems) ?? randomFrom(this.lootItems);
+    const item = pickWeightedItem(this.lootItems, player.ownedItems, enemy) ?? randomFrom(this.lootItems);
 
     if (!item) {
       return;
@@ -370,6 +370,42 @@ function randomFrom<T>(options: T[]): T | null {
   return options[Math.floor(Math.random() * options.length)] ?? null;
 }
 
+function pickWeightedItem(pool: Item[], owned: Item[], enemy: Enemy): Item | null {
+  const missing = pool.filter((item) => !owned.some((ownedItem) => ownedItem.id === item.id));
+
+  if (!missing.length) {
+    return null;
+  }
+
+  const depthFactor = Math.min(1, Math.max(0, (enemy.level - 1) / 7));
+  const eliteBoost = enemy.isBoss ? 0.5 : enemy.elite ? 0.28 : 0;
+  const rareWeight = 0.3 + depthFactor * 0.35 + eliteBoost;
+  const legendaryWeight = 0.05 + depthFactor * 0.28 + eliteBoost;
+
+  const weightFor = (item: Item): number => {
+    switch (item.rarity) {
+      case 'legendary':
+        return legendaryWeight;
+      case 'rare':
+        return rareWeight;
+      default:
+        return 1;
+    }
+  };
+
+  const totalWeight = missing.reduce((sum, item) => sum + weightFor(item), 0);
+  let roll = Math.random() * totalWeight;
+
+  for (const item of missing) {
+    roll -= weightFor(item);
+    if (roll <= 0) {
+      return item;
+    }
+  }
+
+  return missing[missing.length - 1] ?? null;
+}
+
 function chooseInfusionBlessing(player: Player): Player['activeBlessings'][number]['type'] {
   if (player.statusEffect) {
     return 'ward';
@@ -391,6 +427,19 @@ function chooseInfusionBlessing(player: Player): Player['activeBlessings'][numbe
 }
 
 const LOOT_ITEMS: Item[] = [
+  // === Weapons ===
+  {
+    id: 'rusty-blade',
+    name: 'Rostklinge',
+    type: 'weapon',
+    attackBonus: 4,
+    defenseBonus: 0,
+    critBonus: 0,
+    manaBonus: 0,
+    icon: 'Sword',
+    desc: '+4 ATK',
+    rarity: 'common',
+  },
   {
     id: 'iron-sword',
     name: 'Eisenschwert',
@@ -401,6 +450,100 @@ const LOOT_ITEMS: Item[] = [
     manaBonus: 0,
     icon: 'Sword',
     desc: '+7 ATK',
+    rarity: 'common',
+  },
+  {
+    id: 'flame-edge',
+    name: 'Flammenschneide',
+    type: 'weapon',
+    attackBonus: 11,
+    defenseBonus: 0,
+    critBonus: 4,
+    manaBonus: 0,
+    icon: 'Sword',
+    desc: '+11 ATK, +4% Crit',
+    rarity: 'rare',
+    element: 'fire',
+  },
+  {
+    id: 'frost-saber',
+    name: 'Frostsaebel',
+    type: 'weapon',
+    attackBonus: 10,
+    defenseBonus: 3,
+    critBonus: 0,
+    manaBonus: 0,
+    icon: 'Sword',
+    desc: '+10 ATK, +3 DEF',
+    rarity: 'rare',
+    element: 'ice',
+  },
+  {
+    id: 'thunder-spear',
+    name: 'Donnerspeer',
+    type: 'weapon',
+    attackBonus: 12,
+    defenseBonus: 0,
+    critBonus: 6,
+    manaBonus: 0,
+    icon: 'Sword',
+    desc: '+12 ATK, +6% Crit',
+    rarity: 'rare',
+    element: 'lightning',
+  },
+  {
+    id: 'shadow-dagger',
+    name: 'Schattendolch',
+    type: 'weapon',
+    attackBonus: 9,
+    defenseBonus: 0,
+    critBonus: 10,
+    manaBonus: 0,
+    icon: 'Sword',
+    desc: '+9 ATK, +10% Crit',
+    rarity: 'rare',
+    element: 'shadow',
+  },
+  {
+    id: 'dragon-fang',
+    name: 'Drachenzahn',
+    type: 'weapon',
+    attackBonus: 18,
+    defenseBonus: 0,
+    critBonus: 8,
+    manaBonus: 4,
+    icon: 'Sword',
+    desc: '+18 ATK, +8% Crit, +4 Mana',
+    rarity: 'legendary',
+    element: 'fire',
+    setBonus: 'Drachenherz-Set: gleiches Element an Waffe, Ruestung und Ring gewaehrt +10% Elementarschaden.',
+  },
+  {
+    id: 'divine-blade',
+    name: 'Goettliche Klinge',
+    type: 'weapon',
+    attackBonus: 16,
+    defenseBonus: 4,
+    critBonus: 6,
+    manaBonus: 0,
+    icon: 'Sword',
+    desc: '+16 ATK, +4 DEF, +6% Crit',
+    rarity: 'legendary',
+    element: 'holy',
+    setBonus: 'Heiliges Set: gleiches Element an Waffe, Ruestung und Ring gewaehrt +10% Elementarschaden.',
+  },
+  // === Armor ===
+  {
+    id: 'cloth-robe',
+    name: 'Stoffrobe',
+    type: 'armor',
+    attackBonus: 0,
+    defenseBonus: 3,
+    critBonus: 0,
+    manaBonus: 4,
+    icon: 'Armor',
+    desc: '+3 DEF, +4 Mana',
+    rarity: 'common',
   },
   {
     id: 'scale-armor',
@@ -412,6 +555,99 @@ const LOOT_ITEMS: Item[] = [
     manaBonus: 0,
     icon: 'Armor',
     desc: '+6 DEF',
+    rarity: 'common',
+  },
+  {
+    id: 'chain-mail',
+    name: 'Kettenpanzer',
+    type: 'armor',
+    attackBonus: 0,
+    defenseBonus: 10,
+    critBonus: 0,
+    manaBonus: 0,
+    icon: 'Armor',
+    desc: '+10 DEF',
+    rarity: 'rare',
+  },
+  {
+    id: 'ember-plate',
+    name: 'Glutplatte',
+    type: 'armor',
+    attackBonus: 3,
+    defenseBonus: 8,
+    critBonus: 0,
+    manaBonus: 0,
+    icon: 'Armor',
+    desc: '+8 DEF, +3 ATK',
+    rarity: 'rare',
+    element: 'fire',
+  },
+  {
+    id: 'frost-mantle',
+    name: 'Frostmantel',
+    type: 'armor',
+    attackBonus: 0,
+    defenseBonus: 9,
+    critBonus: 0,
+    manaBonus: 8,
+    icon: 'Armor',
+    desc: '+9 DEF, +8 Mana',
+    rarity: 'rare',
+    element: 'ice',
+  },
+  {
+    id: 'storm-shroud',
+    name: 'Sturmhuelle',
+    type: 'armor',
+    attackBonus: 0,
+    defenseBonus: 7,
+    critBonus: 5,
+    manaBonus: 0,
+    icon: 'Armor',
+    desc: '+7 DEF, +5% Crit',
+    rarity: 'rare',
+    element: 'lightning',
+  },
+  {
+    id: 'rune-plate',
+    name: 'Runenpanzer',
+    type: 'armor',
+    attackBonus: 0,
+    defenseBonus: 15,
+    critBonus: 0,
+    manaBonus: 10,
+    icon: 'Armor',
+    desc: '+15 DEF, +10 Mana',
+    rarity: 'legendary',
+    element: 'holy',
+    setBonus: 'Heiliges Set: gleiches Element an Waffe, Ruestung und Ring gewaehrt +10% Elementarschaden.',
+  },
+  {
+    id: 'dragon-scale',
+    name: 'Drachenschuppe',
+    type: 'armor',
+    attackBonus: 5,
+    defenseBonus: 14,
+    critBonus: 0,
+    manaBonus: 4,
+    icon: 'Armor',
+    desc: '+14 DEF, +5 ATK, +4 Mana',
+    rarity: 'legendary',
+    element: 'fire',
+    setBonus: 'Drachenherz-Set: gleiches Element an Waffe, Ruestung und Ring gewaehrt +10% Elementarschaden.',
+  },
+  // === Rings ===
+  {
+    id: 'copper-band',
+    name: 'Kupferreif',
+    type: 'ring',
+    attackBonus: 0,
+    defenseBonus: 0,
+    critBonus: 4,
+    manaBonus: 0,
+    icon: 'Ring',
+    desc: '+4% Crit',
+    rarity: 'common',
   },
   {
     id: 'focus-ring',
@@ -423,6 +659,86 @@ const LOOT_ITEMS: Item[] = [
     manaBonus: 0,
     icon: 'Ring',
     desc: '+8% Crit',
+    rarity: 'common',
+  },
+  {
+    id: 'might-signet',
+    name: 'Machtsiegel',
+    type: 'ring',
+    attackBonus: 6,
+    defenseBonus: 0,
+    critBonus: 4,
+    manaBonus: 0,
+    icon: 'Ring',
+    desc: '+6 ATK, +4% Crit',
+    rarity: 'rare',
+  },
+  {
+    id: 'ward-talisman',
+    name: 'Schutztalisman',
+    type: 'ring',
+    attackBonus: 0,
+    defenseBonus: 5,
+    critBonus: 0,
+    manaBonus: 6,
+    icon: 'Ring',
+    desc: '+5 DEF, +6 Mana',
+    rarity: 'rare',
+    element: 'ice',
+  },
+  {
+    id: 'fortune-charm',
+    name: 'Gluecksamulett',
+    type: 'ring',
+    attackBonus: 0,
+    defenseBonus: 0,
+    critBonus: 12,
+    manaBonus: 0,
+    icon: 'Ring',
+    desc: '+12% Crit',
+    rarity: 'rare',
+    element: 'lightning',
+  },
+  {
+    id: 'void-eye',
+    name: 'Leerenauge',
+    type: 'ring',
+    attackBonus: 5,
+    defenseBonus: 0,
+    critBonus: 8,
+    manaBonus: 0,
+    icon: 'Ring',
+    desc: '+5 ATK, +8% Crit',
+    rarity: 'rare',
+    element: 'shadow',
+  },
+  {
+    id: 'dragon-heart',
+    name: 'Drachenherz',
+    type: 'ring',
+    attackBonus: 8,
+    defenseBonus: 4,
+    critBonus: 10,
+    manaBonus: 6,
+    icon: 'Ring',
+    desc: '+8 ATK, +4 DEF, +10% Crit, +6 Mana',
+    rarity: 'legendary',
+    element: 'fire',
+    setBonus: 'Drachenherz-Set: gleiches Element an Waffe, Ruestung und Ring gewaehrt +10% Elementarschaden.',
+  },
+  {
+    id: 'eternal-band',
+    name: 'Ewiger Reif',
+    type: 'ring',
+    attackBonus: 4,
+    defenseBonus: 6,
+    critBonus: 6,
+    manaBonus: 10,
+    icon: 'Ring',
+    desc: '+4 ATK, +6 DEF, +6% Crit, +10 Mana',
+    rarity: 'legendary',
+    element: 'holy',
+    setBonus: 'Heiliges Set: gleiches Element an Waffe, Ruestung und Ring gewaehrt +10% Elementarschaden.',
   },
 ];
 

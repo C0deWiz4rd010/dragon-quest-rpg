@@ -37,15 +37,17 @@ export class GameState {
     createLogEntry('Wähle einen Pfad und beginne deine Reise.', 'normal'),
   ]);
 
+  readonly hasElementSet = computed(() => elementSetActive(this.player()));
+
   readonly playerAttack = computed(() => {
     const player = this.player();
-    return (
+    const base =
       player.baseAttack +
       player.attackBonus +
       (player.equippedWeapon?.attackBonus ?? 0) +
       petBonus(player, 'attack') +
-      relicAttackBonus(player)
-    );
+      relicAttackBonus(player);
+    return Math.round(base * (elementSetActive(player) ? 1.1 : 1));
   });
 
   readonly playerDefense = computed(() => {
@@ -477,6 +479,18 @@ function petBonus(
   bonusType: NonNullable<Player['activePet']>['bonusType'],
 ): number {
   return player.activePet?.bonusType === bonusType ? player.activePet.bonusValue : 0;
+}
+
+function elementSetActive(player: Player): boolean {
+  const weaponElement = player.equippedWeapon?.element;
+  const armorElement = player.equippedArmor?.element;
+  const ringElement = player.equippedRing?.element;
+
+  return (
+    !!weaponElement &&
+    weaponElement === armorElement &&
+    armorElement === ringElement
+  );
 }
 
 function createLogEntry(message: string, type: GameLogType): GameLogEntry {

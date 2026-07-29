@@ -1,4 +1,6 @@
 export type ItemType = 'weapon' | 'armor' | 'ring';
+export type ItemRarity = 'common' | 'rare' | 'legendary';
+export type ItemElement = 'fire' | 'ice' | 'lightning' | 'shadow' | 'holy';
 
 export interface Item {
   id: string;
@@ -10,4 +12,7 @@ export interface Item {
   manaBonus: number;
   icon: string;
   desc: string;
+  rarity?: ItemRarity;
+  element?: ItemElement;
+  setBonus?: string;
 }
