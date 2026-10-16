@@ -1,7 +1,4 @@
 import { computed, Injectable, inject, signal } from '@angular/core';
-import { assets } from '../assets/asset-catalog';
-import { roleLootMultiplier } from '../combat/combat-rules';
-import { Enemy, EnemyElement, EnemyRole } from '../combat/enemy.model';
 import {
   RunEncounterService,
   MerchantOffer,
@@ -9,21 +6,37 @@ import {
 } from '../encounters/run-encounter.service';
 import { GameState } from '../game-state/game-state.service';
 import { blessingLabel, mergeBlessing, spendBlessing } from '../game-state/run-blessings';
-import { Player, RouteHistoryType, RunBlessingType } from '../inventory/player.model';
+import { RouteHistoryType } from '../inventory/player.model';
 import { Inventory } from '../inventory/inventory.service';
-import { RelicId } from '../inventory/relic.model';
 import {
   randomMissingRelic,
-  relicGoldBonus,
   relicPrepFocusBonus,
   relicRestHealBonus,
   RUN_RELICS,
 } from '../inventory/relics';
 import { MiniGameService, MiniGameType } from '../minigames/mini-game.service';
 import { routeSynergyBonus } from './path-advisor';
-import { PathBranch, PathBranchModifier, PathSegment, type PathBiome } from './path-segment.model';
+import { PathBranch, PathSegment, type PathWeather } from './path-segment.model';
+import { createEnemy } from './enemy-blueprints';
+import {
+  adaptSegmentToPlayerState,
+  createPathSegment,
+  isBossPrepDepth,
+  weatherForBranch,
+} from './path-generator';
+import {
+  applyFortuneReward,
+  createMerchantOffers,
+  randomBlessing,
+  resolveEventOutcome,
+  routeResultLabel,
+  shardChanceForLuck,
+} from './path-rewards';
 
-export type PathWeather = 'clear' | 'rain' | 'fog' | 'snow' | 'ash' | 'storm' | 'glow';
+export { hydrateEnemyVisuals } from './enemy-blueprints';
+export { hydratePathVisuals, adaptSegmentToPlayerState } from './path-generator';
+
+export type { PathWeather };
 
 @Injectable({
   providedIn: 'root',
@@ -309,10 +322,7 @@ export class Path {
               critBonus: p.critBonus + 6,
               mana: Math.min(p.maxMana, p.mana + 18),
             }));
-            this.gameState.addLog(
-              `${source}: Runen-Synthese — +6% Krit, +18 Mana.`,
-              'achievement',
-            );
+            this.gameState.addLog(`${source}: Runen-Synthese — +6% Krit, +18 Mana.`, 'achievement');
           } else {
             const atk = hasWeapon ? 4 : 3;
             const def = hasArmor ? 4 : 3;
@@ -435,7 +445,16 @@ export class Path {
         hp: Math.max(1, p.hp - Math.floor(p.maxHp * frac)),
       }));
 
-    const archetypes = ['shrine', 'coin', 'cache', 'wanderer', 'soldier', 'dragonghost', 'keeper', 'bard'] as const;
+    const archetypes = [
+      'shrine',
+      'coin',
+      'cache',
+      'wanderer',
+      'soldier',
+      'dragonghost',
+      'keeper',
+      'bard',
+    ] as const;
     const kind = archetypes[Math.floor(Math.random() * archetypes.length)];
 
     const effects: Record<string, () => void> = {};
@@ -608,7 +627,10 @@ export class Path {
       effects['risk'] = () => {
         this.gameState.updatePlayer((p) => ({ ...p, gold: Math.max(0, p.gold - (goldBase + 30)) }));
         this.grantRouteRelic({ ...branch, guaranteedRelicId: undefined }, source);
-        this.gameState.addLog(`${source}: Der Handel gelingt — ein Relikt wechselt den Besitzer.`, 'achievement');
+        this.gameState.addLog(
+          `${source}: Der Handel gelingt — ein Relikt wechselt den Besitzer.`,
+          'achievement',
+        );
       };
       effects['reward'] = () => {
         this.gameState.updatePlayer((p) => ({
@@ -616,7 +638,10 @@ export class Path {
           potions: p.potions + 2,
           mana: Math.min(p.maxMana, p.mana + 18),
         }));
-        this.gameState.addLog(`${source}: Du deckst dich mit Vorräten ein — +2 Tränke, +18 Mana.`, 'heal');
+        this.gameState.addLog(
+          `${source}: Du deckst dich mit Vorräten ein — +2 Tränke, +18 Mana.`,
+          'heal',
+        );
       };
     } else if (kind === 'soldier') {
       icon = '🪖';
@@ -647,7 +672,10 @@ export class Path {
           gold: p.gold + goldBase,
         }));
         this.gameState.grantBlessing('battle', 2, source);
-        this.gameState.addLog(`${source}: Dankbar teilt er Kampfwissen — Segen und +${goldBase} Gold.`, 'achievement');
+        this.gameState.addLog(
+          `${source}: Dankbar teilt er Kampfwissen — Segen und +${goldBase} Gold.`,
+          'achievement',
+        );
       };
       effects['reward'] = () => {
         this.gameState.updatePlayer((p) => ({ ...p, gold: p.gold + Math.floor(goldBase * 0.5) }));
@@ -683,10 +711,16 @@ export class Path {
             baseAttack: p.baseAttack + 2,
           }));
           this.gameState.addDragonShards(1, source);
-          this.gameState.addLog(`${source}: Du bestehst die Prüfung — dauerhaft +2 ATK und ein Shard!`, 'achievement');
+          this.gameState.addLog(
+            `${source}: Du bestehst die Prüfung — dauerhaft +2 ATK und ein Shard!`,
+            'achievement',
+          );
         } else {
           hurt(0.2);
-          this.gameState.addLog(`${source}: Die Prüfung überwältigt dich — der Geist entzieht Lebenskraft.`, 'damage');
+          this.gameState.addLog(
+            `${source}: Die Prüfung überwältigt dich — der Geist entzieht Lebenskraft.`,
+            'damage',
+          );
         }
       };
       effects['reward'] = () => {
@@ -696,7 +730,10 @@ export class Path {
           resolve: Math.min(p.maxResolve, p.resolve + 1),
         }));
         this.gameState.grantBlessing('focus', 2, source);
-        this.gameState.addLog(`${source}: Weisheit fließt zu dir — Fokus, Mana und Resolve.`, 'heal');
+        this.gameState.addLog(
+          `${source}: Weisheit fließt zu dir — Fokus, Mana und Resolve.`,
+          'heal',
+        );
       };
     } else if (kind === 'keeper') {
       icon = '⛩';
@@ -728,7 +765,10 @@ export class Path {
           mana: p.maxMana,
           statusEffect: null,
         }));
-        this.gameState.addLog(`${source}: Der Altar leuchtet — volle HP, volles Mana, Status gereinigt.`, 'heal');
+        this.gameState.addLog(
+          `${source}: Der Altar leuchtet — volle HP, volles Mana, Status gereinigt.`,
+          'heal',
+        );
       };
       effects['reward'] = () => {
         this.gameState.updatePlayer((p) => ({
@@ -761,7 +801,10 @@ export class Path {
       effects['risk'] = () => {
         this.gameState.updatePlayer((p) => ({ ...p, gold: p.gold + Math.floor(goldBase * 0.7) }));
         this.gameState.grantBlessing('fortune', 2, source);
-        this.gameState.addLog(`${source}: Das Lied beflügelt dich — Glücks-Segen und +${Math.floor(goldBase * 0.7)} Gold.`, 'achievement');
+        this.gameState.addLog(
+          `${source}: Das Lied beflügelt dich — Glücks-Segen und +${Math.floor(goldBase * 0.7)} Gold.`,
+          'achievement',
+        );
       };
       effects['reward'] = () => {
         this.gameState.updatePlayer((p) => ({ ...p, mana: Math.min(p.maxMana, p.mana + 10) }));
@@ -1084,1235 +1127,7 @@ export interface PathSnapshot {
   currentDepth: number;
 }
 
-const ENEMY_BLUEPRINTS: Record<
-  string,
-  Omit<Enemy, 'id' | 'hp' | 'maxHp' | 'weakness' | 'telegraphedAbility'>
-> = {
-  slime: {
-    name: 'Schleimling',
-    role: 'swift',
-    attack: 10,
-    gold: 20,
-    xp: 25,
-    icon: 'S',
-    sprite: assets.units.slime,
-    assetUrl: assets.units.slime.idle,
-    level: 1,
-    elite: false,
-  },
-  bat: {
-    name: 'Vampirfledermaus',
-    role: 'swift',
-    attack: 16,
-    gold: 32,
-    xp: 42,
-    icon: 'B',
-    sprite: assets.units.bat,
-    assetUrl: assets.units.bat.idle,
-    level: 2,
-    elite: false,
-  },
-  skeleton: {
-    name: 'Knochenwache',
-    role: 'hexer',
-    attack: 21,
-    gold: 55,
-    xp: 75,
-    icon: 'K',
-    sprite: assets.units.skeleton,
-    assetUrl: assets.units.skeleton.idle,
-    level: 3,
-    elite: false,
-  },
-  knight: {
-    name: 'Verfluchter Ritter',
-    role: 'bruiser',
-    attack: 30,
-    gold: 95,
-    xp: 130,
-    icon: 'R',
-    sprite: assets.units.knight,
-    assetUrl: assets.units.knight.idle,
-    level: 4,
-    elite: false,
-  },
-  wyvern: {
-    name: 'Junger Drache',
-    role: 'bruiser',
-    attack: 44,
-    gold: 145,
-    xp: 210,
-    icon: 'D',
-    sprite: assets.units.wyvern,
-    assetUrl: assets.units.wyvern.idle,
-    level: 5,
-    elite: false,
-  },
-  ancient: {
-    name: 'Uralter Drache',
-    role: 'elite',
-    attack: 58,
-    gold: 240,
-    xp: 330,
-    icon: 'A',
-    sprite: assets.units.ancient,
-    assetUrl: assets.units.ancient.idle,
-    level: 7,
-    elite: true,
-  },
-  boss: {
-    name: 'Drachenkonig',
-    role: 'boss',
-    attack: 72,
-    gold: 600,
-    xp: 800,
-    icon: 'DK',
-    sprite: assets.units.boss,
-    assetUrl: assets.units.boss.idle,
-    level: 8,
-    elite: false,
-    isBoss: true,
-  },
-  // === Ember biome ===
-  'fire-sprite': {
-    name: 'Feuergeist',
-    role: 'swift',
-    attack: 15,
-    gold: 30,
-    xp: 40,
-    icon: 'FS',
-    sprite: assets.units.fireSprite,
-    assetUrl: assets.units.fireSprite.idle,
-    level: 2,
-    elite: false,
-  },
-  'lava-golem': {
-    name: 'Lavagolem',
-    role: 'bruiser',
-    attack: 32,
-    gold: 90,
-    xp: 120,
-    icon: 'LG',
-    sprite: assets.units.lavaGolem,
-    assetUrl: assets.units.lavaGolem.idle,
-    level: 4,
-    elite: false,
-  },
-  'magma-drake': {
-    name: 'Magmadrache',
-    role: 'elite',
-    attack: 52,
-    gold: 210,
-    xp: 300,
-    icon: 'MD',
-    sprite: assets.units.magmaDrake,
-    assetUrl: assets.units.magmaDrake.idle,
-    level: 6,
-    elite: true,
-  },
-  // === Grove biome ===
-  'forest-wisp': {
-    name: 'Waldirrlicht',
-    role: 'hexer',
-    attack: 14,
-    gold: 34,
-    xp: 44,
-    icon: 'FW',
-    sprite: assets.units.forestWisp,
-    assetUrl: assets.units.forestWisp.idle,
-    level: 2,
-    elite: false,
-  },
-  'treant-archer': {
-    name: 'Ent-Schutze',
-    role: 'swift',
-    attack: 20,
-    gold: 52,
-    xp: 70,
-    icon: 'TA',
-    sprite: assets.units.treantArcher,
-    assetUrl: assets.units.treantArcher.idle,
-    level: 3,
-    elite: false,
-  },
-  'vine-horror': {
-    name: 'Rankenschrecken',
-    role: 'bruiser',
-    attack: 40,
-    gold: 130,
-    xp: 180,
-    icon: 'VH',
-    sprite: assets.units.vineHorror,
-    assetUrl: assets.units.vineHorror.idle,
-    level: 5,
-    elite: false,
-  },
-  // === Ruin biome ===
-  'tomb-guardian': {
-    name: 'Grabwachter',
-    role: 'bruiser',
-    attack: 30,
-    gold: 92,
-    xp: 125,
-    icon: 'TG',
-    sprite: assets.units.tombGuardian,
-    assetUrl: assets.units.tombGuardian.idle,
-    level: 4,
-    elite: false,
-  },
-  'cursed-armor': {
-    name: 'Fluchruestung',
-    role: 'bruiser',
-    attack: 38,
-    gold: 120,
-    xp: 175,
-    icon: 'CA',
-    sprite: assets.units.cursedArmor,
-    assetUrl: assets.units.cursedArmor.idle,
-    level: 5,
-    elite: false,
-  },
-  'shadow-remnant': {
-    name: 'Schattenrest',
-    role: 'hexer',
-    attack: 46,
-    gold: 175,
-    xp: 240,
-    icon: 'SR',
-    sprite: assets.units.shadowRemnant,
-    assetUrl: assets.units.shadowRemnant.idle,
-    level: 6,
-    elite: false,
-  },
-  // === Frost biome ===
-  'ice-wraith': {
-    name: 'Eisgespenst',
-    role: 'hexer',
-    attack: 22,
-    gold: 56,
-    xp: 76,
-    icon: 'IW',
-    sprite: assets.units.iceWraith,
-    assetUrl: assets.units.iceWraith.idle,
-    level: 3,
-    elite: false,
-  },
-  'frost-bear': {
-    name: 'Frostbaer',
-    role: 'bruiser',
-    attack: 33,
-    gold: 96,
-    xp: 130,
-    icon: 'FB',
-    sprite: assets.units.frostBear,
-    assetUrl: assets.units.frostBear.idle,
-    level: 4,
-    elite: false,
-  },
-  'blizzard-elemental': {
-    name: 'Blizzardelementar',
-    role: 'elite',
-    attack: 56,
-    gold: 235,
-    xp: 320,
-    icon: 'BE',
-    sprite: assets.units.blizzardElemental,
-    assetUrl: assets.units.blizzardElemental.idle,
-    level: 7,
-    elite: true,
-  },
-  // === Storm biome ===
-  'thunder-hawk': {
-    name: 'Donnerhabicht',
-    role: 'swift',
-    attack: 19,
-    gold: 50,
-    xp: 68,
-    icon: 'TH',
-    sprite: assets.units.thunderHawk,
-    assetUrl: assets.units.thunderHawk.idle,
-    level: 3,
-    elite: false,
-  },
-  'storm-djinn': {
-    name: 'Sturmdschinn',
-    role: 'hexer',
-    attack: 42,
-    gold: 132,
-    xp: 185,
-    icon: 'SD',
-    sprite: assets.units.stormDjinn,
-    assetUrl: assets.units.stormDjinn.idle,
-    level: 5,
-    elite: false,
-  },
-  'cyclone-serpent': {
-    name: 'Wirbelschlange',
-    role: 'elite',
-    attack: 55,
-    gold: 230,
-    xp: 315,
-    icon: 'CS',
-    sprite: assets.units.cycloneSerpent,
-    assetUrl: assets.units.cycloneSerpent.idle,
-    level: 7,
-    elite: true,
-  },
-  // === Sanctum biome ===
-  'holy-sentinel': {
-    name: 'Heiliger Wachter',
-    role: 'bruiser',
-    attack: 31,
-    gold: 94,
-    xp: 128,
-    icon: 'HS',
-    sprite: assets.units.holySentinel,
-    assetUrl: assets.units.holySentinel.idle,
-    level: 4,
-    elite: false,
-  },
-  'rune-golem': {
-    name: 'Runengolem',
-    role: 'elite',
-    attack: 57,
-    gold: 240,
-    xp: 325,
-    icon: 'RG',
-    sprite: assets.units.runeGolem,
-    assetUrl: assets.units.runeGolem.idle,
-    level: 7,
-    elite: true,
-  },
-  'void-walker': {
-    name: 'Leerenwandler',
-    role: 'elite',
-    attack: 58,
-    gold: 250,
-    xp: 340,
-    icon: 'VW',
-    sprite: assets.units.voidWalker,
-    assetUrl: assets.units.voidWalker.idle,
-    level: 7,
-    elite: true,
-  },
-};
-
-export function hydrateEnemyVisuals(enemy: Enemy | null): Enemy | null {
-  if (!enemy) {
-    return null;
-  }
-
-  const key = Object.keys(ENEMY_BLUEPRINTS).find((enemyId) => {
-    const blueprint = ENEMY_BLUEPRINTS[enemyId];
-
-    return (
-      blueprint.name === enemy.name ||
-      enemy.assetUrl === blueprint.assetUrl ||
-      enemy.icon === blueprint.icon
-    );
-  });
-  const blueprint = key ? ENEMY_BLUEPRINTS[key] : ENEMY_BLUEPRINTS['slime'];
-
-  return {
-    ...enemy,
-    role: enemy.role ?? blueprint.role,
-    assetUrl: enemy.assetUrl ?? blueprint.assetUrl,
-    sprite: enemy.sprite ?? blueprint.sprite,
-    weakness: enemy.weakness ?? weaknessForRole(enemy.role ?? blueprint.role),
-    telegraphedAbility: enemy.telegraphedAbility ?? null,
-  };
-}
-
-export function hydratePathVisuals(segments: PathSegment[]): PathSegment[] {
-  return segments.map((segment) => ({
-    ...segment,
-    branches: segment.branches.map((branch) => {
-      const blueprint = branch.enemyId
-        ? (ENEMY_BLUEPRINTS[branch.enemyId] ?? ENEMY_BLUEPRINTS['slime'])
-        : null;
-      const weatherPreview = branch.weatherPreview ?? weatherForBranch(branch.type);
-
-      return {
-        ...branch,
-        assetUrl: branch.assetUrl ?? blueprint?.assetUrl,
-        sprite: branch.sprite ?? blueprint?.sprite,
-        enemyRole: branch.enemyRole ?? blueprint?.role,
-        weatherPreview,
-        biome: branch.biome ?? biomeForBranch(branch.type, weatherPreview),
-        riskLabel: branch.riskLabel ?? riskLabel(branch.threat, blueprint?.role),
-        rewardHint: branch.rewardHint ?? rewardHint(branch.type, branch.threat, blueprint?.role),
-        modifier: branch.modifier,
-        modifierHint: branch.modifierHint ?? modifierHint(branch.modifier),
-      };
-    }),
-  }));
-}
-
-export function adaptSegmentToPlayerState(
-  segment: PathSegment,
-  player: Player,
-  bossPrepScore: number,
-): PathSegment {
-  if (
-    segment.depth === 0 ||
-    isBossPrepDepth(segment.depth) ||
-    segment.branches.some((branch) => branch.type === 'boss')
-  ) {
-    return segment;
-  }
-
-  const hasType = (...types: PathBranch['type'][]) =>
-    segment.branches.some((branch) => types.includes(branch.type));
-  const hpPercent = player.hp / player.maxHp;
-  const manaPercent = player.mana / player.maxMana;
-  const bossSoon = segment.depth % 5 >= 3 && bossPrepScore < 60;
-  const replaceIndex = highestThreatBranchIndex(segment.branches);
-  let replacement: PathBranch | null = null;
-
-  if (hpPercent < 0.42 && !hasType('rest', 'sanctuary', 'merchant')) {
-    replacement = createRestBranch(
-      segment.depth,
-      replaceIndex,
-      'Notlager',
-      'Adaptive Rettungsroute fuer knappe HP, Mana und Cooldown.',
-      'Adaptiv: HP, Mana, Cooldown',
-    );
-  } else if (bossSoon && !hasType('sanctuary', 'merchant', 'forge')) {
-    replacement = createSanctuaryBranch(
-      segment.depth,
-      replaceIndex,
-      'Prep-Schrein',
-      'Adaptive Bossvorbereitung mit Segen, Resolve und Reinigung.',
-      'Adaptiv: Boss-Prep',
-    );
-  } else if (
-    (manaPercent < 0.35 || player.skillCooldown > 2) &&
-    !hasType('rest', 'forge', 'merchant')
-  ) {
-    replacement = createForgeBranch(
-      segment.depth,
-      replaceIndex,
-      'Fokus-Schmiede',
-      'Adaptive Tempo-Route fuer Mana, Cooldown und direkte Werte.',
-      'Adaptiv: Tempo',
-    );
-  }
-
-  if (!replacement) {
-    return segment;
-  }
-
-  return {
-    ...segment,
-    branches: segment.branches.map((branch, index) =>
-      index === replaceIndex ? withBranchMetadata(replacement) : branch,
-    ),
-  };
-}
-
-function createPathSegment(depth: number, playerLevel: number): PathSegment {
-  if (isBossPrepDepth(depth)) {
-    return createBossPrepSegment(depth, playerLevel);
-  }
-
-  const branchCount = depth === 0 ? 2 : Math.min(4, 2 + Math.floor(Math.random() * 3));
-  const branches = Array.from({ length: branchCount }, (_, index) =>
-    createBranch(depth, index, playerLevel),
-  );
-
-  if (depth === 1 && !branches.some((branch) => branch.type === 'minigame')) {
-    branches[branches.length - 1] = createMiniGameBranch(depth, branches.length - 1);
-  }
-
-  if (depth > 0 && depth % 5 === 0) {
-    branches[0] = {
-      id: `path-${depth}-boss`,
-      type: 'boss',
-      name: 'Thronsaal',
-      icon: 'DK',
-      assetUrl: assets.nodes.boss,
-      description: 'Ein schwerer Kampf mit hoher Belohnung.',
-      threat: 5,
-      riskLabel: riskLabel(5, 'boss'),
-      rewardHint: rewardHint('boss', 5, 'boss'),
-      weatherPreview: weatherForBranch('boss'),
-      enemyRole: 'boss',
-      modifier: 'focus',
-      modifierHint: modifierHint('focus'),
-      completed: false,
-      enemyId: 'boss',
-    };
-  }
-
-  return {
-    id: `segment-${depth}`,
-    depth,
-    branches: branches.map(withBranchMetadata),
-    cleared: false,
-  };
-}
-
-function createBranch(depth: number, index: number, playerLevel: number): PathBranch {
-  const roll = Math.random();
-
-  if (roll > 0.82 && depth > 0) {
-    return createMiniGameBranch(depth, index);
-  }
-
-  if (roll > 0.78 && depth > 2) {
-    return createEliteBranch(depth, index);
-  }
-
-  if (roll > 0.76) {
-    return {
-      id: `path-${depth}-${index}`,
-      type: 'treasure',
-      name: 'Reliktkammer',
-      icon: 'C',
-      assetUrl: assets.nodes.treasure,
-      description: 'Sichere Beute, aber der Lauf wird tiefer.',
-      threat: 1,
-      riskLabel: riskLabel(1),
-      rewardHint: `Sicher: ${30 + depth * 12}+ Gold${depth > 2 ? ' und Relic-Chance' : ''}`,
-      weatherPreview: weatherForBranch('treasure'),
-      modifier: branchModifier(1, 'treasure'),
-      completed: false,
-      reward: {
-        gold: 30 + depth * 12 + Math.floor(Math.random() * 25),
-        potions: Math.random() > 0.72 ? 1 : 0,
-      },
-    };
-  }
-
-  if (roll > 0.68) {
-    return {
-      id: `path-${depth}-${index}`,
-      type: 'rest',
-      name: 'Lagerfeuer',
-      icon: 'Camp',
-      assetUrl: assets.nodes.camp,
-      description: 'Rastplatz fur Heilung, Mana und einen ruhigen Reset.',
-      threat: 0,
-      riskLabel: riskLabel(0),
-      rewardHint: 'Stabil: HP, Mana, Cooldown',
-      weatherPreview: weatherForBranch('rest'),
-      modifier: branchModifier(0, 'rest'),
-      completed: false,
-    };
-  }
-
-  if (roll > 0.6) {
-    return {
-      id: `path-${depth}-${index}`,
-      type: 'event',
-      name: 'Runenschrein',
-      icon: 'R',
-      assetUrl: assets.nodes.shrine,
-      description: 'Unberechenbares Ereignis mit Ressourcen oder Erholung.',
-      threat: 0,
-      riskLabel: riskLabel(0),
-      rewardHint: 'Variabel: Gold oder Erholung',
-      weatherPreview: weatherForBranch('event'),
-      modifier: branchModifier(0, 'event'),
-      completed: false,
-    };
-  }
-
-  if (roll > 0.52 && depth > 0) {
-    return {
-      id: `path-${depth}-${index}`,
-      type: 'merchant',
-      name: 'Trosshaendler',
-      icon: 'G',
-      assetUrl: assets.nodes.merchant,
-      description: 'Passt seine Ware an deinen aktuellen Run-Zustand an.',
-      threat: 0,
-      riskLabel: riskLabel(0),
-      rewardHint: 'Wahl: Tempo, Sustain oder Relic',
-      weatherPreview: weatherForBranch('merchant'),
-      modifier: branchModifier(0, 'merchant'),
-      completed: false,
-    };
-  }
-
-  if (roll > 0.44 && depth > 1) {
-    return {
-      id: `path-${depth}-${index}`,
-      type: 'forge',
-      name: 'Feldschmiede',
-      icon: 'F',
-      assetUrl: assets.nodes.forge,
-      description: 'Schaerft deine Ausruestung direkt im Run.',
-      threat: 1,
-      riskLabel: riskLabel(1),
-      rewardHint: 'Tempo: direkte Kampfwerte',
-      weatherPreview: weatherForBranch('forge'),
-      modifier: branchModifier(1, 'forge'),
-      completed: false,
-    };
-  }
-
-  if (roll > 0.36 && depth > 1) {
-    return {
-      id: `path-${depth}-${index}`,
-      type: 'sanctuary',
-      name: 'Sanktuarium',
-      icon: 'S',
-      assetUrl: assets.nodes.sanctuary,
-      description: 'Klare den Fluss des Runs, tanke Resolve und sichere dir einen Segen.',
-      threat: 0,
-      riskLabel: riskLabel(0),
-      rewardHint: 'Segen, Resolve, Reinigung',
-      weatherPreview: weatherForBranch('sanctuary'),
-      modifier: branchModifier(0, 'sanctuary'),
-      completed: false,
-    };
-  }
-
-  const enemyPool = Object.entries(ENEMY_BLUEPRINTS)
-    .filter(([, enemy]) => !enemy.isBoss && enemy.level <= Math.min(7, playerLevel + depth + 1))
-    .map(([id]) => id);
-  const enemyId = enemyPool[Math.floor(Math.random() * enemyPool.length)] ?? 'slime';
-  const role = ENEMY_BLUEPRINTS[enemyId].role;
-  const threat = ENEMY_BLUEPRINTS[enemyId].elite ? 4 : Math.min(4, ENEMY_BLUEPRINTS[enemyId].level);
-
-  return {
-    id: `path-${depth}-${index}`,
-    type: 'fight',
-    name: depth > 3 && Math.random() > 0.75 ? 'Elite-Begegnung' : 'Monsterpfad',
-    icon: ENEMY_BLUEPRINTS[enemyId].icon,
-    assetUrl: ENEMY_BLUEPRINTS[enemyId].assetUrl,
-    sprite: ENEMY_BLUEPRINTS[enemyId].sprite,
-    description: describeFightPath(enemyId, depth),
-    threat,
-    riskLabel: riskLabel(threat, role),
-    rewardHint: rewardHint('fight', threat, role),
-    weatherPreview: weatherForBranch('fight'),
-    enemyRole: role,
-    modifier: branchModifier(threat, 'fight'),
-    completed: false,
-    enemyId,
-  };
-}
-
-function highestThreatBranchIndex(branches: PathBranch[]): number {
-  if (!branches.length) {
-    return 0;
-  }
-
-  return Math.max(
-    0,
-    branches.reduce(
-      (bestIndex, branch, index) =>
-        branch.threat > branches[bestIndex].threat ? index : bestIndex,
-      0,
-    ),
-  );
-}
-
-function createRestBranch(
-  depth: number,
-  index: number,
-  name = 'Lagerfeuer',
-  description = 'Rastplatz fur Heilung, Mana und einen ruhigen Reset.',
-  reward = 'Stabil: HP, Mana, Cooldown',
-): PathBranch {
-  return {
-    id: `path-${depth}-${index}-rest`,
-    type: 'rest',
-    name,
-    icon: 'Camp',
-    assetUrl: assets.nodes.camp,
-    description,
-    threat: 0,
-    riskLabel: riskLabel(0),
-    rewardHint: reward,
-    weatherPreview: weatherForBranch('rest'),
-    modifier: branchModifier(0, 'rest'),
-    completed: false,
-  };
-}
-
-function createForgeBranch(
-  depth: number,
-  index: number,
-  name = 'Feldschmiede',
-  description = 'Schaerft deine Ausruestung direkt im Run.',
-  reward = 'Tempo: direkte Kampfwerte',
-): PathBranch {
-  return {
-    id: `path-${depth}-${index}-forge`,
-    type: 'forge',
-    name,
-    icon: 'F',
-    assetUrl: assets.nodes.forge,
-    description,
-    threat: 1,
-    riskLabel: riskLabel(1),
-    rewardHint: reward,
-    weatherPreview: weatherForBranch('forge'),
-    modifier: branchModifier(1, 'forge'),
-    completed: false,
-  };
-}
-
-function createSanctuaryBranch(
-  depth: number,
-  index: number,
-  name = 'Sanktuarium',
-  description = 'Klaert den Fluss des Runs, tankt Resolve und sichert dir einen Segen.',
-  reward = 'Segen, Resolve, Reinigung',
-): PathBranch {
-  return {
-    id: `path-${depth}-${index}-sanctuary`,
-    type: 'sanctuary',
-    name,
-    icon: 'S',
-    assetUrl: assets.nodes.sanctuary,
-    description,
-    threat: 0,
-    riskLabel: riskLabel(0),
-    rewardHint: reward,
-    weatherPreview: weatherForBranch('sanctuary'),
-    modifier: branchModifier(0, 'sanctuary'),
-    completed: false,
-  };
-}
-
-function createMiniGameBranch(depth: number, index: number): PathBranch {
-  const miniGames = [
-    {
-      description: 'Kurzer Reflex-Test mit direkter Belohnung.',
-      icon: 'R',
-      name: 'Reflexprobe',
-    },
-    {
-      description: 'Merk dir das Muster und sichere dir Extra-Ressourcen.',
-      icon: 'M',
-      name: 'Merkspiel',
-    },
-    {
-      description: 'Präzisionspfad mit kleiner Bonuskiste.',
-      icon: 'P',
-      name: 'Präzisionslauf',
-    },
-    {
-      description: 'Schnelltippen für einen sauberen Tempo-Bonus.',
-      icon: 'T',
-      name: 'Tastentest',
-    },
-  ] as const;
-  const miniGame = miniGames[Math.floor(Math.random() * miniGames.length)] ?? miniGames[0];
-
-  return {
-    id: `path-${depth}-${index}`,
-    type: 'minigame',
-    name: miniGame.name,
-    icon: miniGame.icon,
-    description: miniGame.description,
-    threat: 1,
-    riskLabel: riskLabel(1),
-    rewardHint: 'Skill: Gold, Mana, Bonuschance',
-    weatherPreview: weatherForBranch('minigame'),
-    modifier: branchModifier(1, 'minigame'),
-    completed: false,
-  };
-}
-
-function createEliteBranch(depth: number, index: number): PathBranch {
-  return {
-    id: `path-${depth}-${index}`,
-    type: 'fight',
-    name: 'Elite-Jagd',
-    icon: 'A',
-    assetUrl: ENEMY_BLUEPRINTS['ancient'].assetUrl,
-    sprite: ENEMY_BLUEPRINTS['ancient'].sprite,
-    description: 'Ein harter Elite-Pfad fuer Prep, Relics und massiven Reward.',
-    threat: 4,
-    riskLabel: riskLabel(4, 'elite'),
-    rewardHint: 'Elite: Relic-Chance, Resolve und Boss-Prep',
-    weatherPreview: weatherForBranch('fight'),
-    enemyRole: 'elite',
-    modifier: branchModifier(4, 'fight'),
-    eliteRoute: true,
-    completed: false,
-    enemyId: 'ancient',
-  };
-}
-
-function weaknessForRole(role: EnemyRole): EnemyElement {
-  switch (role) {
-    case 'bruiser': return 'ice';
-    case 'swift': return 'lightning';
-    case 'hexer': return 'fire';
-    case 'elite': return 'shadow';
-    case 'boss': return 'shadow';
-  }
-}
-
-function createEnemy(enemyId: string, playerLevel: number, forceBoss = false, threat = 1, newGamePlus = 0): Enemy {
-  const blueprint = ENEMY_BLUEPRINTS[forceBoss ? 'boss' : enemyId] ?? ENEMY_BLUEPRINTS['slime'];
-  const scaling = Math.max(0, playerLevel - blueprint.level);
-  // New Game+ tightens the screws: +22% enemy HP and +18% damage per cycle.
-  const ngHpMult = 1 + newGamePlus * 0.22;
-  const ngAtkMult = 1 + newGamePlus * 0.18;
-  const ngRewardMult = 1 + newGamePlus * 0.15;
-  const maxHp = Math.round(((forceBoss ? 500 : 45 + blueprint.level * 26) + scaling * 18) * ngHpMult);
-  const rewardScale = (roleLootMultiplier(blueprint.role) + Math.max(0, threat - 1) * 0.08) * ngRewardMult;
-
-  return {
-    ...blueprint,
-    id: `${enemyId}-${crypto.randomUUID()}`,
-    hp: maxHp,
-    maxHp,
-    attack: Math.round((blueprint.attack + scaling * 3) * ngAtkMult),
-    gold: Math.floor((blueprint.gold + scaling * 10) * rewardScale),
-    xp: Math.floor((blueprint.xp + scaling * 12) * rewardScale),
-    weakness: weaknessForRole(blueprint.role),
-    telegraphedAbility: null,
-  };
-}
-
-function withBranchMetadata(branch: PathBranch): PathBranch {
-  const weatherPreview = branch.weatherPreview ?? weatherForBranch(branch.type);
-
-  return {
-    ...branch,
-    weatherPreview,
-    biome: branch.biome ?? biomeForBranch(branch.type, weatherPreview),
-    modifierHint: branch.modifierHint ?? modifierHint(branch.modifier),
-  };
-}
-
-function biomeForBranch(type: PathBranch['type'], weather: PathWeather): PathBiome {
-  if (type === 'boss' || type === 'sanctuary') {
-    return 'sanctum';
-  }
-
-  if (type === 'forge' || weather === 'ash') {
-    return 'ember';
-  }
-
-  if (weather === 'storm') {
-    return 'storm';
-  }
-
-  if (weather === 'snow') {
-    return 'frost';
-  }
-
-  if (type === 'rest' || weather === 'rain' || weather === 'glow') {
-    return 'grove';
-  }
-
-  return 'ruin';
-}
-
-function weatherForBranch(type: PathBranch['type']): PathWeather {
-  if (type === 'fight') {
-    return Math.random() > 0.5 ? 'rain' : 'ash';
-  }
-
-  if (type === 'boss') {
-    return 'storm';
-  }
-
-  if (type === 'forge') {
-    return Math.random() > 0.5 ? 'ash' : 'snow';
-  }
-
-  if (type === 'merchant') {
-    return 'clear';
-  }
-
-  if (type === 'sanctuary') {
-    return 'glow';
-  }
-
-  if (type === 'rest') {
-    return 'glow';
-  }
-
-  if (type === 'event') {
-    return 'fog';
-  }
-
-  if (type === 'minigame') {
-    return 'glow';
-  }
-
-  return 'snow';
-}
-
-function branchModifier(threat: number, type: PathBranch['type']): PathBranchModifier | undefined {
-  const roll = Math.random();
-
-  if (type === 'boss') return 'focus';
-  if (type === 'rest') return roll > 0.45 ? 'blessing' : undefined;
-  if (type === 'sanctuary') return roll > 0.45 ? 'blessing' : 'focus';
-  if (type === 'merchant') return roll > 0.5 ? 'cache' : 'blessing';
-  if (type === 'forge') return roll > 0.48 ? 'focus' : 'cache';
-  if (type === 'treasure') return roll > 0.42 ? 'cache' : undefined;
-  if (type === 'event') return roll > 0.62 ? 'curse' : roll > 0.28 ? 'blessing' : undefined;
-  if (type === 'minigame') return roll > 0.5 ? 'focus' : 'cache';
-  if (threat >= 4) return roll > 0.55 ? 'ambush' : roll > 0.22 ? 'focus' : undefined;
-  if (threat >= 2) return roll > 0.62 ? 'ambush' : roll > 0.36 ? 'cache' : undefined;
-
-  return roll > 0.7 ? 'cache' : undefined;
-}
-
-function modifierHint(modifier: PathBranchModifier | undefined): string | undefined {
-  switch (modifier) {
-    case 'ambush':
-      return 'Mod: Hinterhalt';
-    case 'blessing':
-      return 'Mod: Segen';
-    case 'cache':
-      return 'Mod: Vorrat';
-    case 'curse':
-      return 'Mod: Fluch';
-    case 'focus':
-      return 'Mod: Fokus';
-    default:
-      return undefined;
-  }
-}
-
-function riskLabel(threat: number, role?: EnemyRole): string {
-  if (role === 'boss') return 'Bossrisiko';
-  if (role === 'elite' || threat >= 4) return 'Hohes Risiko';
-  if (threat >= 2) return 'Taktisches Risiko';
-  if (threat === 1) return 'Niedriges Risiko';
-  return 'Sicher';
-}
-
-function rewardHint(type: PathBranch['type'], threat: number, role?: EnemyRole): string {
-  if (type === 'boss') return 'Boss: sehr viel XP/Gold';
-  if (type === 'fight') {
-    const multiplier = role ? roleLootMultiplier(role) + Math.max(0, threat - 1) * 0.08 : 1;
-    return `${roleLabel(role)}: ${Math.round(multiplier * 100)}% Reward`;
-  }
-  if (type === 'treasure') return 'Sicherer Goldfund';
-  if (type === 'rest') return 'Heilung und Tempo';
-  if (type === 'merchant') return 'Adaptive Versorgung';
-  if (type === 'forge') return 'Direkte Kampfwerte';
-  if (type === 'sanctuary') return 'Blessing und Resolve';
-  if (type === 'minigame') return 'Skill-Bonus';
-  return 'Unbekannter Ausgang';
-}
-
-function roleLabel(role?: EnemyRole): string {
-  switch (role) {
-    case 'bruiser':
-      return 'Bruiser';
-    case 'swift':
-      return 'Swift';
-    case 'hexer':
-      return 'Hexer';
-    case 'elite':
-      return 'Elite';
-    case 'boss':
-      return 'Boss';
-    default:
-      return 'Route';
-  }
-}
-
-function resolveEventOutcome(
-  depth: number,
-  luck: number,
-): {
-  gold: number;
-  hp: number;
-  mana: number;
-  message: string;
-  potions: number;
-  shards?: number;
-  blessing?: { type: RunBlessingType; charges: number };
-  relic?: { id: RelicId };
-  type: 'event' | 'heal';
-} {
-  const scaledGold = 18 + depth * 8 + Math.floor(luck * 1.4) + Math.floor(Math.random() * 18);
-  const shardReward = Math.random() < shardChanceForLuck(luck, 0.1) ? 1 : 0;
-  const roll = Math.random();
-
-  if (roll > 0.78) {
-    return {
-      gold: scaledGold + 10,
-      hp: 0,
-      mana: 24,
-      message: `Runenschrein aktiviert: +${scaledGold + 10} Gold und +24 Mana.`,
-      potions: 0,
-      shards: shardReward,
-      type: 'event',
-    };
-  }
-
-  if (roll > 0.56) {
-    return {
-      gold: Math.floor(scaledGold * 0.5),
-      hp: 20 + depth * 3,
-      mana: 14,
-      message: 'Wanderaltar gefunden: Du sammelst Gold und stabilisierst deine Reserven.',
-      potions: 0,
-      shards: shardReward > 0 && Math.random() > 0.45 ? shardReward : 0,
-      type: 'heal',
-    };
-  }
-
-  if (roll > 0.28) {
-    const blessing = randomBlessing(['fortune', 'focus', 'vigor']);
-    const relic =
-      depth > 3 && Math.random() > 0.72
-        ? (RUN_RELICS[Math.floor(Math.random() * RUN_RELICS.length)] ?? null)
-        : null;
-
-    return {
-      gold: Math.floor(scaledGold * 0.65),
-      hp: 10 + depth * 2,
-      mana: 10,
-      message: `Runenschrift gelesen: etwas Beute und ein neuer Segen begleiten dich${relic ? ', dazu flackert ein Relic auf' : ''}.`,
-      potions: 0,
-      shards: shardReward > 0 && Math.random() > 0.35 ? shardReward : 0,
-      blessing,
-      relic: relic ? { id: relic.id } : undefined,
-      type: 'heal',
-    };
-  }
-
-  return {
-    gold: scaledGold,
-    hp: 0,
-    mana: 8,
-    message: `Verlassene Vorratskiste: +${scaledGold} Gold, +8 Mana und +1 Trank.`,
-    potions: 1,
-    shards: shardReward,
-    type: 'event',
-  };
-}
-
-function describeFightPath(enemyId: string, depth: number): string {
-  const enemy = ENEMY_BLUEPRINTS[enemyId] ?? ENEMY_BLUEPRINTS['slime'];
-  const risk = depth > 3 || enemy.elite ? 'hohem Druck' : 'kontrollierbarem Risiko';
-
-  return `${enemy.name} wartet hier mit ${risk}, XP und Gold.`;
-}
-
-function createBossPrepSegment(depth: number, playerLevel: number): PathSegment {
-  return {
-    id: `segment-${depth}`,
-    depth,
-    branches: (
-      [
-        {
-          id: `path-${depth}-elite`,
-          type: 'fight',
-          name: 'Elite-Jagd',
-          icon: 'A',
-          assetUrl: ENEMY_BLUEPRINTS['ancient'].assetUrl,
-          sprite: ENEMY_BLUEPRINTS['ancient'].sprite,
-          description: 'Ein uralter Drache bewacht seltene Prep-Beute vor dem Boss.',
-          threat: 4,
-          riskLabel: riskLabel(4, 'elite'),
-          rewardHint: 'Elite: Relic-Chance und Resolve',
-          weatherPreview: 'ash',
-          enemyRole: 'elite',
-          modifier: 'focus',
-          modifierHint: modifierHint('focus'),
-          eliteRoute: true,
-          completed: false,
-          enemyId: 'ancient',
-        },
-        {
-          id: `path-${depth}-merchant`,
-          type: 'merchant',
-          name: 'Vorhut-Haendler',
-          icon: 'G',
-          assetUrl: assets.nodes.merchant,
-          description: 'Letzte Einkaeufe und taktische Auswahl vor dem Boss.',
-          threat: 0,
-          riskLabel: riskLabel(0),
-          rewardHint: 'Wahl: Boss-Prep',
-          weatherPreview: 'clear',
-          modifier: 'cache',
-          modifierHint: modifierHint('cache'),
-          completed: false,
-        },
-        {
-          id: `path-${depth}-forge`,
-          type: 'forge',
-          name: 'Feldschmiede',
-          icon: 'F',
-          assetUrl: assets.nodes.forge,
-          description: 'Direkte Werte fuer die naechste Bossphase.',
-          threat: 1,
-          riskLabel: riskLabel(1),
-          rewardHint: 'Prep: direkte Stats',
-          weatherPreview: 'snow',
-          modifier: 'focus',
-          modifierHint: modifierHint('focus'),
-          completed: false,
-        },
-        {
-          id: `path-${depth}-sanctuary`,
-          type: 'sanctuary',
-          name: 'Boss-Sanktuarium',
-          icon: 'S',
-          assetUrl: assets.nodes.sanctuary,
-          description: 'Reinigt den Run und fuellt Blessings sowie Resolve vor dem Finale.',
-          threat: 0,
-          riskLabel: riskLabel(0),
-          rewardHint: 'Prep: Blessing und Resolve',
-          weatherPreview: 'glow',
-          modifier: 'blessing',
-          modifierHint: modifierHint('blessing'),
-          completed: false,
-        },
-      ] satisfies PathBranch[]
-    ).map(withBranchMetadata),
-    cleared: false,
-  };
-}
-
-function isBossPrepDepth(depth: number): boolean {
-  return depth > 0 && depth % 5 === 4;
-}
-
-function randomBlessing(pool: RunBlessingType[]): { type: RunBlessingType; charges: number } {
-  const type = pool[Math.floor(Math.random() * pool.length)] ?? pool[0] ?? 'focus';
-  const charges = type === 'ward' ? 2 : Math.random() > 0.7 ? 3 : 2;
-
-  return { type, charges };
-}
-
-function applyFortuneReward(
-  player: Player,
-  gold: number,
-  potions: number,
-  extraPotionOnFortune: number,
-  onApplied: (used: boolean, goldBonus: number, potionBonus: number) => void,
-): Pick<Player, 'activeBlessings' | 'gold' | 'potions'> {
-  const fortune = spendBlessing(player.activeBlessings, 'fortune');
-  const goldBonus =
-    (fortune.consumed ? 25 + effectivePlayerLuck(player) * 2 : 0) + relicGoldBonus(player);
-  const potionBonus = fortune.consumed ? extraPotionOnFortune : 0;
-
-  onApplied(fortune.consumed, goldBonus, potionBonus);
-
-  return {
-    activeBlessings: fortune.blessings,
-    gold: player.gold + gold + goldBonus,
-    potions: player.potions + potions + potionBonus,
-  };
-}
-
-function effectivePlayerLuck(player: Player): number {
-  return player.luck + (player.activePet?.bonusType === 'luck' ? player.activePet.bonusValue : 0);
-}
-
-function shardChanceForLuck(luck: number, baseChance: number): number {
-  return Math.min(0.48, baseChance + luck * 0.015);
-}
-
-function createMerchantOffers(player: Player, source: string): MerchantOffer[] {
-  const sustainOffer: MerchantOffer = player.statusEffect
-    ? {
-        id: `${source}-fieldmed`,
-        title: 'Feldmedizin',
-        description: 'Entfernt Status, heilt und legt eine frische Aegis auf den Run.',
-        cost: 80,
-        rewardLabel: '+22 HP, Cleanse, Ward',
-        kind: 'sustain',
-        blessing: { type: 'ward', charges: 2 },
-        cleanse: true,
-        hp: 22,
-      }
-    : {
-        id: `${source}-rations`,
-        title: 'Notfallration',
-        description: 'Mehr Sicherheit fuer den naechsten Kampf oder Boss.',
-        cost: 90,
-        rewardLabel: '+2 Traenke, +18 HP',
-        kind: 'sustain',
-        hp: 18,
-        potions: 2,
-      };
-
-  const tempoOffer: MerchantOffer =
-    player.mana < player.maxMana * 0.45 || player.skillCooldown > 1
-      ? {
-          id: `${source}-focus`,
-          title: 'Fokusvorrat',
-          description: 'Zieht Drachenklaue und Manafenster sofort nach vorne.',
-          cost: 70,
-          rewardLabel: '+32 Mana, -2 Cooldown, Fokuslicht',
-          kind: 'tempo',
-          blessing: { type: 'focus', charges: 2 },
-          cooldown: 2,
-          mana: 32,
-        }
-      : {
-          id: `${source}-sharpen`,
-          title: 'Schaerfset',
-          description: 'Ein kleiner, sofortiger Frontload fuer den Bosskampf.',
-          cost: 110,
-          rewardLabel: '+3 ATK, +2 DEF, Kampfrausch',
-          kind: 'forge',
-          attackBonus: 3,
-          blessing: { type: 'battle', charges: 2 },
-          defenseBonus: 2,
-          mana: 10,
-        };
-
-  const relic = randomMissingRelic(player);
-  const capstoneOffer: MerchantOffer = relic
-    ? {
-        id: `${source}-relic`,
-        title: relic.name,
-        description: `Seltenes Prep-Relic direkt vom Trosshaendler. ${relic.desc}`,
-        cost: 140,
-        rewardLabel: 'Seltenes Run-Relic',
-        kind: 'relic',
-        relic,
-      }
-    : {
-        id: `${source}-luck`,
-        title: 'Gluecksroute',
-        description: 'Ein kleines Gratis-Paket fuer Runs, die schon gut aufgestellt sind.',
-        cost: 0,
-        rewardLabel: '+12 HP, +8 Mana, Glueckssegen',
-        kind: 'blessing',
-        blessing: { type: 'fortune', charges: 2 },
-        hp: 12,
-        mana: 8,
-      };
-
-  return [sustainOffer, tempoOffer, capstoneOffer];
-}
-
-function routeResultLabel(branch: PathBranch): string {
-  if (branch.eliteRoute) {
-    return 'Elite-Prep';
-  }
-
-  switch (branch.type) {
-    case 'fight':
-      return 'Kampfroute';
-    case 'treasure':
-      return 'Beute';
-    case 'event':
-      return 'Ereignis';
-    case 'rest':
-      return 'Erholung';
-    case 'minigame':
-      return 'Skillcheck';
-    case 'merchant':
-      return 'Handel';
-    case 'forge':
-      return 'Werte';
-    case 'sanctuary':
-      return 'Segen';
-    case 'boss':
-      return 'Boss';
-  }
+export interface PathSnapshot {
+  segments: PathSegment[];
+  currentDepth: number;
 }

@@ -1,7 +1,7 @@
 import { UnitSprite } from '../assets/asset-catalog';
 import { RelicId } from '../inventory/relic.model';
 import type { EnemyRole } from '../combat/enemy.model';
-import type { PathWeather } from './path.service';
+export type PathWeather = 'clear' | 'rain' | 'fog' | 'snow' | 'ash' | 'storm' | 'glow';
 
 export type PathBranchType =
   | 'fight'
