@@ -47,7 +47,8 @@ export class StorageService {
     return slot === 1 ? this.saveKey : `${this.saveKey}_${slot}`;
   }
 
-  save(slot: SaveSlot = this.currentSlot()): void {
+  /** Writes the current run to a slot. Returns false if storage is unavailable or full. */
+  save(slot: SaveSlot = this.currentSlot(), options: { silent?: boolean } = {}): boolean {
     const save: SaveGame = {
       version: 3,
       savedAt: new Date().toISOString(),
@@ -65,13 +66,22 @@ export class StorageService {
       },
     };
 
-    localStorage.setItem(this.keyFor(slot), JSON.stringify(save));
+    try {
+      localStorage.setItem(this.keyFor(slot), JSON.stringify(save));
+    } catch {
+      this.gameState.addLog('Speichern fehlgeschlagen (Speicher voll oder gesperrt).', 'damage');
+      return false;
+    }
+
     this.currentSlot.set(slot);
-    this.gameState.addLog(`Spiel in Slot ${slot} gespeichert.`, 'event');
+    if (!options.silent) {
+      this.gameState.addLog(`Spiel in Slot ${slot} gespeichert.`, 'event');
+    }
+    return true;
   }
 
   load(slot: SaveSlot = this.currentSlot()): boolean {
-    const raw = localStorage.getItem(this.keyFor(slot));
+    const raw = this.readRaw(slot);
 
     if (!raw) {
       this.gameState.addLog('Kein Speicherstand gefunden.', 'damage');
@@ -79,7 +89,13 @@ export class StorageService {
     }
 
     try {
-      const save = migrateSave(JSON.parse(raw) as LegacySaveGame, this.gameState.player(), {
+      const parsed: unknown = JSON.parse(raw);
+
+      if (!isLegacySave(parsed)) {
+        throw new Error('Invalid save shape');
+      }
+
+      const save = migrateSave(parsed, this.gameState.player(), {
         segments: this.path.segments(),
         currentDepth: this.path.currentDepth(),
       });
@@ -93,8 +109,25 @@ export class StorageService {
       );
       return true;
     } catch {
-      this.gameState.addLog('Speicherstand konnte nicht gelesen werden.', 'damage');
+      this.backupCorrupt(slot, raw);
+      this.gameState.addLog('Speicherstand beschaedigt – Sicherung wurde angelegt.', 'damage');
       return false;
+    }
+  }
+
+  private readRaw(slot: SaveSlot): string | null {
+    try {
+      return localStorage.getItem(this.keyFor(slot));
+    } catch {
+      return null;
+    }
+  }
+
+  private backupCorrupt(slot: SaveSlot, raw: string): void {
+    try {
+      localStorage.setItem(`${this.keyFor(slot)}_corrupt`, raw);
+    } catch {
+      // Backup is best effort only.
     }
   }
 
@@ -112,7 +145,10 @@ export class StorageService {
       if (!raw) {
         return null;
       }
-      const parsed = JSON.parse(raw) as LegacySaveGame;
+      const parsed: unknown = JSON.parse(raw);
+      if (!isLegacySave(parsed)) {
+        return null;
+      }
       const player = parsed.state?.player;
       return {
         slot,
@@ -125,6 +161,37 @@ export class StorageService {
       return null;
     }
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/** Runtime shape check so a parseable but broken save never reaches restore(). */
+export function isLegacySave(value: unknown): value is LegacySaveGame {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  const { state, path } = value;
+
+  if (state !== undefined && !isRecord(state)) {
+    return false;
+  }
+
+  if (isRecord(state) && state['player'] !== undefined && !isRecord(state['player'])) {
+    return false;
+  }
+
+  if (path !== undefined && !isRecord(path)) {
+    return false;
+  }
+
+  if (isRecord(path) && path['segments'] !== undefined && !Array.isArray(path['segments'])) {
+    return false;
+  }
+
+  return true;
 }
 
 function migrateSave(

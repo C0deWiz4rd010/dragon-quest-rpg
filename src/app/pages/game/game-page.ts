@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  isDevMode,
+  signal,
+} from '@angular/core';
 import { CombatPanel } from '../../features/combat/combat-panel';
 import { RunEncounterOverlay } from '../../features/encounters/run-encounter-overlay';
 import { GameState } from '../../features/game-state/game-state.service';
@@ -166,9 +174,12 @@ export class GamePage {
       return;
     }
 
-    window.render_game_to_text = () => this.renderGameToText();
-    window.advanceTime = (ms: number) =>
-      new Promise((resolve) => window.setTimeout(resolve, Math.max(0, ms)));
+    // Test/automation hooks are only exposed outside production builds.
+    if (isDevMode()) {
+      window.render_game_to_text = () => this.renderGameToText();
+      window.advanceTime = (ms: number) =>
+        new Promise((resolve) => window.setTimeout(resolve, Math.max(0, ms)));
+    }
 
     this.tutorial.maybeStart();
 
@@ -176,14 +187,16 @@ export class GamePage {
     effect(() => {
       const depth = this.path.currentDepth();
       if (depth > 0) {
-        this.saveGame();
+        this.saveGame(true);
       }
     });
   }
 
-  protected saveGame(): void {
-    this.storage.save();
-    this.savedAt.set(new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }));
+  protected saveGame(silent = false): void {
+    this.storage.save(undefined, { silent });
+    this.savedAt.set(
+      new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+    );
   }
 
   protected setWeather(mode: PathWeather): void {
@@ -244,13 +257,20 @@ export class GamePage {
 
   protected weatherColorFor(mode: PathWeather): string {
     switch (mode) {
-      case 'rain': return 'weather-rain';
-      case 'fog': return 'weather-fog';
-      case 'snow': return 'weather-snow';
-      case 'ash': return 'weather-ash';
-      case 'storm': return 'weather-storm';
-      case 'glow': return 'weather-glow';
-      default: return 'weather-clear';
+      case 'rain':
+        return 'weather-rain';
+      case 'fog':
+        return 'weather-fog';
+      case 'snow':
+        return 'weather-snow';
+      case 'ash':
+        return 'weather-ash';
+      case 'storm':
+        return 'weather-storm';
+      case 'glow':
+        return 'weather-glow';
+      default:
+        return 'weather-clear';
     }
   }
 
