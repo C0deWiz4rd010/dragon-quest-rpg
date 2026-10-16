@@ -139,44 +139,19 @@ export class GamePage {
 
     return [
       {
-        label: 'Kampfkraft',
-        value: this.gameState.playerAttack() + this.gameState.playerDefense(),
-        detail: `ATK ${this.gameState.playerAttack()} / DEF ${this.gameState.playerDefense()}`,
-      },
-      {
-        label: 'Kampfkunst',
-        value:
-          player.riposteCharges > 0
-            ? `Riposte ${player.riposteCharges}`
-            : `${player.perfectGuards} Guard`,
-        detail: `${player.perfectGuards} perfekte, ${player.totalOverkillDamage} Overkill`,
-      },
-      {
         label: 'Ressourcen',
         value: `${player.gold}g`,
-        detail: `${player.potions} Traenke, ${player.resolve}/${player.maxResolve} Resolve, ${player.dragonShards} Shards, Rang ${this.gameState.dragonRank()}`,
+        detail: `${player.potions} Tränke · ${player.dragonShards} Shards · ${player.resolve}/${player.maxResolve} Resolve`,
       },
       {
         label: 'Fortschritt',
         value: `Tiefe ${this.path.currentDepth() + 1}`,
-        detail: `${player.completedPaths} Pfade, Serie ${player.routeStreak}, Note ${this.gameState.runGrade()}`,
+        detail: `Note ${this.gameState.runGrade()} · ${player.completedPaths} Pfade`,
       },
       {
-        label: 'Bossprep',
+        label: 'Boss-Prep',
         value: `${this.gameState.bossPrepScore()}%`,
         detail: this.gameState.bossPrepLabel(),
-      },
-      {
-        label: 'Druck',
-        value: `${this.pressureScore()}%`,
-        detail: `${this.pressureLabel()} / ${this.bossForecast()}`,
-      },
-      {
-        label: 'Auftrag',
-        value: player.activeContract.completed
-          ? 'Fertig'
-          : `${player.activeContract.progress}/${player.activeContract.target}`,
-        detail: `${player.activeContract.title}, Serie ${player.contractStreak}`,
       },
       {
         label: 'Fokus',
@@ -245,6 +220,25 @@ export class GamePage {
         return '✨ Aura';
       default:
         return '☀ Klar';
+    }
+  }
+
+  protected weatherIconFor(mode: PathWeather): string {
+    switch (mode) {
+      case 'rain':
+        return '🌧';
+      case 'fog':
+        return '🌫';
+      case 'snow':
+        return '❄';
+      case 'ash':
+        return '🌋';
+      case 'storm':
+        return '⛈';
+      case 'glow':
+        return '✨';
+      default:
+        return '☀';
     }
   }
 

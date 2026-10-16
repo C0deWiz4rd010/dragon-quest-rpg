@@ -154,90 +154,41 @@
     </div>
   }
 
-  <div class="combat-overview">
-    <article class="combat-readout tip" data-tip="Direkter Vergleich der aktuellen Frontwerte.">
-      <span>Duell</span>
-      <strong>{{ gameState.playerAttack() }} / {{ gameState.enemy()?.attack ?? 0 }}</strong>
-      <small>ATK Held vs. Gegner</small>
-    </article>
-    <article
-      class="combat-readout tip"
-      data-tip="Deckung reduziert den naechsten Treffer, gibt Mana und verkuerzt den Cooldown."
-    >
-      <span>Momentum</span>
-      <strong>{{ finisherPower() }}</strong>
-      <small
-        >{{ gameState.player().combo }}x Combo, CD {{ gameState.player().skillCooldown }}</small
+  @if (gameState.enemy()) {
+    <div class="combat-overview">
+      <article class="combat-readout">
+        <span>⚔ Duell</span>
+        <strong>{{ gameState.playerAttack() }} / {{ gameState.enemy()?.attack ?? 0 }}</strong>
+        <small>Angriff · du vs. Gegner</small>
+      </article>
+      <article class="combat-readout">
+        <span>💧 Ressourcen</span>
+        <strong>{{ gameState.player().mana }}/{{ gameState.player().maxMana }}</strong>
+        <small>{{ gameState.player().potions }} Tränke bereit</small>
+      </article>
+      <article class="combat-readout">
+        <span>🎯 Plan</span>
+        <strong>{{ tacticalAdvice() }}</strong>
+        <small>{{ enemyIntent() }}</small>
+      </article>
+      <article
+        class="combat-readout riposte-readout"
+        [class.active]="gameState.player().riposteCharges > 0"
       >
-    </article>
-    <article
-      class="combat-readout tip"
-      data-tip="Mana, Status und Heiloptionen bestimmen, wie lange du den Kampf halten kannst."
-    >
-      <span>Ressourcen</span>
-      <strong>{{ gameState.player().mana }}/{{ gameState.player().maxMana }}</strong>
-      <small>{{ gameState.player().potions }} Traenke verfuegbar</small>
-    </article>
-    <article
-      class="combat-readout tip"
-      data-tip="Drachenklaue trifft unter 40% Gegner-HP staerker, unter 25% am haertesten."
-    >
-      <span>Execute</span>
-      <strong>{{ executeWindow() }}</strong>
-      <small>niedrige Gegner-HP</small>
-    </article>
-    <article
-      class="combat-readout tip riposte-readout"
-      [class.active]="gameState.player().riposteCharges > 0"
-      data-tip="Deckung kann Riposte-Ladungen aufbauen, die den naechsten Angriff oder Finisher verstaerken."
-    >
-      <span>Riposte</span>
-      <strong>{{ ripostePower() }}</strong>
-      <small>{{ gameState.player().perfectGuards }} perfekte Deckungen</small>
-    </article>
-    <article
-      class="combat-readout tip phase-readout"
-      [class.heated]="phaseTone() === 'heated'"
-      [class.enraged]="phaseTone() === 'enraged'"
-      data-tip="Elite- und Bossgegner werden in spaeten HP-Phasen aggressiver."
-    >
-      <span>Phase</span>
-      <strong>{{ phasePressure() }}</strong>
-      <small>{{ enemyIntent() }}</small>
-    </article>
-    <article
-      class="combat-readout tip"
-      data-tip="Vorschau auf den naechsten Gegnertyp und Wetterdruck."
-    >
-      <span>Incoming</span>
-      <strong>{{ incomingPreview() }}</strong>
-      <small>naechster Gegenschlag</small>
-    </article>
-    <article
-      class="combat-readout tip"
-      data-tip="Kurzer Vorschlag aus HP, Mana, Resolve, Cooldown und Gegner-HP."
-    >
-      <span>Plan</span>
-      <strong>{{ tacticalAdvice() }}</strong>
-      <small>{{ gameState.player().resolve }}/{{ gameState.player().maxResolve }} Resolve</small>
-    </article>
-    <article
-      class="combat-readout tip"
-      data-tip="Wie gut der Run aktuell auf Boss- oder Elite-Druck vorbereitet ist."
-    >
-      <span>Prep</span>
-      <strong>{{ gameState.bossPrepScore() }}%</strong>
-      <small>{{ prepForecast() }}</small>
-    </article>
-    <article
-      class="combat-readout tip"
-      data-tip="Overkill belohnt starkes Timing mit Extra-Mana, Gold und bei hohen Treffern Shards."
-    >
-      <span>Overkill</span>
-      <strong>{{ overkillLabel() }}</strong>
-      <small>{{ gameState.player().totalOverkillDamage }} Bonus-DMG</small>
-    </article>
-  </div>
+        <span>⚡ Konter</span>
+        <strong>{{ ripostePower() }}</strong>
+        <small>{{ executeWindow() === 'Warten' ? 'Execute wartet' : 'Execute ' + executeWindow() }}</small>
+      </article>
+    </div>
+  } @else {
+    <div class="combat-prep">
+      <span class="prep-icon">🧭</span>
+      <div class="prep-text">
+        <strong>Ruhephase – bereite dich vor</strong>
+        <small>Wähle rechts deinen nächsten Pfad. Heilen, Deckung & Tränke sind zwischen Kämpfen frei nutzbar.</small>
+      </div>
+    </div>
+  }
 
   @if (gameState.levelUpChoices().length) {
     <div class="level-up-panel levelup-entrance">

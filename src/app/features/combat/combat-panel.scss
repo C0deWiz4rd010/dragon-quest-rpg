@@ -5,16 +5,23 @@
 
 /* Frameless: the parent ember-themed zone card-frame provides the outer frame */
 .combat-panel {
-  align-content: start;
-  display: grid;
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
   gap: 7px;
-  grid-template-rows: auto auto auto auto;
   height: 100%;
   min-height: 0;
   overflow: hidden;
   padding: 0;
   position: relative;
   text-align: center;
+}
+
+/* Every panel section keeps its natural height and stacks cleanly without
+   collapsing into the Pixi stage above it. */
+.combat-panel > * {
+  flex: 0 0 auto;
+  min-height: 0;
 }
 
 /* ── Engage transition (Map -> Kampf) ────────────────────────────── */
@@ -67,21 +74,22 @@
 /* ── Combat overview readouts ────────────────────────────────────── */
 .combat-overview {
   align-content: start;
-  align-items: start;
+  align-items: stretch;
   display: grid;
-  gap: 4px;
+  gap: 6px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .combat-readout {
   border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 9px;
-  background: linear-gradient(180deg, rgba(33, 18, 25, 0.7), rgba(8, 6, 10, 0.5));
+  border-radius: 11px;
+  background: linear-gradient(180deg, rgba(33, 18, 25, 0.6), rgba(8, 6, 10, 0.42));
   display: grid;
-  gap: 1px;
+  gap: 2px;
   min-width: 0;
-  padding: 5px 8px;
+  padding: 7px 10px;
   position: relative;
+  text-align: left;
   transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
 }
 
@@ -90,12 +98,48 @@
   transform: translateY(-1px);
 }
 
+/* ── Ruhephase / preparation hint (no enemy) ─────────────────────── */
+.combat-prep {
+  align-items: center;
+  background: linear-gradient(180deg, rgba(20, 30, 24, 0.55), rgba(8, 12, 10, 0.4));
+  border: 1px solid rgba(74, 222, 128, 0.22);
+  border-radius: 12px;
+  display: flex;
+  gap: 11px;
+  padding: 11px 14px;
+  text-align: left;
+
+  .prep-icon {
+    filter: drop-shadow(0 0 8px rgba(74, 222, 128, 0.4));
+    font-size: 26px;
+    line-height: 1;
+  }
+
+  .prep-text {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  strong {
+    color: #d9f7e5;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  small {
+    color: #9fb8ab;
+    font-size: 9.5px;
+    line-height: 1.4;
+  }
+}
+
 .combat-readout span,
 .actions-header p {
   color: #f0a0a0;
-  font-size: 7px;
+  font-size: 8px;
   font-weight: 900;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   margin: 0;
   text-transform: uppercase;
 }
@@ -103,16 +147,16 @@
 .combat-readout strong,
 .actions-header strong {
   color: #fff6c7;
-  font-size: 11px;
+  font-size: 12.5px;
   font-variant-numeric: tabular-nums;
   font-weight: 800;
-  line-height: 1.1;
+  line-height: 1.15;
 }
 
 .combat-readout small,
 .actions-header span {
-  color: #dce6f5;
-  font-size: 8px;
+  color: #cdd8e8;
+  font-size: 9px;
 }
 
 /* ── Action buttons row ──────────────────────────────────────────── */
@@ -609,13 +653,21 @@
   }
 }
 
-@media (min-width: 600px) {
+/* Container-driven: adapt commands to the actual panel width, not the viewport,
+   so labels stay readable inside the narrow desktop combat column. */
+@container (min-width: 360px) {
   .actions {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .combat-overview {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .action-previews {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@container (min-width: 560px) {
+  .actions {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
   .action-previews {

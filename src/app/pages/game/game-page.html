@@ -50,9 +50,10 @@
                 type="button"
                 [class.active]="path.weather() === mode"
                 [title]="weatherLabelFor(mode)"
+                [attr.aria-label]="weatherLabelFor(mode)"
                 (click)="setWeather(mode)"
               >
-                {{ weatherLabelFor(mode) }}
+                {{ weatherIconFor(mode) }}
               </button>
             }
           </div>

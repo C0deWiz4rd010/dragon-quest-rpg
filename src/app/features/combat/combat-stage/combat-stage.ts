@@ -72,7 +72,7 @@ export class CombatStage {
   private lastAnimId = -1;
   private lastFtId = -1;
   private W = 0;
-  private readonly H = 180;
+  private readonly H = 130;
   private stageShakeId: ReturnType<typeof setInterval> | null = null;
   private resizeObserver: ResizeObserver | null = null;
 
@@ -219,7 +219,7 @@ export class CombatStage {
     s.animationSpeed = 0.12;
     s.play();
     s.anchor.set(0.5);
-    s.scale.set(2.6);
+    s.scale.set(1.6);
     s.x = this.W * 0.26;
     s.y = this.H * 0.47;
     this.heroSprite = s;
@@ -238,7 +238,7 @@ export class CombatStage {
     s.animationSpeed = 0.12;
     s.play();
     s.anchor.set(0.5);
-    s.scale.set(-2.6, 2.6); // horizontal gespiegelt
+    s.scale.set(-1.6, 1.6); // horizontal gespiegelt
     s.x = this.W * 0.74;
     s.y = this.H * 0.47;
     this.enemySprite = s;

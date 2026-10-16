@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { Combat } from '../combat/combat.service';
 import { GameState } from '../game-state/game-state.service';
@@ -6,6 +6,8 @@ import { blessingDescription, blessingLabel } from '../game-state/run-blessings'
 import { Path } from '../path/path.service';
 import { StorageService } from '../persistence/storage.service';
 import { Inventory } from './inventory.service';
+
+type SupplyTab = 'gear' | 'shop';
 
 @Component({
   selector: 'app-inventory-panel',
@@ -20,6 +22,8 @@ export class InventoryPanel {
   protected readonly inventory = inject(Inventory);
   protected readonly storage = inject(StorageService);
   private readonly path = inject(Path);
+
+  protected readonly supplyTab = signal<SupplyTab>('gear');
 
   protected blessingLabel = blessingLabel;
   protected blessingDescription = blessingDescription;

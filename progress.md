@@ -28,7 +28,6 @@ Original prompt: Refactor nochmal das Porgramm mit besonderer Hinsicht auf diese
 - Added combat advisor readouts for incoming damage and next-step tactical advice, plus weather/status/skill aura layers around the Pixi combat stage.
 - Extended `window.render_game_to_text` telemetry with directive, route synergy, and advisor data.
 - Verification: `npx ng test --watch=false` passes (13 files, 52 tests), `npm run build` passes, Playwright smoke passes for desktop click flow and mobile tab flow.
-- Release blocker: `D:\Meine Projekte\dragon-quest-rpg` is not a Git checkout and no matching GitHub repo/remote was found through `gh`; push to `develop` and GitHub Pages release could not be performed from this folder.
 - Improvement Plan 4 completed: added a 13-point todo in `docs/improvement-plan-4.md` and worked through it.
 - Added Riposte combat flow: guarded hits can build Riposte charges, perfect guards are tracked, attacks and Drachenklaue consume charges for bonus damage.
 - Added enemy phase pressure and Overkill rewards: elite/boss low-HP phases hit harder and oversized kills now track overkill stats with extra mana/gold/shard rewards.
@@ -38,3 +37,8 @@ Original prompt: Refactor nochmal das Porgramm mit besonderer Hinsicht auf diese
 - Added focused tests for combat rules, combat advisor, combat service flows, path biome hydration, and game-page telemetry.
 - Verification: `npx ng test --watch=false` passes (13 files, 60 tests), `npm run build` passes, Playwright smoke passes on `http://127.0.0.1:4200` for desktop load/weather/branch flow and mobile map tab.
 - Browser QA note: Browser plugin was not available, so regular Playwright was used. Headless Chromium emitted WebGL GPU-stall performance warnings only; no app console errors were observed.
+
+## Verbesserungsplan 2026-10 (Phase 0 Baseline)
+- Plan: siehe Claude-Plan (Phasen 0-10: Technik, Kampf, Progression, Grafik, UI, Audio, A11y, Persistenz, Tests/Doku, Release).
+- Baseline: `npm run build` ok, initial 1.08 MB (273 kB transfer), three lazy 728 kB; `ng test` 13 Dateien / 60 Tests gruen (erster Lauf direkt nach Build crashte den Worker, Wiederholung gruen).
+- `game-page.scss` = 39792 Bytes, knapp unter dem 40 kB Fehlerbudget -> Split in Phase 5 (vorher keine Erweiterungen).
