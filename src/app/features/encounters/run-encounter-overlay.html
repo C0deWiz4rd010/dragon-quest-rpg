@@ -53,7 +53,7 @@
             >
               <span class="choice-topline">
                 <strong>{{ choice.title }}</strong>
-                @if (choice.chance != null) {
+                @if (choice.chance !== undefined && choice.chance !== null) {
                   <span class="choice-chance">{{ choice.chance }}%</span>
                 }
               </span>

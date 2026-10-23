@@ -12,10 +12,8 @@ import {
   AnimatedSprite,
   Application,
   Graphics,
-  Rectangle,
   Text,
   TextStyle,
-  Texture,
 } from 'pixi.js';
 import { assets } from '../../assets/asset-catalog';
 import type { UnitSprite } from '../../assets/asset-catalog';

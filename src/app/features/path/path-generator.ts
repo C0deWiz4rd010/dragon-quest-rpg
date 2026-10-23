@@ -100,7 +100,7 @@ export function adaptSegmentToPlayerState(
 
 export function createPathSegment(depth: number, playerLevel: number): PathSegment {
   if (isBossPrepDepth(depth)) {
-    return createBossPrepSegment(depth, playerLevel);
+    return createBossPrepSegment(depth);
   }
 
   const branchCount = depth === 0 ? 2 : Math.min(4, 2 + Math.floor(Math.random() * 3));
@@ -583,7 +583,7 @@ export function describeFightPath(enemyId: string, depth: number): string {
   return `${enemy.name} wartet hier mit ${risk}, XP und Gold.`;
 }
 
-export function createBossPrepSegment(depth: number, playerLevel: number): PathSegment {
+export function createBossPrepSegment(depth: number): PathSegment {
   return {
     id: `segment-${depth}`,
     depth,

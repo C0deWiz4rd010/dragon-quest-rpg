@@ -161,7 +161,6 @@ export class PixiBackground {
     if (!this.app) return;
 
     const W = this.app.renderer.width;
-    const H = this.app.renderer.height;
 
     for (let i = this.embers.length - 1; i >= 0; i--) {
       const e = this.embers[i];
