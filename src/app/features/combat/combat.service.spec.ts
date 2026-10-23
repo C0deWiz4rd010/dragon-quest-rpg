@@ -113,7 +113,8 @@ describe('Combat', () => {
 
     expect(gameState.player().statusEffect).toBeNull();
     expect(gameState.player().skillCooldown).toBe(0);
-    expect(gameState.player().mana).toBe(54);
+    // 20 start + 8 guard + 9 guard recovery + 8 focus (anti-turtle balance)
+    expect(gameState.player().mana).toBe(45);
     expect(gameState.player().activeBlessings.length).toBe(0);
     randomSpy.mockRestore();
   });
@@ -202,5 +203,81 @@ describe('Combat', () => {
     expect(gameState.player().overkillStreak).toBe(1);
     expect(gameState.logs().some((entry) => entry.message.includes('Overkill'))).toBe(true);
     randomSpy.mockRestore();
+  });
+
+  describe('elements and stun', () => {
+    const enemy = (overrides: Partial<Parameters<typeof gameState.setEnemy>[0]> = {}) =>
+      ({
+        id: 'enemy-x',
+        name: 'Test Dummy',
+        role: 'swift',
+        hp: 500,
+        maxHp: 500,
+        attack: 1,
+        gold: 0,
+        xp: 0,
+        icon: 'T',
+        level: 1,
+        elite: false,
+        weakness: 'fire',
+        resistance: null,
+        telegraphedAbility: null,
+        ...overrides,
+      }) as Parameters<typeof gameState.setEnemy>[0];
+
+    afterEach(() => vi.restoreAllMocks());
+
+    it('hits weaknesses harder with a matching weapon element', () => {
+      vi.spyOn(Math, 'random').mockReturnValue(0.99);
+      gameState.updatePlayer((player) => ({
+        ...player,
+        equippedWeapon: {
+          id: 'test-blade',
+          name: 'Flammenklinge',
+          type: 'weapon',
+          attackBonus: 0,
+          defenseBonus: 0,
+          critBonus: 0,
+          manaBonus: 0,
+          icon: 'F',
+          desc: 'Test',
+          element: 'fire',
+        },
+      }));
+      gameState.setEnemy(enemy());
+
+      service.attack();
+
+      expect(gameState.logs().some((entry) => entry.message.includes('Schwachpunkt'))).toBe(true);
+    });
+
+    it('notes resistance and deals no weakness bonus for unaligned weapons', () => {
+      vi.spyOn(Math, 'random').mockReturnValue(0.99);
+      gameState.setEnemy(enemy());
+
+      service.attack();
+
+      expect(gameState.logs().some((entry) => entry.message.includes('Schwachpunkt'))).toBe(false);
+    });
+
+    it('a stunned enemy skips its attack and the stun wears off', () => {
+      vi.spyOn(Math, 'random').mockReturnValue(0.99);
+      gameState.setEnemy(enemy({ stunnedRounds: 1, attack: 99 }));
+      const hpBefore = gameState.player().hp;
+
+      service.guard();
+
+      expect(gameState.player().hp).toBe(hpBefore);
+      expect(gameState.enemy()?.stunnedRounds).toBe(0);
+    });
+
+    it('bruisers wind up a telegraph on the cycle', () => {
+      vi.spyOn(Math, 'random').mockReturnValue(0.99);
+      gameState.setEnemy(enemy({ role: 'bruiser', turn: 1, attack: 1 }));
+
+      service.guard();
+
+      expect(gameState.enemy()?.telegraphedAbility?.name).toBe('Wuchtschlag');
+    });
   });
 });

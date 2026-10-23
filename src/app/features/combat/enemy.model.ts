@@ -7,6 +7,8 @@ export interface TelegraphedAbility {
   name: string;
   damageMultiplier?: number;
   shieldMultiplier?: number;
+  /** The released attack is guaranteed to inflict a status effect. */
+  forceStatus?: boolean;
 }
 
 export interface Enemy {
@@ -25,5 +27,12 @@ export interface Enemy {
   elite: boolean;
   isBoss?: boolean;
   weakness: EnemyElement | null;
+  resistance?: EnemyElement | null;
+  /** Rounds the enemy skips its attack for. */
+  stunnedRounds?: number;
+  /** Enemy attacks performed so far; drives telegraph cycles. */
+  turn?: number;
+  /** Boss-specific half-health ability; falls back to Drachenzorn. */
+  signature?: TelegraphedAbility;
   telegraphedAbility: TelegraphedAbility | null;
 }

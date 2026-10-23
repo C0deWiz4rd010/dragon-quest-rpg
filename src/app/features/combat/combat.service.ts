@@ -1,6 +1,8 @@
 import { Injectable, inject, signal } from '@angular/core';
+import { COMBAT_BALANCE } from './combat-balance';
 import {
-  elementWeaknessMultiplier,
+  attackElementMultiplier,
+  canBeStunned,
   executeDamageMultiplier,
   enemyPhasePressure,
   overkillReward,
@@ -8,7 +10,10 @@ import {
   roleFollowUpChance,
   roleGuardMultiplier,
   roleAttackMultiplier,
+  roleTelegraph,
   statusFromThreat,
+  statusForRole,
+  statusLabel,
   tickStatusEffect,
   weatherCombatModifiers,
 } from './combat-rules';
@@ -69,15 +74,22 @@ export class Combat {
     const battleUsed = getBlessingCharges(player.activeBlessings, 'battle') > 0;
     const riposteCharges = player.riposteCharges;
     const riposteMultiplier = riposteDamageMultiplier(riposteCharges);
+    const elementBonus = attackElementMultiplier(enemy, this.gameState.playerAttackElement());
     const baseDamage = calculateDamage(this.gameState.playerAttack(), isCrit);
-    const damage = Math.floor(
-      baseDamage *
-        (1 + Math.max(0, combo - 1) * 0.12) *
-        (battleUsed ? 1.22 : 1) *
-        riposteMultiplier,
+    const damage = Math.max(
+      1,
+      Math.floor(
+        baseDamage *
+          (1 + Math.max(0, combo - 1) * COMBAT_BALANCE.comboStep) *
+          (battleUsed ? COMBAT_BALANCE.battleBlessing : 1) *
+          riposteMultiplier *
+          elementBonus,
+      ),
     );
     const manaBurst = combo >= 3 ? 6 : 2;
-    const skillResetAt8 = combo >= 8 && player.skillCooldown > 0;
+    const skillResetAt8 = combo >= COMBAT_BALANCE.cooldownResetCombo && player.skillCooldown > 0;
+    const riposteStun =
+      riposteCharges >= COMBAT_BALANCE.stun.riposteCharges && canBeStunned(enemy);
 
     this.animate('hero', 'attack');
 
@@ -90,14 +102,14 @@ export class Combat {
       mana: Math.min(current.maxMana, current.mana + manaBurst),
       maxCombo: Math.max(current.maxCombo, combo),
       riposteCharges: 0,
-      comboFever: combo === 5,
+      comboFever: combo === COMBAT_BALANCE.feverCombo,
       skillCooldown: skillResetAt8 ? 0 : current.skillCooldown,
     }));
 
     if (isCritFromFever) {
       this.gameState.addLog('Combo Fever entlaedt sich: garantierter Krit!', 'achievement');
     }
-    if (combo === 5) {
+    if (combo === COMBAT_BALANCE.feverCombo) {
       this.gameState.addLog('Combo Fever! Naechster Angriff garantiert kritisch.', 'achievement');
     }
     if (skillResetAt8) {
@@ -111,9 +123,10 @@ export class Combat {
 
     this.damageEnemy(
       damage,
-      `${isCrit ? `Kritischer Treffer fur ${damage} Schaden.` : `Du triffst fur ${damage} Schaden.`}${isCritFromFever ? ' Fever-Krit!' : ''}${battleUsed ? ' Kampfrausch legt nach.' : ''}${riposteCharges ? ` Riposte entlaedt ${riposteCharges} Ladung${riposteCharges === 1 ? '' : 'en'}.` : ''}`,
+      `${isCrit ? `Kritischer Treffer fur ${damage} Schaden.` : `Du triffst fur ${damage} Schaden.`}${isCritFromFever ? ' Fever-Krit!' : ''}${battleUsed ? ' Kampfrausch legt nach.' : ''}${riposteCharges ? ` Riposte entlaedt ${riposteCharges} Ladung${riposteCharges === 1 ? '' : 'en'}.` : ''}${elementNote(elementBonus)}`,
       isCrit,
       'attack',
+      riposteStun,
     );
   }
 
@@ -128,20 +141,25 @@ export class Combat {
     const combo = player.combo;
     const battleUsed = this.gameState.blessingCharges('battle') > 0;
     const riposteCharges = player.riposteCharges;
-    const finisherBonus = 1 + Math.max(0, combo - 1) * 0.18;
+    const finisherBonus = 1 + Math.max(0, combo - 1) * COMBAT_BALANCE.special.finisherStep;
     const executeBonus = enemy
       ? executeDamageMultiplier(Math.round((enemy.hp / enemy.maxHp) * 100))
       : 1;
-    const weaknessBonus = enemy ? elementWeaknessMultiplier(enemy.weakness, 'fire') : 1;
+    const weaknessBonus = attackElementMultiplier(enemy, this.gameState.playerAttackElement());
+    const specialStun =
+      !!enemy &&
+      weaknessBonus > 1 &&
+      canBeStunned(enemy) &&
+      Math.random() < COMBAT_BALANCE.stun.specialChance;
 
     this.gameState.updatePlayer((player) => ({
       ...player,
       activeBlessings: battleUsed
         ? spendBlessing(player.activeBlessings, 'battle').blessings
         : player.activeBlessings,
-      mana: player.mana - 30,
-      totalManaUsed: player.totalManaUsed + 30,
-      skillCooldown: 3,
+      mana: player.mana - COMBAT_BALANCE.special.manaCost,
+      totalManaUsed: player.totalManaUsed + COMBAT_BALANCE.special.manaCost,
+      skillCooldown: COMBAT_BALANCE.special.cooldown,
       combo: 0,
       maxCombo: Math.max(player.maxCombo, combo),
       riposteCharges: 0,
@@ -151,18 +169,18 @@ export class Combat {
     const damage = calculateDamage(
       Math.floor(
         this.gameState.playerAttack() *
-          1.55 *
+          COMBAT_BALANCE.special.damageMultiplier *
           finisherBonus *
           executeBonus *
           weaknessBonus *
-          (battleUsed ? 1.22 : 1) *
+          (battleUsed ? COMBAT_BALANCE.battleBlessing : 1) *
           riposteDamageMultiplier(riposteCharges) *
           relicSpecialDamageMultiplier(this.gameState.player()),
       ),
       false,
     );
     const executeText = executeBonus > 1 ? ' Execute-Fenster genutzt.' : '';
-    const weaknessText = weaknessBonus > 1 ? ' Schwachpunkt getroffen!' : '';
+    const weaknessText = elementNote(weaknessBonus);
     const riposteText = riposteCharges
       ? ` Riposte verstaerkt den Finisher (${riposteCharges}x).`
       : '';
@@ -173,6 +191,7 @@ export class Combat {
       `Drachenklaue entladt ${combo > 1 ? `deine ${combo}x Combo` : 'rohe Energie'} fur ${damage} Schaden.${executeText}${weaknessText}${battleUsed ? ' Kampfrausch treibt den Finisher weiter.' : ''}${riposteText}`,
       false,
       'skill',
+      specialStun,
     );
   }
 
@@ -189,7 +208,9 @@ export class Combat {
       const vigor = spendBlessing(player.activeBlessings, 'vigor');
       vigorUsed = vigor.consumed;
       const healed = Math.min(
-        28 + player.level * 2 + (vigor.consumed ? 14 : 0),
+        COMBAT_BALANCE.heal.base +
+          player.level * COMBAT_BALANCE.heal.perLevel +
+          (vigor.consumed ? COMBAT_BALANCE.heal.vigorBonus : 0),
         player.maxHp - player.hp,
       );
 
@@ -198,8 +219,8 @@ export class Combat {
         activeBlessings: vigor.blessings,
         hp: player.hp + healed,
         guarding: true,
-        mana: player.mana - 20,
-        totalManaUsed: player.totalManaUsed + 20,
+        mana: player.mana - COMBAT_BALANCE.heal.manaCost,
+        totalManaUsed: player.totalManaUsed + COMBAT_BALANCE.heal.manaCost,
         combo: 0,
         resolve: Math.min(player.maxResolve, player.resolve + (vigor.consumed ? 1 : 0)),
         statusEffect: null,
@@ -226,8 +247,8 @@ export class Combat {
     this.gameState.updatePlayer((current) => ({
       ...current,
       guarding: true,
-      mana: Math.min(current.maxMana, current.mana + 12),
-      skillCooldown: Math.max(0, current.skillCooldown - 1),
+      mana: Math.min(current.maxMana, current.mana + COMBAT_BALANCE.guard.manaGain),
+      skillCooldown: Math.max(0, current.skillCooldown - COMBAT_BALANCE.guard.cooldownReduction),
       combo: 0,
       comboFever: false,
     }));
@@ -296,6 +317,7 @@ export class Combat {
     message: string,
     isCrit: boolean,
     action: 'attack' | 'skill',
+    stun = false,
   ): void {
     const enemy = this.gameState.enemy();
 
@@ -339,13 +361,19 @@ export class Combat {
       enemy.hp / enemy.maxHp >= 0.45 &&
       hp / enemy.maxHp < 0.45;
 
+    const bossAbility = enemy.signature ?? { name: 'Drachenzorn', damageMultiplier: 1.75 };
+    const stunned = stun && hp > 0;
+
     this.gameState.updateEnemy((current) => ({
       ...current,
       hp,
+      stunnedRounds: stunned
+        ? Math.max(current.stunnedRounds ?? 0, COMBAT_BALANCE.stun.rounds)
+        : current.stunnedRounds,
       telegraphedAbility: shieldBlocked
         ? null
         : crossesBossThreshold
-          ? { name: 'Drachenzorn', damageMultiplier: 1.75 }
+          ? bossAbility
           : crossesEliteThreshold
             ? { name: 'Eliteschild', shieldMultiplier: 0.45 }
             : current.telegraphedAbility,
@@ -362,9 +390,15 @@ export class Combat {
     }
     this.gameState.addLog(message, hp === 0 ? 'heal' : 'damage');
 
+    if (stunned) {
+      this.gameState.addLog(
+        `${enemy.name} ist betaeubt und setzt die naechste Runde aus!`,
+        'achievement',
+      );
+    }
     if (crossesBossThreshold) {
       this.gameState.addLog(
-        'Der Drachenkoenig bereitet DRACHENZORN vor! Naechster Angriff sehr gefaehrlich – Deckung empfohlen!',
+        `${enemy.name} bereitet ${bossAbility.name.toUpperCase()} vor! Naechster Angriff sehr gefaehrlich – Deckung empfohlen!`,
         'damage',
       );
     }
@@ -425,12 +459,22 @@ export class Combat {
       return;
     }
 
+    if ((enemy.stunnedRounds ?? 0) > 0) {
+      this.gameState.updateEnemy((current) => ({
+        ...current,
+        stunnedRounds: Math.max(0, (current.stunnedRounds ?? 0) - 1),
+      }));
+      this.gameState.updatePlayer((current) => ({ ...current, guarding: false }));
+      this.gameState.addLog(`${enemy.name} ist betaeubt und kann nicht angreifen.`, 'heal');
+      return;
+    }
+
     if (Math.random() < modifiers.enemyMissChance) {
       this.gameState.addLog(`${enemy.name} verfehlt dich im Sturm.`, 'event');
       return;
     }
 
-    const enemyCritChance = Math.max(0, 10 + modifiers.enemyCritDelta);
+    const enemyCritChance = Math.max(0, COMBAT_BALANCE.crit.enemyBase + modifiers.enemyCritDelta);
     const isCrit = Math.random() * 100 < enemyCritChance;
     const phase = enemyPhasePressure(enemy.role, Math.round((enemy.hp / enemy.maxHp) * 100));
     const telegraphMultiplier = enemy.telegraphedAbility?.damageMultiplier ?? 1;
@@ -446,11 +490,15 @@ export class Combat {
         rawDamage *
           (1 - (this.gameState.playerDefense() + modifiers.playerDefenseDelta) / 100) *
           guardMultiplier *
-          (wardUsed ? 0.78 : 1),
+          (wardUsed ? COMBAT_BALANCE.wardBlessing : 1),
       ),
     );
 
-    const newStatus = statusFromThreat(enemy.role, weather, player.statusEffect);
+    const releasedAbility = enemy.telegraphedAbility;
+    const newStatus =
+      releasedAbility?.forceStatus && !player.statusEffect
+        ? statusForRole(enemy.role, Math.random())
+        : statusFromThreat(enemy.role, weather, player.statusEffect);
 
     this.gameState.updatePlayer((current) => {
       const hp = Math.max(0, current.hp - reducedDamage);
@@ -495,7 +543,7 @@ export class Combat {
       );
     }
 
-    if (telegraphMultiplier > 1) {
+    if (telegraphMultiplier > 1 || releasedAbility?.forceStatus) {
       this.gameState.updateEnemy((e) => ({ ...e, telegraphedAbility: null }));
       this.gameState.addLog(
         `${enemy.name} entlaedt ${telegraphedAbilityName} fuer verheerenden Schaden!`,
@@ -521,6 +569,17 @@ export class Combat {
 
     if (player.guarding && guardMultiplier > 0.45) {
       this.gameState.addLog(`${enemy.name} durchbricht einen Teil deiner Deckung.`, 'damage');
+    }
+
+    this.gameState.updateEnemy((current) => {
+      const turn = (current.turn ?? 0) + 1;
+      const next = { ...current, turn };
+
+      return { ...next, telegraphedAbility: current.telegraphedAbility ?? roleTelegraph(next) };
+    });
+    const windUp = this.gameState.enemy()?.telegraphedAbility;
+    if (windUp && !releasedAbility && (windUp.forceStatus || windUp.damageMultiplier)) {
+      this.gameState.addLog(`${enemy.name} holt zu ${windUp.name} aus! Jetzt decken!`, 'event');
     }
 
     const followUpChance = roleFollowUpChance(enemy.role);
@@ -549,14 +608,7 @@ export class Combat {
   }
 
   private tickRound(action: 'attack' | 'skill' | 'heal' | 'guard' | 'potion' | 'resolve'): void {
-    const baseRecovery = {
-      attack: 8,
-      guard: 14,
-      heal: 4,
-      potion: 6,
-      skill: 5,
-      resolve: 2,
-    } satisfies Record<typeof action, number>;
+    const baseRecovery = COMBAT_BALANCE.roundRecovery satisfies Record<typeof action, number>;
 
     const modifiers = weatherCombatModifiers(this.path.weather());
     const playerBeforeTick = this.gameState.player();
@@ -583,15 +635,15 @@ export class Combat {
       };
     });
 
-    if (statusTick?.damage) {
+    if (statusTick.damage) {
       this.showFloatingText('hero', `-${statusTick.damage}`, 'damage');
       this.gameState.addLog(
         `${statusLabel(statusTickType ?? 'burn')} tickt fur ${statusTick.damage}.`,
         'damage',
       );
-      if (statusTick.expired) {
-        this.gameState.addLog('Der Statuseffekt klingt ab.', 'event');
-      }
+    }
+    if (statusTick.expired) {
+      this.gameState.addLog('Der Statuseffekt klingt ab.', 'event');
     }
 
     if (this.gameState.player().hp <= 0) {
@@ -776,9 +828,13 @@ function calculateDamage(attack: number, isCrit: boolean): number {
   const spread = Math.max(1, attack - 5);
   const damage = Math.floor(Math.random() * spread) + 5;
 
-  return Math.max(1, isCrit ? Math.floor(damage * 1.5) : damage);
+  return Math.max(1, isCrit ? Math.floor(damage * COMBAT_BALANCE.crit.multiplier) : damage);
 }
 
-function statusLabel(type: 'poison' | 'burn'): string {
-  return type === 'poison' ? 'Gift' : 'Brand';
+function elementNote(multiplier: number): string {
+  if (multiplier > 1) {
+    return ' Schwachpunkt getroffen!';
+  }
+
+  return multiplier < 1 ? ' Der Gegner widersteht dem Element.' : '';
 }

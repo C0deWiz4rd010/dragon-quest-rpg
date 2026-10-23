@@ -1,4 +1,5 @@
 import { computed, Injectable, signal } from '@angular/core';
+import { AttackElement, statusAttackMultiplier } from '../combat/combat-rules';
 import { Enemy } from '../combat/enemy.model';
 import {
   Player,
@@ -46,6 +47,11 @@ export class GameState {
 
   readonly hasElementSet = computed(() => elementSetActive(this.player()));
 
+  /** Element of the equipped weapon; unaligned weapons deal neutral damage. */
+  readonly playerAttackElement = computed<AttackElement>(
+    () => this.player().equippedWeapon?.element ?? 'none',
+  );
+
   readonly playerAttack = computed(() => {
     const player = this.player();
     const base =
@@ -57,7 +63,8 @@ export class GameState {
     const multiplier =
       (elementSetActive(player) ? 1.1 : 1) *
       relicSynergyAttackMultiplier(player) *
-      skillAttackMultiplier(player);
+      skillAttackMultiplier(player) *
+      statusAttackMultiplier(player.statusEffect);
     return Math.round(base * multiplier);
   });
 

@@ -23,8 +23,15 @@
         class="status-badge"
         [class.burn]="fx.type === 'burn'"
         [class.poison]="fx.type === 'poison'"
+        [class.bleed]="fx.type === 'bleed'"
+        [class.weaken]="fx.type === 'weaken'"
       >
-        {{ statusIcon(fx.type) }} ({{ fx.rounds }}x {{ fx.damagePerRound }} DMG)
+        {{ statusIcon(fx.type) }}
+        @if (fx.damagePerRound > 0) {
+          ({{ fx.rounds }}x {{ fx.damagePerRound }} DMG)
+        } @else {
+          ({{ fx.rounds }}x -25% ATK)
+        }
       </span>
     }
     @if (weatherBuff(path.weather()); as buff) {
@@ -37,6 +44,15 @@
       <span class="weakness-badge" [class.exploitable]="isWeaknessExploitable()">
         {{ weaknessIcon() }} {{ weaknessElementLabel() }}schwach
       </span>
+    }
+    @if (enemyResistance()) {
+      <span class="resistance-badge">{{ resistanceLabel() }} resistent</span>
+    }
+    @if (isStunned()) {
+      <span class="stun-badge">💫 Betäubt</span>
+    }
+    @if (attackElementBadge()) {
+      <span class="element-badge">Waffe {{ attackElementBadge() }}</span>
     }
     @if (phaseTone() !== 'calm') {
       <span class="phase-badge" [class.enraged]="phaseTone() === 'enraged'">

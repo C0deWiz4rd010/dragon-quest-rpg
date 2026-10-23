@@ -316,6 +316,48 @@
     border: 1px solid rgba(168, 85, 247, 0.45);
     color: #c084fc;
   }
+
+  &.bleed {
+    background: rgba(239, 68, 68, 0.18);
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    color: #f87171;
+  }
+
+  &.weaken {
+    background: rgba(148, 163, 184, 0.16);
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    color: #cbd5e1;
+  }
+}
+
+/* Resistance / stun / weapon element badges */
+.resistance-badge,
+.stun-badge,
+.element-badge {
+  border-radius: 6px;
+  font-size: 8px;
+  font-weight: 800;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+
+.resistance-badge {
+  background: rgba(100, 116, 139, 0.12);
+  border: 1px dashed rgba(148, 163, 184, 0.4);
+  color: #94a3b8;
+}
+
+.stun-badge {
+  animation: statusPulse 1.2s ease-in-out infinite;
+  background: rgba(250, 204, 21, 0.16);
+  border: 1px solid rgba(250, 204, 21, 0.5);
+  color: #fde047;
+}
+
+.element-badge {
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #7dd3fc;
 }
 
 /* Weather buff badge */

@@ -9,7 +9,7 @@ import {
   type PathBiome,
   type PathWeather,
 } from './path-segment.model';
-import { ENEMY_BLUEPRINTS } from './enemy-blueprints';
+import { ENEMY_BLUEPRINTS, randomBossId } from './enemy-blueprints';
 
 export function hydratePathVisuals(segments: PathSegment[]): PathSegment[] {
   return segments.map((segment) => ({
@@ -128,7 +128,7 @@ export function createPathSegment(depth: number, playerLevel: number): PathSegme
       modifier: 'focus',
       modifierHint: modifierHint('focus'),
       completed: false,
-      enemyId: 'boss',
+      enemyId: randomBossId(),
     };
   }
 

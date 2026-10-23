@@ -2,7 +2,7 @@ import { Item } from './item.model';
 import { Pet } from './pet.model';
 import { Relic } from './relic.model';
 
-export type StatusEffectType = 'poison' | 'burn';
+export type StatusEffectType = 'poison' | 'burn' | 'bleed' | 'weaken';
 export type RunBlessingType = 'battle' | 'ward' | 'focus' | 'fortune' | 'vigor';
 export type RouteHistoryType =
   | 'fight'

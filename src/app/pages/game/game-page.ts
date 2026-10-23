@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { CombatPanel } from '../../features/combat/combat-panel';
+import { statusIcon } from '../../features/combat/combat-rules';
 import { RunEncounterOverlay } from '../../features/encounters/run-encounter-overlay';
 import { GameState } from '../../features/game-state/game-state.service';
 import { AchievementService } from '../../features/game-state/achievement.service';
@@ -191,6 +192,8 @@ export class GamePage {
       }
     });
   }
+
+  protected readonly statusGlyph = statusIcon;
 
   protected saveGame(silent = false): void {
     this.storage.save(undefined, { silent });

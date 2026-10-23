@@ -1,6 +1,10 @@
-import { StatusEffect } from '../inventory/player.model';
-import type { PathWeather } from '../path/path.service';
-import type { EnemyElement, EnemyRole } from './enemy.model';
+import { StatusEffect, StatusEffectType } from '../inventory/player.model';
+import type { PathWeather } from '../path/path-segment.model';
+import { COMBAT_BALANCE } from './combat-balance';
+import type { Enemy, EnemyElement, EnemyRole, TelegraphedAbility } from './enemy.model';
+
+/** Element of the player's attack. `none` means an unaligned weapon. */
+export type AttackElement = EnemyElement | 'holy' | 'none';
 
 export interface WeatherCombatModifiers {
   playerCritDelta: number;
@@ -53,6 +57,8 @@ export function roleAttackMultiplier(role: EnemyRole): number {
 
 export function roleStatusChance(role: EnemyRole): number {
   switch (role) {
+    case 'swift':
+      return 0.1;
     case 'hexer':
       return 0.22;
     case 'elite':
@@ -202,9 +208,88 @@ export function statusFromThreat(
   }
 
   if (roll() < roleStatusChance(role)) {
-    return role === 'hexer'
-      ? { type: 'poison', rounds: 4, damagePerRound: 6 }
-      : { type: 'burn', rounds: 3, damagePerRound: 7 };
+    return statusForRole(role, roll());
+  }
+
+  return null;
+}
+
+/** Picks which ailment a role inflicts; `pick` is a roll in [0, 1). */
+export function statusForRole(role: EnemyRole, pick: number): StatusEffect {
+  switch (role) {
+    case 'hexer':
+      return pick < 0.6
+        ? { type: 'poison', rounds: 4, damagePerRound: 6 }
+        : { type: 'weaken', rounds: 3, damagePerRound: 0 };
+    case 'swift':
+      return { type: 'bleed', rounds: 3, damagePerRound: 5 };
+    case 'boss':
+      return pick < 0.5
+        ? { type: 'weaken', rounds: 3, damagePerRound: 0 }
+        : { type: 'burn', rounds: 3, damagePerRound: 8 };
+    default:
+      return pick < 0.5
+        ? { type: 'burn', rounds: 3, damagePerRound: 7 }
+        : { type: 'bleed', rounds: 3, damagePerRound: 6 };
+  }
+}
+
+export function statusLabel(type: StatusEffectType): string {
+  switch (type) {
+    case 'poison':
+      return 'Gift';
+    case 'burn':
+      return 'Brand';
+    case 'bleed':
+      return 'Blutung';
+    case 'weaken':
+      return 'Schwaeche';
+  }
+}
+
+export function statusIcon(type: StatusEffectType): string {
+  switch (type) {
+    case 'poison':
+      return '☠';
+    case 'burn':
+      return '🔥';
+    case 'bleed':
+      return '🩸';
+    case 'weaken':
+      return '⬇';
+  }
+}
+
+/** Attack multiplier caused by the player's own status ailment. */
+export function statusAttackMultiplier(effect: StatusEffect | null): number {
+  return effect?.type === 'weaken' ? COMBAT_BALANCE.weaken.attackMultiplier : 1;
+}
+
+/** Bosses and elites cannot be stunned by chance; only normal enemies can. */
+export function canBeStunned(enemy: Pick<Enemy, 'role'>): boolean {
+  return enemy.role !== 'boss' && enemy.role !== 'elite';
+}
+
+/** Heavy move a bruiser or hexer winds up every few turns (null when none is due). */
+export function roleTelegraph(
+  enemy: Pick<Enemy, 'role' | 'turn' | 'telegraphedAbility'>,
+): TelegraphedAbility | null {
+  if (enemy.telegraphedAbility) {
+    return null;
+  }
+
+  const due = (enemy.turn ?? 0) % COMBAT_BALANCE.telegraph.cycle === COMBAT_BALANCE.telegraph.cycle - 1;
+
+  if (!due) {
+    return null;
+  }
+
+  if (enemy.role === 'bruiser') {
+    return { name: 'Wuchtschlag', damageMultiplier: COMBAT_BALANCE.telegraph.bruiserMultiplier };
+  }
+
+  if (enemy.role === 'hexer') {
+    return { name: 'Fluchsalve', forceStatus: true };
   }
 
   return null;
@@ -215,15 +300,60 @@ export function elementWeaknessMultiplier(
   attackElement: EnemyElement,
 ): number {
   if (!enemyWeakness || enemyWeakness !== attackElement) return 1;
-  return 1.25;
+  return COMBAT_BALANCE.element.weakness;
 }
 
-export function weaknessLabel(element: EnemyElement): string {
+/** Full element interaction: weakness boosts, resistance dampens, holy counters shadow. */
+export function attackElementMultiplier(
+  enemy: Pick<Enemy, 'weakness' | 'resistance'> | null,
+  element: AttackElement,
+): number {
+  if (!enemy || element === 'none') {
+    return 1;
+  }
+
+  const target: EnemyElement = element === 'holy' ? 'shadow' : element;
+
+  if (enemy.weakness === target) {
+    return COMBAT_BALANCE.element.weakness;
+  }
+
+  if (enemy.resistance === target) {
+    return COMBAT_BALANCE.element.resistance;
+  }
+
+  return 1;
+}
+
+export function weaknessLabel(element: EnemyElement | 'holy'): string {
   switch (element) {
-    case 'fire': return 'Feuer';
-    case 'ice': return 'Eis';
-    case 'lightning': return 'Blitz';
-    case 'shadow': return 'Schatten';
+    case 'fire':
+      return 'Feuer';
+    case 'ice':
+      return 'Eis';
+    case 'lightning':
+      return 'Blitz';
+    case 'shadow':
+      return 'Schatten';
+    case 'holy':
+      return 'Licht';
+  }
+}
+
+export function elementIcon(element: EnemyElement | 'holy' | 'none' | null | undefined): string {
+  switch (element) {
+    case 'fire':
+      return '🔥';
+    case 'ice':
+      return '❄';
+    case 'lightning':
+      return '⚡';
+    case 'shadow':
+      return '◆';
+    case 'holy':
+      return '✦';
+    default:
+      return '';
   }
 }
 

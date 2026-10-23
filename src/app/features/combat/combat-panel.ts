@@ -14,11 +14,15 @@ import { GameState } from '../game-state/game-state.service';
 import { Path } from '../path/path.service';
 import { Combat } from './combat.service';
 import { EnemyElement, EnemyRole, TelegraphedAbility } from './enemy.model';
+import { StatusEffectType } from '../inventory/player.model';
+import { COMBAT_BALANCE } from './combat-balance';
 import {
-  elementWeaknessMultiplier,
+  attackElementMultiplier,
+  elementIcon,
   enemyIntentPreview,
   enemyPhasePressure,
   riposteDamageMultiplier,
+  statusLabel,
   weaknessLabel,
 } from './combat-rules';
 import { incomingDamagePreview, tacticalCombatAdvice } from './combat-advisor';
@@ -90,8 +94,8 @@ export class CombatPanel {
     }
   }
 
-  protected statusIcon(type: 'poison' | 'burn'): string {
-    return type === 'poison' ? 'Gift' : 'Brand';
+  protected statusIcon(type: StatusEffectType): string {
+    return statusLabel(type);
   }
 
   protected weatherBuff(weather: string): string | null {
@@ -234,7 +238,7 @@ export class CombatPanel {
   protected attackPreview(): string {
     const atk = this.gameState.playerAttack();
     const combo = this.gameState.player().combo + 1;
-    const comboBonus = 1 + Math.max(0, combo - 1) * 0.12;
+    const comboBonus = 1 + Math.max(0, combo - 1) * COMBAT_BALANCE.comboStep;
     const spread = Math.max(1, atk - 5);
     const low = Math.max(1, Math.floor(5 * comboBonus));
     const high = Math.floor((4 + spread) * comboBonus);
@@ -244,10 +248,10 @@ export class CombatPanel {
   protected specialPreview(): string {
     const atk = this.gameState.playerAttack();
     const combo = this.gameState.player().combo;
-    const finisherBonus = 1 + Math.max(0, combo - 1) * 0.18;
+    const finisherBonus = 1 + Math.max(0, combo - 1) * COMBAT_BALANCE.special.finisherStep;
     const enemy = this.gameState.enemy();
-    const weakBonus = enemy ? elementWeaknessMultiplier(enemy.weakness, 'fire') : 1;
-    const base = Math.floor(atk * 1.55 * finisherBonus * weakBonus);
+    const weakBonus = attackElementMultiplier(enemy, this.gameState.playerAttackElement());
+    const base = Math.floor(atk * COMBAT_BALANCE.special.damageMultiplier * finisherBonus * weakBonus);
     const spread = Math.max(1, base - 5);
     return `~${Math.max(1, base - spread)}–${base} DMG`;
   }
@@ -269,7 +273,25 @@ export class CombatPanel {
   }
 
   protected isWeaknessExploitable(): boolean {
-    return this.gameState.enemy()?.weakness === 'fire';
+    return attackElementMultiplier(this.gameState.enemy(), this.gameState.playerAttackElement()) > 1;
+  }
+
+  protected enemyResistance(): EnemyElement | null {
+    return this.gameState.enemy()?.resistance ?? null;
+  }
+
+  protected resistanceLabel(): string {
+    const r = this.enemyResistance();
+    return r ? `${elementIcon(r)} ${weaknessLabel(r)}` : '';
+  }
+
+  protected isStunned(): boolean {
+    return (this.gameState.enemy()?.stunnedRounds ?? 0) > 0;
+  }
+
+  protected attackElementBadge(): string {
+    const element = this.gameState.playerAttackElement();
+    return element === 'none' ? '' : `${elementIcon(element)} ${weaknessLabel(element)}`;
   }
 
   protected weaknessElementLabel(): string {
@@ -278,13 +300,7 @@ export class CombatPanel {
   }
 
   protected weaknessIcon(): string {
-    switch (this.gameState.enemy()?.weakness) {
-      case 'fire': return '🔥';
-      case 'ice': return '❄';
-      case 'lightning': return '⚡';
-      case 'shadow': return '◆';
-      default: return '';
-    }
+    return elementIcon(this.gameState.enemy()?.weakness);
   }
 
   protected telegraphWarning(): TelegraphedAbility | null {
@@ -297,6 +313,9 @@ export class CombatPanel {
     }
     if (ability.shieldMultiplier) {
       return `Schild: naechster Treffer -${Math.round((1 - ability.shieldMultiplier) * 100)}% reduziert. Finisher nutzen!`;
+    }
+    if (ability.forceStatus) {
+      return 'Der naechste Treffer verhaengt garantiert einen Statuseffekt! Deckung hilft.';
     }
     return 'Gefaehrliche Aktion vorbereitet!';
   }

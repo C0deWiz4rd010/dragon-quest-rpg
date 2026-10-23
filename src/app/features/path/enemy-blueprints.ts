@@ -1,10 +1,11 @@
 import { assets } from '../assets/asset-catalog';
+import { ENEMY_BALANCE } from '../combat/combat-balance';
 import { roleLootMultiplier } from '../combat/combat-rules';
 import { Enemy, EnemyElement, EnemyRole } from '../combat/enemy.model';
 
 export const ENEMY_BLUEPRINTS: Record<
   string,
-  Omit<Enemy, 'id' | 'hp' | 'maxHp' | 'weakness' | 'telegraphedAbility'>
+  Omit<Enemy, 'id' | 'hp' | 'maxHp' | 'weakness' | 'resistance' | 'telegraphedAbility'>
 > = {
   slime: {
     name: 'Schleimling',
@@ -90,6 +91,34 @@ export const ENEMY_BLUEPRINTS: Record<
     level: 8,
     elite: false,
     isBoss: true,
+  },
+  'frost-wyrm': {
+    name: 'Frostwyrm Glacia',
+    role: 'boss',
+    attack: 66,
+    gold: 620,
+    xp: 820,
+    icon: 'FW',
+    sprite: assets.units.blizzardElemental,
+    assetUrl: assets.units.blizzardElemental.idle,
+    level: 8,
+    elite: false,
+    isBoss: true,
+    signature: { name: 'Eisiger Atem', damageMultiplier: 1.5, forceStatus: true },
+  },
+  'storm-titan': {
+    name: 'Sturmtitan Voltarr',
+    role: 'boss',
+    attack: 78,
+    gold: 640,
+    xp: 840,
+    icon: 'ST',
+    sprite: assets.units.cycloneSerpent,
+    assetUrl: assets.units.cycloneSerpent.idle,
+    level: 8,
+    elite: false,
+    isBoss: true,
+    signature: { name: 'Donnerschlag', damageMultiplier: 1.9 },
   },
   // === Ember biome ===
   'fire-sprite': {
@@ -315,6 +344,53 @@ export const ENEMY_BLUEPRINTS: Record<
   },
 };
 
+/** Bosses that can guard the throne room; one is rolled per boss node. */
+export const BOSS_POOL = ['boss', 'frost-wyrm', 'storm-titan'] as const;
+
+export function randomBossId(): string {
+  return BOSS_POOL[Math.floor(Math.random() * BOSS_POOL.length)] ?? 'boss';
+}
+
+interface ElementProfile {
+  weakness: EnemyElement;
+  resistance?: EnemyElement;
+}
+
+/** Per-enemy element affinity so biome and weapon choice actually matter. */
+const ELEMENT_PROFILES: Record<string, ElementProfile> = {
+  slime: { weakness: 'fire' },
+  bat: { weakness: 'lightning' },
+  skeleton: { weakness: 'fire', resistance: 'shadow' },
+  knight: { weakness: 'lightning' },
+  wyvern: { weakness: 'ice' },
+  ancient: { weakness: 'ice', resistance: 'fire' },
+  boss: { weakness: 'ice', resistance: 'fire' },
+  'frost-wyrm': { weakness: 'fire', resistance: 'ice' },
+  'storm-titan': { weakness: 'shadow', resistance: 'lightning' },
+  'fire-sprite': { weakness: 'ice', resistance: 'fire' },
+  'lava-golem': { weakness: 'ice', resistance: 'fire' },
+  'magma-drake': { weakness: 'ice', resistance: 'fire' },
+  'forest-wisp': { weakness: 'fire' },
+  'treant-archer': { weakness: 'fire' },
+  'vine-horror': { weakness: 'fire', resistance: 'lightning' },
+  'tomb-guardian': { weakness: 'lightning', resistance: 'shadow' },
+  'cursed-armor': { weakness: 'lightning' },
+  'shadow-remnant': { weakness: 'fire', resistance: 'shadow' },
+  'ice-wraith': { weakness: 'fire', resistance: 'ice' },
+  'frost-bear': { weakness: 'fire', resistance: 'ice' },
+  'blizzard-elemental': { weakness: 'fire', resistance: 'ice' },
+  'thunder-hawk': { weakness: 'ice', resistance: 'lightning' },
+  'storm-djinn': { weakness: 'ice', resistance: 'lightning' },
+  'cyclone-serpent': { weakness: 'ice', resistance: 'lightning' },
+  'holy-sentinel': { weakness: 'shadow' },
+  'rune-golem': { weakness: 'lightning' },
+  'void-walker': { weakness: 'lightning', resistance: 'shadow' },
+};
+
+function profileFor(enemyId: string, role: EnemyRole): ElementProfile {
+  return ELEMENT_PROFILES[enemyId] ?? { weakness: weaknessForRole(role) };
+}
+
 export function hydrateEnemyVisuals(enemy: Enemy | null): Enemy | null {
   if (!enemy) {
     return null;
@@ -336,7 +412,10 @@ export function hydrateEnemyVisuals(enemy: Enemy | null): Enemy | null {
     role: enemy.role ?? blueprint.role,
     assetUrl: enemy.assetUrl ?? blueprint.assetUrl,
     sprite: enemy.sprite ?? blueprint.sprite,
-    weakness: enemy.weakness ?? weaknessForRole(enemy.role ?? blueprint.role),
+    weakness: enemy.weakness ?? profileFor(key ?? 'slime', enemy.role ?? blueprint.role).weakness,
+    resistance:
+      enemy.resistance ?? profileFor(key ?? 'slime', enemy.role ?? blueprint.role).resistance ?? null,
+    signature: enemy.signature ?? blueprint.signature,
     telegraphedAbility: enemy.telegraphedAbility ?? null,
   };
 }
@@ -363,27 +442,33 @@ export function createEnemy(
   threat = 1,
   newGamePlus = 0,
 ): Enemy {
-  const blueprint = ENEMY_BLUEPRINTS[forceBoss ? 'boss' : enemyId] ?? ENEMY_BLUEPRINTS['slime'];
+  const resolvedId = forceBoss ? (BOSS_POOL.includes(enemyId as never) ? enemyId : 'boss') : enemyId;
+  const blueprint = ENEMY_BLUEPRINTS[resolvedId] ?? ENEMY_BLUEPRINTS['slime'];
+  const profile = profileFor(resolvedId, blueprint.role);
   const scaling = Math.max(0, playerLevel - blueprint.level);
-  // New Game+ tightens the screws: +22% enemy HP and +18% damage per cycle.
-  const ngHpMult = 1 + newGamePlus * 0.22;
-  const ngAtkMult = 1 + newGamePlus * 0.18;
-  const ngRewardMult = 1 + newGamePlus * 0.15;
-  const maxHp = Math.round(
-    ((forceBoss ? 500 : 45 + blueprint.level * 26) + scaling * 18) * ngHpMult,
-  );
+  // New Game+ tightens the screws every cycle.
+  const ngHpMult = 1 + newGamePlus * ENEMY_BALANCE.newGamePlus.hp;
+  const ngAtkMult = 1 + newGamePlus * ENEMY_BALANCE.newGamePlus.attack;
+  const ngRewardMult = 1 + newGamePlus * ENEMY_BALANCE.newGamePlus.reward;
+  const baseHp = forceBoss
+    ? (ENEMY_BALANCE.bossHp[resolvedId] ?? ENEMY_BALANCE.bossHp['boss'])
+    : ENEMY_BALANCE.hpBase + blueprint.level * ENEMY_BALANCE.hpPerBlueprintLevel;
+  const maxHp = Math.round((baseHp + scaling * ENEMY_BALANCE.hpPerLevelGap) * ngHpMult);
   const rewardScale =
     (roleLootMultiplier(blueprint.role) + Math.max(0, threat - 1) * 0.08) * ngRewardMult;
 
   return {
     ...blueprint,
-    id: `${enemyId}-${crypto.randomUUID()}`,
+    id: `${resolvedId}-${crypto.randomUUID()}`,
     hp: maxHp,
     maxHp,
-    attack: Math.round((blueprint.attack + scaling * 3) * ngAtkMult),
-    gold: Math.floor((blueprint.gold + scaling * 10) * rewardScale),
-    xp: Math.floor((blueprint.xp + scaling * 12) * rewardScale),
-    weakness: weaknessForRole(blueprint.role),
+    attack: Math.round((blueprint.attack + scaling * ENEMY_BALANCE.attackPerLevelGap) * ngAtkMult),
+    gold: Math.floor((blueprint.gold + scaling * ENEMY_BALANCE.goldPerLevelGap) * rewardScale),
+    xp: Math.floor((blueprint.xp + scaling * ENEMY_BALANCE.xpPerLevelGap) * rewardScale),
+    weakness: profile.weakness,
+    resistance: profile.resistance ?? null,
+    turn: 0,
+    stunnedRounds: 0,
     telegraphedAbility: null,
   };
 }

@@ -137,7 +137,7 @@
             }
             @if (player().statusEffect; as fx) {
               <span class="readout-chip status-chip" [class.burn]="fx.type === 'burn'" [class.poison]="fx.type === 'poison'">
-                {{ fx.type === 'burn' ? '🔥' : '☠' }} {{ fx.rounds }}rd
+                {{ statusGlyph(fx.type) }} {{ fx.rounds }}rd
               </span>
             }
           </div>
