@@ -780,7 +780,7 @@ export class Combat {
     if (enemy.isBoss) {
       this.gameState.gameActive.set(false);
       this.gameState.addLog(
-        'Der Drachenkonig ist gefallen. Dieser Lauf ist gewonnen.',
+        `${enemy.name} ist gefallen. Dieser Lauf ist gewonnen.`,
         'achievement',
       );
     }
