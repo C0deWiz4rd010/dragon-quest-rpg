@@ -46,18 +46,41 @@
         <span class="btn-text">⚔ Neues Spiel</span>
       </button>
       @if (hasSave()) {
-        <div class="slot-list" aria-label="Speicherstände">
+        <div class="slot-list" role="group" aria-label="Speicherstände">
           @for (info of slots(); track info.slot) {
-            <button class="btn-load" type="button" (click)="loadSlot(info.slot)">
-              <span class="slot-lead">📂 Slot {{ info.slot }}</span>
-              <span class="slot-meta">
-                {{ classLabel(info.characterClass) }} · Lvl {{ info.level }} ·
-                {{ info.completedPaths }} Pfade
-              </span>
-              <span class="slot-time">{{ formatSaved(info.savedAt) }}</span>
-            </button>
+            <div class="slot-row">
+              <button class="btn-load" type="button" (click)="loadSlot(info.slot)">
+                <span class="slot-lead"><span aria-hidden="true">📂</span> Slot {{ info.slot }}</span>
+                <span class="slot-meta">
+                  {{ classLabel(info.characterClass) }} · Lvl {{ info.level }} · Tiefe {{ info.depth }} ·
+                  {{ info.completedPaths }} Pfade@if (info.newGamePlus) { · NG+{{ info.newGamePlus }} }
+                </span>
+                <span class="slot-time">{{ formatSaved(info.savedAt) }}</span>
+              </button>
+              @if (pendingDelete() === info.slot) {
+                <button class="slot-delete confirm" type="button" (click)="confirmDelete(info.slot)">
+                  Wirklich löschen?
+                </button>
+              } @else {
+                <button
+                  class="slot-delete"
+                  type="button"
+                  [attr.aria-label]="'Slot ' + info.slot + ' löschen'"
+                  (click)="askDelete(info.slot)"
+                >
+                  <span aria-hidden="true">🗑</span>
+                </button>
+              }
+            </div>
           }
         </div>
+      }
+      <label class="btn-import">
+        <span><span aria-hidden="true">📥</span> Spielstand importieren</span>
+        <input type="file" accept="application/json,.json" (change)="importFile($event)" />
+      </label>
+      @if (message(); as msg) {
+        <p class="slot-message" role="status">{{ msg }}</p>
       }
     </div>
 

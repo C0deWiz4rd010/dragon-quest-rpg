@@ -20,3 +20,11 @@
     </div>
   </div>
 }
+
+@if (storage.saveError(); as error) {
+  <div class="save-error-toast" role="alert">
+    <span aria-hidden="true">⚠</span>
+    <p>{{ error }}</p>
+    <button type="button" (click)="storage.saveError.set(null)">OK</button>
+  </div>
+}

@@ -118,3 +118,36 @@
   to { opacity: 0; transform: translateX(120%); }
 }
 
+
+/* Persistent warning when saving fails; stays until dismissed. */
+.save-error-toast {
+  align-items: center;
+  background: linear-gradient(135deg, rgba(60, 20, 20, 0.97), rgba(30, 10, 14, 0.97));
+  border: 1px solid rgba(248, 113, 113, 0.65);
+  border-radius: 14px;
+  bottom: 84px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.55);
+  color: var(--dq-red-pale);
+  display: flex;
+  gap: 10px;
+  left: 50%;
+  max-width: min(420px, 92vw);
+  padding: 10px 14px;
+  position: fixed;
+  transform: translateX(-50%);
+  z-index: 1300;
+
+  p {
+    font-size: 12px;
+    margin: 0;
+  }
+
+  button {
+    background: rgba(248, 113, 113, 0.18);
+    border: 1px solid rgba(248, 113, 113, 0.5);
+    border-radius: 8px;
+    color: inherit;
+    cursor: pointer;
+    padding: 6px 12px;
+  }
+}

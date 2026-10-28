@@ -388,3 +388,60 @@
   .btn-start .btn-glow,
   .crest-ring { animation: none; }
 }
+
+.slot-row {
+  align-items: stretch;
+  display: flex;
+  gap: 6px;
+
+  .btn-load {
+    flex: 1;
+  }
+}
+
+.slot-delete {
+  background: rgba(127, 29, 29, 0.35);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  border-radius: 10px;
+  color: var(--dq-red-soft);
+  cursor: pointer;
+  font-size: var(--dq-font-sm);
+  min-width: 44px;
+  padding: 0 10px;
+
+  &.confirm {
+    background: rgba(185, 28, 28, 0.6);
+    color: #fff;
+  }
+}
+
+.btn-import {
+  border: 1px dashed var(--dq-line-strong);
+  border-radius: 10px;
+  color: var(--dq-ink-muted);
+  cursor: pointer;
+  display: block;
+  font-size: var(--dq-font-sm);
+  margin-top: 8px;
+  padding: 10px 12px;
+  text-align: center;
+
+  input {
+    height: 1px;
+    opacity: 0;
+    position: absolute;
+    width: 1px;
+  }
+
+  &:focus-within {
+    outline: 2px solid var(--dq-yellow);
+    outline-offset: 2px;
+  }
+}
+
+.slot-message {
+  color: var(--dq-gold-soft);
+  font-size: var(--dq-font-sm);
+  margin: 8px 0 0;
+  text-align: center;
+}

@@ -1,7 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 
 import { GameState } from '../game-state/game-state.service';
-import { isLegacySave, StorageService } from './storage.service';
+import {
+  isLegacySave,
+  MAX_IMPORT_BYTES,
+  SAVE_EXPORT_FORMAT,
+  StorageService,
+} from './storage.service';
 
 describe('StorageService', () => {
   let service: StorageService;
@@ -77,6 +82,100 @@ describe('StorageService', () => {
       expect(isLegacySave([])).toBe(false);
       expect(isLegacySave({ path: { segments: 'x' } })).toBe(false);
       expect(isLegacySave({ state: 3 })).toBe(false);
+    });
+  });
+
+  describe('slot management', () => {
+    it('reports depth, class and new game plus in slot info', () => {
+      gameState.reset('mage');
+      service.save(2);
+
+      const info = service.slotInfo(2);
+
+      expect(info?.characterClass).toBe('mage');
+      expect(info?.depth).toBe(1);
+      expect(info?.newGamePlus).toBe(0);
+    });
+
+    it('bumps the slot revision on save, delete and import', () => {
+      const before = service.slotRevision();
+
+      service.save(1);
+      service.deleteSlot(1);
+      service.importText(3, JSON.stringify({ state: { player: {} } }));
+
+      expect(service.slotRevision()).toBe(before + 3);
+    });
+
+    it('deletes a slot together with its corruption backup', () => {
+      service.save(2);
+      localStorage.setItem('dragonQuestRpgSave_2_corrupt', 'x');
+
+      service.deleteSlot(2);
+
+      expect(service.hasSlot(2)).toBe(false);
+      expect(localStorage.getItem('dragonQuestRpgSave_2_corrupt')).toBeNull();
+    });
+
+    it('exports a slot and re-imports it into another slot', () => {
+      gameState.reset('rogue');
+      service.save(1);
+
+      const text = service.exportSlot(1);
+      const wrapper = JSON.parse(text ?? '{}');
+
+      expect(wrapper.format).toBe(SAVE_EXPORT_FORMAT);
+      expect(wrapper.slot).toBe(1);
+      expect(service.exportSlot(3)).toBeNull();
+
+      expect(service.importText(3, text ?? '')).toEqual({ ok: true });
+      expect(service.slotInfo(3)?.characterClass).toBe('rogue');
+      expect(service.load(3)).toBe(true);
+    });
+
+    it('accepts a raw save document without the export wrapper', () => {
+      const raw = JSON.stringify({ version: 3, state: { player: { level: 4 } } });
+
+      expect(service.importText(2, raw).ok).toBe(true);
+      expect(service.slotInfo(2)?.level).toBe(4);
+    });
+
+    it('rejects invalid imports with a readable reason and leaves the slot untouched', () => {
+      service.save(1);
+      const before = localStorage.getItem('dragonQuestRpgSave');
+
+      for (const text of ['not json', '{}', '[1,2]', JSON.stringify({ state: { player: 'x' } })]) {
+        const result = service.importText(1, text);
+
+        expect(result.ok, text).toBe(false);
+        if (!result.ok) expect(result.error).toBeTruthy();
+      }
+
+      expect(service.importText(1, 'x'.repeat(MAX_IMPORT_BYTES + 1)).ok).toBe(false);
+      expect(localStorage.getItem('dragonQuestRpgSave')).toBe(before);
+    });
+
+    it('sets a persistent warning when saving fails and clears it on success', () => {
+      const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new DOMException('full', 'QuotaExceededError');
+      });
+
+      expect(service.save(1)).toBe(false);
+      expect(service.saveError()).toContain('Speichern fehlgeschlagen');
+
+      spy.mockRestore();
+      expect(service.save(1)).toBe(true);
+      expect(service.saveError()).toBeNull();
+    });
+
+    it('reports a full storage on import instead of throwing', () => {
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new DOMException('full', 'QuotaExceededError');
+      });
+
+      const result = service.importText(1, JSON.stringify({ state: { player: {} } }));
+
+      expect(result.ok).toBe(false);
     });
   });
 });

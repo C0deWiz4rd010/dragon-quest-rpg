@@ -71,6 +71,15 @@
             </button>
             <button
               type="button"
+              class="tool-btn slots-btn"
+              title="Spielstände verwalten"
+              aria-label="Spielstände verwalten"
+              (click)="savePanelOpen.set(!savePanelOpen())"
+            >
+              <span class="tool-glyph" aria-hidden="true">📁</span>
+            </button>
+            <button
+              type="button"
               class="tool-btn manual-button"
               title="Handbuch"
               (click)="handbookOpen.set(!handbookOpen())"
@@ -247,7 +256,11 @@
   </section>
 
   <!-- ── SETTINGS OVERLAY ─────────────────────────────────────── -->
-@if (settingsOpen()) {
+@if (savePanelOpen()) {
+    <app-save-panel (closed)="savePanelOpen.set(false)" />
+  }
+
+  @if (settingsOpen()) {
     <app-settings-panel (closed)="settingsOpen.set(false)" />
   }
 

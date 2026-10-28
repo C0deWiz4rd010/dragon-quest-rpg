@@ -27,9 +27,19 @@ export interface SlotInfo {
   slot: SaveSlot;
   savedAt: string;
   level: number;
+  /** 1-based route depth the run had reached. */
+  depth: number;
   completedPaths: number;
+  newGamePlus: number;
   characterClass?: string;
 }
+
+/** Marker written into exported files so imports can tell them apart from random JSON. */
+export const SAVE_EXPORT_FORMAT = 'dragon-quest-rpg-save';
+/** Imports larger than this are rejected before parsing. */
+export const MAX_IMPORT_BYTES = 2_000_000;
+
+export type ImportResult = { ok: true } | { ok: false; error: string };
 
 @Injectable({
   providedIn: 'root',
@@ -41,6 +51,10 @@ export class StorageService {
 
   /** The slot most recently saved to or loaded from. */
   readonly currentSlot = signal<SaveSlot>(1);
+  /** Bumps whenever any slot changes, so slot lists can refresh reactively. */
+  readonly slotRevision = signal(0);
+  /** Set when the last save failed (quota, private mode); shown as a warning toast. */
+  readonly saveError = signal<string | null>(null);
 
   private keyFor(slot: SaveSlot): string {
     // Slot 1 keeps the legacy key so old saves migrate seamlessly.
@@ -70,9 +84,14 @@ export class StorageService {
       localStorage.setItem(this.keyFor(slot), JSON.stringify(save));
     } catch {
       this.gameState.addLog('Speichern fehlgeschlagen (Speicher voll oder gesperrt).', 'damage');
+      this.saveError.set(
+        'Speichern fehlgeschlagen – der Browser-Speicher ist voll oder gesperrt. Exportiere deinen Spielstand als Datei.',
+      );
       return false;
     }
 
+    this.saveError.set(null);
+    this.slotRevision.update((n) => n + 1);
     this.currentSlot.set(slot);
     if (!options.silent) {
       this.gameState.addLog(`Spiel in Slot ${slot} gespeichert.`, 'event');
@@ -131,6 +150,74 @@ export class StorageService {
     }
   }
 
+  /** Removes a slot (and its corruption backup). */
+  deleteSlot(slot: SaveSlot): void {
+    try {
+      localStorage.removeItem(this.keyFor(slot));
+      localStorage.removeItem(`${this.keyFor(slot)}_corrupt`);
+    } catch {
+      // Nothing to delete if storage is unavailable.
+    }
+
+    this.slotRevision.update((n) => n + 1);
+  }
+
+  /** Serialises a slot as a downloadable JSON document, or null if the slot is empty. */
+  exportSlot(slot: SaveSlot): string | null {
+    const raw = this.readRaw(slot);
+
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      return JSON.stringify({
+        format: SAVE_EXPORT_FORMAT,
+        exportedAt: new Date().toISOString(),
+        slot,
+        save: JSON.parse(raw),
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  /** Validates exported (or raw) save JSON and writes it into `slot`. */
+  importText(slot: SaveSlot, text: string): ImportResult {
+    if (text.length > MAX_IMPORT_BYTES) {
+      return { ok: false, error: 'Die Datei ist zu groß für einen Spielstand.' };
+    }
+
+    let parsed: unknown;
+
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      return { ok: false, error: 'Die Datei ist kein gültiges JSON.' };
+    }
+
+    const candidate =
+      isRecord(parsed) && parsed['format'] === SAVE_EXPORT_FORMAT ? parsed['save'] : parsed;
+
+    if (
+      !isLegacySave(candidate) ||
+      !isRecord(candidate.state) ||
+      !isRecord(candidate.state.player)
+    ) {
+      return { ok: false, error: 'Die Datei enthält keinen gültigen Spielstand.' };
+    }
+
+    try {
+      localStorage.setItem(this.keyFor(slot), JSON.stringify(candidate));
+    } catch {
+      return { ok: false, error: 'Der Browser-Speicher ist voll oder gesperrt.' };
+    }
+
+    this.slotRevision.update((n) => n + 1);
+
+    return { ok: true };
+  }
+
   hasSlot(slot: SaveSlot): boolean {
     try {
       return !!localStorage.getItem(this.keyFor(slot));
@@ -154,7 +241,9 @@ export class StorageService {
         slot,
         savedAt: parsed.savedAt ?? '',
         level: player?.level ?? 1,
+        depth: (parsed.path?.currentDepth ?? 0) + 1,
         completedPaths: player?.completedPaths ?? 0,
+        newGamePlus: player?.newGamePlus ?? 0,
         characterClass: player?.characterClass,
       };
     } catch {

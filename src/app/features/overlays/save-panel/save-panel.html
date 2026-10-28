@@ -1,0 +1,53 @@
+<aside class="save-panel" role="dialog" aria-modal="true" aria-label="Spielstände" appDialogFocus>
+  <button type="button" class="save-close" (click)="closed.emit()">✕ Schließen</button>
+  <h2><span aria-hidden="true">📁</span> Spielstände</h2>
+
+  @for (view of slots(); track view.slot) {
+    <section class="slot-card" [class.active]="view.active" [attr.aria-label]="'Slot ' + view.slot">
+      <header>
+        <strong>Slot {{ view.slot }}</strong>
+        @if (view.active) {
+          <span class="slot-badge">aktiv</span>
+        }
+      </header>
+
+      @if (view.info; as info) {
+        <p class="slot-info">
+          {{ className(info.characterClass) }} · Lvl {{ info.level }} · Tiefe {{ info.depth }} ·
+          {{ info.completedPaths }} Pfade@if (info.newGamePlus) { · NG+{{ info.newGamePlus }} }
+        </p>
+        <p class="slot-time">{{ formatSaved(info.savedAt) }}</p>
+      } @else {
+        <p class="slot-info empty">Leer</p>
+      }
+
+      <div class="slot-actions">
+        <button type="button" (click)="save(view)">
+          @if (isPending(view.slot, 'save')) { Überschreiben? } @else { <span aria-hidden="true">💾</span> Speichern }
+        </button>
+        @if (view.info) {
+          <button type="button" (click)="load(view.slot)"><span aria-hidden="true">📂</span> Laden</button>
+          <button type="button" (click)="export(view.slot)"><span aria-hidden="true">📤</span> Export</button>
+        }
+        <label class="file-button">
+          <span><span aria-hidden="true">📥</span> Import</span>
+          <input type="file" accept="application/json,.json" (change)="importFile(view.slot, $event)" />
+        </label>
+        @if (view.info) {
+          <button type="button" class="danger" (click)="remove(view.slot)">
+            @if (isPending(view.slot, 'delete')) { Wirklich löschen? } @else { <span aria-hidden="true">🗑</span> Löschen }
+          </button>
+        }
+        @if (pending()?.slot === view.slot) {
+          <button type="button" (click)="cancel()">Abbrechen</button>
+        }
+      </div>
+    </section>
+  }
+
+  <p class="save-message" role="status" aria-live="polite">{{ message() }}</p>
+  <p class="save-hint">
+    Spielstände liegen nur in diesem Browser. Exportiere sie als Datei, um sie zu sichern oder auf
+    ein anderes Gerät zu übertragen.
+  </p>
+</aside>

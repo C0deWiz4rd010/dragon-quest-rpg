@@ -25,6 +25,7 @@ import { Path, PathWeather } from '../../features/path/path.service';
 import { StorageService } from '../../features/persistence/storage.service';
 import { HandbookPanel } from '../../features/overlays/handbook-panel/handbook-panel';
 import { RunOutcomeOverlay } from '../../features/overlays/run-outcome-overlay/run-outcome-overlay';
+import { SavePanel } from '../../features/overlays/save-panel/save-panel';
 import { SettingsPanel } from '../../features/overlays/settings-panel/settings-panel';
 import { ToastLayer } from '../../features/overlays/toast-layer/toast-layer';
 import { TutorialOverlay } from '../../features/overlays/tutorial-overlay/tutorial-overlay';
@@ -51,6 +52,7 @@ declare global {
     PixiBackground,
     RunEncounterOverlay,
     RunOutcomeOverlay,
+    SavePanel,
     SettingsPanel,
     ToastLayer,
     TutorialOverlay,
@@ -71,6 +73,7 @@ export class GamePage {
   protected readonly audioDirector = inject(AudioDirector);
   protected readonly handbookOpen = signal(false);
   protected readonly settingsOpen = signal(false);
+  protected readonly savePanelOpen = signal(false);
   protected readonly mobileTab = signal<MobileTab>('combat');
   protected readonly savedAt = signal<string | null>(null);
   protected readonly player = computed(() => this.gameState.player());
