@@ -96,5 +96,7 @@ export interface Player {
   comboFever: boolean;
   characterClass?: string;
   learnedSkills?: string[];
+  /** Skill ids offered after a level-up; the player picks one. */
+  pendingSkillChoices?: string[];
   newGamePlus?: number;
 }

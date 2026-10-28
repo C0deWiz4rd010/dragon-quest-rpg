@@ -280,4 +280,88 @@ describe('Combat', () => {
       expect(gameState.enemy()?.telegraphedAbility?.name).toBe('Wuchtschlag');
     });
   });
+
+  describe('classes and skill choices', () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    it('lets the player pick one offered skill and clears the offer', () => {
+      gameState.updatePlayer((player) => ({
+        ...player,
+        pendingSkillChoices: ['berserker', 'scholar', 'deadeye'],
+      }));
+
+      service.chooseSkill('scholar');
+
+      expect(gameState.player().learnedSkills).toEqual(['scholar']);
+      expect(gameState.player().pendingSkillChoices).toEqual([]);
+    });
+
+    it('ignores skills that were not offered', () => {
+      gameState.updatePlayer((player) => ({ ...player, pendingSkillChoices: ['berserker'] }));
+
+      service.chooseSkill('reaper');
+
+      expect(gameState.player().learnedSkills ?? []).toEqual([]);
+      expect(gameState.player().pendingSkillChoices).toEqual(['berserker']);
+    });
+
+    it('warriors keep their combo when guarding, others lose it', () => {
+      vi.spyOn(Math, 'random').mockReturnValue(0.99);
+      const dummy = {
+        id: 'd',
+        name: 'Dummy',
+        role: 'swift',
+        hp: 500,
+        maxHp: 500,
+        attack: 1,
+        gold: 0,
+        xp: 0,
+        icon: 'D',
+        level: 1,
+        elite: false,
+        weakness: null,
+        telegraphedAbility: null,
+      } as Parameters<typeof gameState.setEnemy>[0];
+
+      gameState.updatePlayer((player) => ({ ...player, characterClass: 'warrior', combo: 3 }));
+      gameState.setEnemy(dummy);
+      service.guard();
+      expect(gameState.player().combo).toBe(3);
+
+      gameState.updatePlayer((player) => ({ ...player, characterClass: 'rogue', combo: 3 }));
+      gameState.setEnemy(dummy);
+      service.guard();
+      expect(gameState.player().combo).toBe(0);
+    });
+
+    it('mages cast Drachenklaue for less mana', () => {
+      vi.spyOn(Math, 'random').mockReturnValue(0.99);
+      gameState.updatePlayer((player) => ({
+        ...player,
+        characterClass: 'mage',
+        mana: 22,
+        skillCooldown: 0,
+      }));
+      gameState.setEnemy({
+        id: 'd',
+        name: 'Dummy',
+        role: 'swift',
+        hp: 900,
+        maxHp: 900,
+        attack: 1,
+        gold: 0,
+        xp: 0,
+        icon: 'D',
+        level: 1,
+        elite: false,
+        weakness: null,
+        telegraphedAbility: null,
+      });
+
+      expect(gameState.canUseSkill()).toBe(true);
+      service.specialAttack();
+
+      expect(gameState.player().totalManaUsed).toBeGreaterThanOrEqual(22);
+    });
+  });
 });

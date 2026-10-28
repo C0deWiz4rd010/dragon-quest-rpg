@@ -19,7 +19,14 @@ import {
 } from './combat-rules';
 import { createLevelUpChoices, GameState, LevelUpChoiceId } from '../game-state/game-state.service';
 import { getBlessingCharges, spendBlessing } from '../game-state/run-blessings';
-import { rollUnlearnedSkill, skillGoldMultiplier, skillXpMultiplier, skillLifestealPct } from '../game-state/skills';
+import { critManaRefund, guardKeepsCombo, healManaCost, skillManaCost } from '../game-state/character-classes';
+import {
+  getSkill,
+  rollSkillChoices,
+  skillGoldMultiplier,
+  skillLifestealPct,
+  skillXpMultiplier,
+} from '../game-state/skills';
 import { Inventory } from '../inventory/inventory.service';
 import {
   relicComboAttackBonus,
@@ -100,7 +107,7 @@ export class Combat {
           elementBonus,
       ),
     );
-    const manaBurst = combo >= 3 ? 6 : 2;
+    const manaBurst = (combo >= 3 ? 6 : 2) + (isCrit ? critManaRefund(player) : 0);
     const skillResetAt8 = combo >= COMBAT_BALANCE.cooldownResetCombo && player.skillCooldown > 0;
     const riposteStun =
       riposteCharges >= COMBAT_BALANCE.stun.riposteCharges && canBeStunned(enemy);
@@ -174,8 +181,9 @@ export class Combat {
       activeBlessings: battleUsed
         ? spendBlessing(player.activeBlessings, 'battle').blessings
         : player.activeBlessings,
-      mana: player.mana - COMBAT_BALANCE.special.manaCost,
-      totalManaUsed: player.totalManaUsed + COMBAT_BALANCE.special.manaCost,
+      mana: player.mana - skillManaCost(player, COMBAT_BALANCE.special.manaCost),
+      totalManaUsed:
+        player.totalManaUsed + skillManaCost(player, COMBAT_BALANCE.special.manaCost),
       skillCooldown: COMBAT_BALANCE.special.cooldown,
       combo: 0,
       maxCombo: Math.max(player.maxCombo, combo),
@@ -236,8 +244,8 @@ export class Combat {
         activeBlessings: vigor.blessings,
         hp: player.hp + healed,
         guarding: true,
-        mana: player.mana - COMBAT_BALANCE.heal.manaCost,
-        totalManaUsed: player.totalManaUsed + COMBAT_BALANCE.heal.manaCost,
+        mana: player.mana - healManaCost(player, COMBAT_BALANCE.heal.manaCost),
+        totalManaUsed: player.totalManaUsed + healManaCost(player, COMBAT_BALANCE.heal.manaCost),
         combo: 0,
         resolve: Math.min(player.maxResolve, player.resolve + (vigor.consumed ? 1 : 0)),
         statusEffect: null,
@@ -267,8 +275,8 @@ export class Combat {
       hp: Math.min(current.maxHp, current.hp + relicGuardHeal(current)),
       mana: Math.min(current.maxMana, current.mana + COMBAT_BALANCE.guard.manaGain),
       skillCooldown: Math.max(0, current.skillCooldown - COMBAT_BALANCE.guard.cooldownReduction),
-      combo: 0,
-      comboFever: false,
+      combo: guardKeepsCombo(current) ? current.combo : 0,
+      comboFever: guardKeepsCombo(current) ? current.comboFever : false,
     }));
     this.animate('hero', 'skill');
     this.showFloatingText('hero', 'Guard', 'mana');
@@ -304,6 +312,25 @@ export class Combat {
       'heal',
     );
     this.afterPlayerAction('potion');
+  }
+
+  chooseSkill(skillId: string): void {
+    const skill = getSkill(skillId);
+    const offered = this.gameState.player().pendingSkillChoices ?? [];
+
+    if (!skill || !offered.includes(skillId)) {
+      return;
+    }
+
+    this.gameState.updatePlayer((player) => ({
+      ...player,
+      learnedSkills: [...(player.learnedSkills ?? []), skill.id],
+      pendingSkillChoices: [],
+    }));
+    this.gameState.addLog(
+      `Neue Fähigkeit erlernt: ${skill.icon} ${skill.name} — ${skill.description}`,
+      'achievement',
+    );
   }
 
   chooseLevelUp(choiceId: LevelUpChoiceId): void {
@@ -541,7 +568,7 @@ export class Combat {
         activeBlessings: wardState.blessings,
         hp,
         guarding: false,
-        combo: 0,
+        combo: player.guarding && guardKeepsCombo(current) ? current.combo : 0,
         riposteCharges:
           player.guarding && hp > 0
             ? Math.min(
@@ -768,17 +795,15 @@ export class Combat {
         this.gameState.addLog(`Level up! Du erreichst Level ${level}.`, 'heal');
       }
 
-      let learnedSkills = player.learnedSkills;
+      let pendingSkillChoices = player.pendingSkillChoices;
       if (leveled) {
         this.gameState.levelUpChoices.set(createLevelUpChoices());
-        if (Math.random() < 0.3) {
-          const skill = rollUnlearnedSkill(player);
-          if (skill) {
-            learnedSkills = [...(player.learnedSkills ?? []), skill.id];
-            this.gameState.addLog(
-              `Neue Fähigkeit erlernt: ${skill.icon} ${skill.name} — ${skill.description}`,
-              'achievement',
-            );
+        // Every second level (and by chance otherwise) offers a choice of three skills.
+        if (level % 2 === 0 || Math.random() < 0.3) {
+          const offered = rollSkillChoices(player);
+          if (offered.length) {
+            pendingSkillChoices = offered;
+            this.gameState.addLog('Eine neue Faehigkeit steht zur Wahl.', 'achievement');
           }
         }
       }
@@ -790,7 +815,7 @@ export class Combat {
         maxHp,
         hp,
         maxMana,
-        learnedSkills,
+        pendingSkillChoices,
         gold:
           player.gold +
           Math.round(

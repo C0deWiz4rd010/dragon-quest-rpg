@@ -115,11 +115,10 @@ export function learnedSkills(player: Player): Skill[] {
     .filter((skill): skill is Skill => !!skill);
 }
 
-function sum(player: Player, key: keyof Skill): number {
-  return learnedSkills(player).reduce((total, skill) => {
-    const value = skill[key];
-    return total + (typeof value === 'number' ? value : 0);
-  }, 0);
+type SkillNumericKey = 'attackPct' | 'defensePct' | 'critFlat' | 'lifestealPct' | 'xpPct' | 'goldPct';
+
+function sum(player: Player, key: SkillNumericKey): number {
+  return learnedSkills(player).reduce((total, skill) => total + (skill[key] ?? 0), 0);
 }
 
 export function skillAttackMultiplier(player: Player): number {
@@ -154,4 +153,38 @@ export function rollUnlearnedSkill(player: Player): Skill | undefined {
     return undefined;
   }
   return pool[Math.floor(Math.random() * pool.length)];
+}
+
+/** Skills each class gravitates towards; they show up three times as often. */
+const CLASS_AFFINITY: Record<string, string[]> = {
+  warrior: ['berserker', 'ironhide', 'warlord', 'guardian'],
+  mage: ['scholar', 'sage', 'reaper', 'vampirism'],
+  rogue: ['deadeye', 'assassin', 'treasurehunter', 'duelist'],
+  paladin: ['ironhide', 'guardian', 'vampirism', 'sage'],
+};
+
+/** Rolls up to `count` distinct unlearned skills, favouring the player's class. */
+export function rollSkillChoices(player: Player, count = 3): string[] {
+  const owned = new Set(player.learnedSkills ?? []);
+  const favoured = new Set(CLASS_AFFINITY[player.characterClass ?? ''] ?? []);
+  const pool = SKILLS.filter((skill) => !owned.has(skill.id)).map((skill) => ({
+    id: skill.id,
+    weight: favoured.has(skill.id) ? 3 : 1,
+  }));
+  const picks: string[] = [];
+
+  while (picks.length < count && pool.length) {
+    const total = pool.reduce((sum, entry) => sum + entry.weight, 0);
+    let roll = Math.random() * total;
+    let index = pool.findIndex((entry) => (roll -= entry.weight) < 0);
+
+    if (index < 0) {
+      index = pool.length - 1;
+    }
+
+    picks.push(pool[index].id);
+    pool.splice(index, 1);
+  }
+
+  return picks;
 }

@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { blessingLabel } from '../game-state/run-blessings';
+import { getSkill, Skill } from '../game-state/skills';
 import { CombatStage } from './combat-stage/combat-stage';
 import { GameState } from '../game-state/game-state.service';
 import { Path } from '../path/path.service';
@@ -266,6 +267,12 @@ export class CombatPanel {
     const player = this.gameState.player();
     const hp = Math.min(22 + player.level * 2, player.maxHp - player.hp);
     return `+${hp} HP +24 Mana`;
+  }
+
+  protected skillChoices(): Skill[] {
+    return (this.gameState.player().pendingSkillChoices ?? [])
+      .map((id) => getSkill(id))
+      .filter((skill): skill is Skill => !!skill);
   }
 
   protected enemyWeakness(): EnemyElement | null {

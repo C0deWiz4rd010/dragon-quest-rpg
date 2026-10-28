@@ -1,4 +1,5 @@
 import { computed, Injectable, signal } from '@angular/core';
+import { COMBAT_BALANCE } from '../combat/combat-balance';
 import { AttackElement, statusAttackMultiplier } from '../combat/combat-rules';
 import { Enemy } from '../combat/enemy.model';
 import {
@@ -17,7 +18,12 @@ import {
 } from '../inventory/relics';
 import { GameLogEntry, GameLogType } from '../log/game-log-entry.model';
 import { blessingLabel, getBlessingCharges, mergeBlessing } from './run-blessings';
-import { applyCharacterClass, CharacterClassId } from './character-classes';
+import {
+  applyCharacterClass,
+  CharacterClassId,
+  healManaCost,
+  skillManaCost,
+} from './character-classes';
 import {
   skillAttackMultiplier,
   skillCritFlat,
@@ -124,15 +130,26 @@ export class GameState {
       this.gameActive() &&
       !!this.enemy() &&
       player.hp > 0 &&
-      player.mana >= 30 &&
+      player.mana >= skillManaCost(player, COMBAT_BALANCE.special.manaCost) &&
       player.skillCooldown === 0
     );
   });
 
   readonly canHeal = computed(() => {
     const player = this.player();
-    return this.gameActive() && player.hp > 0 && player.hp < player.maxHp && player.mana >= 20;
+    return (
+      this.gameActive() &&
+      player.hp > 0 &&
+      player.hp < player.maxHp &&
+      player.mana >= healManaCost(player, COMBAT_BALANCE.heal.manaCost)
+    );
   });
+
+  readonly skillManaCost = computed(() =>
+    skillManaCost(this.player(), COMBAT_BALANCE.special.manaCost),
+  );
+
+  readonly healManaCost = computed(() => healManaCost(this.player(), COMBAT_BALANCE.heal.manaCost));
 
   readonly canUsePotion = computed(() => {
     const player = this.player();

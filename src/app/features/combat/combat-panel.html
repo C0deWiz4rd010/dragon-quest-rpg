@@ -107,7 +107,7 @@
       [disabled]="!gameState.canUseSkill()"
       [class.skill-ready]="gameState.canUseSkill()"
       (click)="combat.specialAttack()"
-      title="Drachenklaue – Finisher-Angriff (30 Mana)"
+      [attr.title]="'Drachenklaue – Finisher-Angriff (' + gameState.skillManaCost() + ' Mana)'"
     >
       <span class="btn-icon">🔥</span>
       <span class="btn-label">Drachenklaue</span>
@@ -121,7 +121,7 @@
       class="action-btn action-heal"
       [disabled]="!gameState.canHeal()"
       (click)="combat.heal()"
-      title="Heilung (20 Mana)"
+      [attr.title]="'Heilung (' + gameState.healManaCost() + ' Mana)'"
     >
       <span class="btn-icon">💊</span>
       <span class="btn-label">Heilen</span>
@@ -202,6 +202,25 @@
       <div class="prep-text">
         <strong>Ruhephase – bereite dich vor</strong>
         <small>Wähle rechts deinen nächsten Pfad. Heilen, Deckung & Tränke sind zwischen Kämpfen frei nutzbar.</small>
+      </div>
+    </div>
+  }
+
+  @if (skillChoices().length) {
+    <div class="level-up-panel levelup-entrance">
+      <div class="level-up-title">Neue Fähigkeit wählen</div>
+      <div class="level-up-grid">
+        @for (skill of skillChoices(); track skill.id) {
+          <button
+            type="button"
+            class="level-up-card"
+            [attr.title]="skill.description"
+            (click)="combat.chooseSkill(skill.id)"
+          >
+            <strong>{{ skill.icon }} {{ skill.name }}</strong>
+            <span>{{ skill.description }}</span>
+          </button>
+        }
       </div>
     </div>
   }
