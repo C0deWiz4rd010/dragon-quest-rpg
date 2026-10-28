@@ -473,8 +473,9 @@ button,
 }
 
 @media (pointer: coarse) {
+  // !important: component styles set smaller min-heights on compact chips and tool buttons.
   button:not(.setting-toggle):not(.tutorial-dot) {
-    min-height: var(--dq-touch);
+    min-height: var(--dq-touch) !important;
   }
 
   .setting-row {
