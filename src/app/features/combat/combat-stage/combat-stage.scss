@@ -17,6 +17,38 @@
   width: 100%;
 }
 
+/* Biome backdrops: a tinted horizon glow and ground band behind the fighters. */
+.stage-wrap[data-biome='ember'] {
+  --biome-glow: rgba(249, 115, 22, 0.2);
+  --biome-ground: rgba(120, 40, 10, 0.4);
+}
+.stage-wrap[data-biome='grove'] {
+  --biome-glow: rgba(74, 222, 128, 0.16);
+  --biome-ground: rgba(20, 83, 45, 0.42);
+}
+.stage-wrap[data-biome='ruin'] {
+  --biome-glow: rgba(168, 162, 158, 0.14);
+  --biome-ground: rgba(68, 64, 60, 0.45);
+}
+.stage-wrap[data-biome='frost'] {
+  --biome-glow: rgba(125, 211, 252, 0.2);
+  --biome-ground: rgba(30, 64, 110, 0.42);
+}
+.stage-wrap[data-biome='storm'] {
+  --biome-glow: rgba(148, 163, 184, 0.22);
+  --biome-ground: rgba(30, 41, 59, 0.5);
+}
+.stage-wrap[data-biome='sanctum'] {
+  --biome-glow: rgba(253, 224, 71, 0.18);
+  --biome-ground: rgba(113, 63, 18, 0.4);
+}
+.stage-wrap[data-biome]:not([data-biome='none']) {
+  background:
+    linear-gradient(180deg, transparent 66%, var(--biome-ground) 100%),
+    radial-gradient(ellipse at 50% 62%, var(--biome-glow), transparent 62%),
+    linear-gradient(180deg, rgba(10, 12, 22, 0.92), rgba(5, 6, 14, 0.97));
+}
+
 .combat-weather-layer,
 .skill-aura,
 .combat-pressure-layer,

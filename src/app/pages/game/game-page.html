@@ -274,6 +274,19 @@
       </label>
 
       <label class="setting-row">
+        <span class="setting-label">📳 Bildschirm-Wackeln</span>
+        <button
+          type="button"
+          class="setting-toggle"
+          [class.on]="settings.screenShake()"
+          [attr.aria-pressed]="settings.screenShake()"
+          (click)="settings.toggleScreenShake()"
+        >
+          <span class="toggle-knob"></span>
+        </button>
+      </label>
+
+      <label class="setting-row">
         <span class="setting-label">🌗 Hoher Kontrast</span>
         <button
           type="button"

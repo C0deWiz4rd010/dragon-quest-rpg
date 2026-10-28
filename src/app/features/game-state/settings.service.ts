@@ -5,6 +5,7 @@ export type FontScale = 'sm' | 'md' | 'lg';
 interface SettingsState {
   particles: boolean;
   animations: boolean;
+  screenShake: boolean;
   highContrast: boolean;
   fontScale: FontScale;
 }
@@ -14,6 +15,7 @@ const STORAGE_KEY = 'dragonQuestRpgSettings';
 const DEFAULTS: SettingsState = {
   particles: true,
   animations: true,
+  screenShake: true,
   highContrast: false,
   fontScale: 'md',
 };
@@ -30,6 +32,7 @@ export class SettingsService {
 
   readonly particles = signal(this.initial.particles);
   readonly animations = signal(this.initial.animations);
+  readonly screenShake = signal(this.initial.screenShake);
   readonly highContrast = signal(this.initial.highContrast);
   readonly fontScale = signal<FontScale>(this.initial.fontScale);
 
@@ -38,6 +41,7 @@ export class SettingsService {
       const state: SettingsState = {
         particles: this.particles(),
         animations: this.animations(),
+        screenShake: this.screenShake(),
         highContrast: this.highContrast(),
         fontScale: this.fontScale(),
       };
@@ -52,6 +56,10 @@ export class SettingsService {
 
   toggleAnimations(): void {
     this.animations.update((value) => !value);
+  }
+
+  toggleScreenShake(): void {
+    this.screenShake.update((value) => !value);
   }
 
   toggleHighContrast(): void {
@@ -83,6 +91,7 @@ export class SettingsService {
       return {
         particles: parsed.particles ?? DEFAULTS.particles,
         animations: parsed.animations ?? DEFAULTS.animations,
+        screenShake: parsed.screenShake ?? DEFAULTS.screenShake,
         highContrast: parsed.highContrast ?? DEFAULTS.highContrast,
         fontScale: parsed.fontScale ?? DEFAULTS.fontScale,
       };

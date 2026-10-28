@@ -1,5 +1,6 @@
 <div
   class="stage-wrap"
+  [attr.data-biome]="biome()"
   [class.skill-online]="gameState.canUseSkill()"
   [class.riposte-ready]="gameState.player().riposteCharges > 0"
   [class.enemy-heated]="enemyPhaseTone() === 'heated'"

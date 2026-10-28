@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { COMBAT_BALANCE } from './combat-balance';
 import {
+  type AttackElement,
   attackElementMultiplier,
   canBeStunned,
   executeDamageMultiplier,
@@ -50,6 +51,8 @@ export interface CombatAnimation {
   id: number;
   target: CombatAnimationTarget;
   type: CombatAnimationType;
+  /** Element of the attack that caused the animation, used to colour impact effects. */
+  element?: AttackElement;
 }
 
 export interface FloatingCombatText {
@@ -432,7 +435,12 @@ export class Combat {
             : current.telegraphedAbility,
     }));
 
-    this.animate('enemy', hp === 0 ? 'death' : isCrit ? 'crit' : 'hit');
+    this.animate(
+      'enemy',
+      hp === 0 ? 'death' : isCrit ? 'crit' : 'hit',
+      0,
+      this.gameState.playerAttackElement(),
+    );
     this.showFloatingText('enemy', `-${actualDamage}`, isCrit ? 'crit' : 'damage');
 
     if (shieldBlocked) {
@@ -857,11 +865,16 @@ export class Combat {
     }
   }
 
-  private animate(target: CombatAnimationTarget, type: CombatAnimationType, delay = 0): void {
+  private animate(
+    target: CombatAnimationTarget,
+    type: CombatAnimationType,
+    delay = 0,
+    element?: AttackElement,
+  ): void {
     setTimeout(() => {
       const id = ++this.animationId;
 
-      this.animation.set({ id, target, type });
+      this.animation.set({ id, target, type, element });
       setTimeout(() => {
         if (this.animation()?.id === id) {
           this.animation.set(null);
