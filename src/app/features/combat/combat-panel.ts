@@ -250,7 +250,7 @@ export class CombatPanel {
     const combo = this.gameState.player().combo;
     const finisherBonus = 1 + Math.max(0, combo - 1) * COMBAT_BALANCE.special.finisherStep;
     const enemy = this.gameState.enemy();
-    const weakBonus = attackElementMultiplier(enemy, this.gameState.playerAttackElement());
+    const weakBonus = this.combat.elementMultiplier(enemy);
     const base = Math.floor(atk * COMBAT_BALANCE.special.damageMultiplier * finisherBonus * weakBonus);
     const spread = Math.max(1, base - 5);
     return `~${Math.max(1, base - spread)}–${base} DMG`;

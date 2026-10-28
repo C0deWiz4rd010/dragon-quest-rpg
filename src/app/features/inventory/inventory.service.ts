@@ -7,7 +7,7 @@ import { Item } from './item.model';
 import { Pet } from './pet.model';
 import { Player } from './player.model';
 import { Relic } from './relic.model';
-import { randomMissingRelic, RUN_RELICS } from './relics';
+import { randomMissingRelic, relicDefinition, RUN_RELICS } from './relics';
 
 export interface LootToast {
   name: string;
@@ -239,9 +239,13 @@ export class Inventory {
       return false;
     }
 
+    const bonusMana = relicDefinition(relic.id)?.effects.maxMana ?? 0;
+
     this.gameState.updatePlayer((player) => ({
       ...player,
       ownedRelics: [...player.ownedRelics, relic],
+      maxMana: player.maxMana + bonusMana,
+      mana: Math.min(player.maxMana + bonusMana, player.mana + bonusMana),
     }));
     this.gameState.addLog(`${source}: ${relic.name} gefunden.`, 'achievement');
     this.showLootToast({ name: relic.name, icon: relic.icon, kind: 'relic' });

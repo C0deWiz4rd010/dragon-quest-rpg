@@ -21,7 +21,18 @@ import { createLevelUpChoices, GameState, LevelUpChoiceId } from '../game-state/
 import { getBlessingCharges, spendBlessing } from '../game-state/run-blessings';
 import { rollUnlearnedSkill, skillGoldMultiplier, skillXpMultiplier, skillLifestealPct } from '../game-state/skills';
 import { Inventory } from '../inventory/inventory.service';
-import { relicManaRegenBonus, relicSpecialDamageMultiplier } from '../inventory/relics';
+import {
+  relicComboAttackBonus,
+  relicDamageMultiplier,
+  relicExecuteWindowBonus,
+  relicGuardHeal,
+  relicManaRegenBonus,
+  relicOverkillShards,
+  relicPoisonMultiplier,
+  relicSpecialDamageMultiplier,
+  relicSwiftGoldBonus,
+  relicWeatherManaBonus,
+} from '../inventory/relics';
 import { PetTrigger } from '../inventory/pet.model';
 import { Path } from '../path/path.service';
 import { Enemy } from './enemy.model';
@@ -74,8 +85,11 @@ export class Combat {
     const battleUsed = getBlessingCharges(player.activeBlessings, 'battle') > 0;
     const riposteCharges = player.riposteCharges;
     const riposteMultiplier = riposteDamageMultiplier(riposteCharges);
-    const elementBonus = attackElementMultiplier(enemy, this.gameState.playerAttackElement());
-    const baseDamage = calculateDamage(this.gameState.playerAttack(), isCrit);
+    const elementBonus = this.elementMultiplier(enemy);
+    const baseDamage = calculateDamage(
+      this.gameState.playerAttack() + relicComboAttackBonus(player, combo),
+      isCrit,
+    );
     const damage = Math.max(
       1,
       Math.floor(
@@ -143,12 +157,15 @@ export class Combat {
     const riposteCharges = player.riposteCharges;
     const finisherBonus = 1 + Math.max(0, combo - 1) * COMBAT_BALANCE.special.finisherStep;
     const executeBonus = enemy
-      ? executeDamageMultiplier(Math.round((enemy.hp / enemy.maxHp) * 100))
+      ? executeDamageMultiplier(
+          Math.round((enemy.hp / enemy.maxHp) * 100),
+          relicExecuteWindowBonus(player),
+        )
       : 1;
-    const weaknessBonus = attackElementMultiplier(enemy, this.gameState.playerAttackElement());
+    const weaknessBonus = this.elementMultiplier(enemy);
     const specialStun =
       !!enemy &&
-      weaknessBonus > 1 &&
+      attackElementMultiplier(enemy, this.gameState.playerAttackElement()) > 1 &&
       canBeStunned(enemy) &&
       Math.random() < COMBAT_BALANCE.stun.specialChance;
 
@@ -247,6 +264,7 @@ export class Combat {
     this.gameState.updatePlayer((current) => ({
       ...current,
       guarding: true,
+      hp: Math.min(current.maxHp, current.hp + relicGuardHeal(current)),
       mana: Math.min(current.maxMana, current.mana + COMBAT_BALANCE.guard.manaGain),
       skillCooldown: Math.max(0, current.skillCooldown - COMBAT_BALANCE.guard.cooldownReduction),
       combo: 0,
@@ -310,6 +328,14 @@ export class Combat {
     });
     this.gameState.levelUpChoices.set([]);
     this.gameState.addLog('Level-Up-Bonus gewahlt.', 'heal');
+  }
+
+  /** Element interaction plus relic bonuses; used by attacks and UI previews. */
+  elementMultiplier(enemy: Enemy | null): number {
+    const element = this.gameState.playerAttackElement();
+    const base = attackElementMultiplier(enemy, element);
+
+    return base * relicDamageMultiplier(this.gameState.player(), element, base > 1);
   }
 
   private damageEnemy(
@@ -495,10 +521,17 @@ export class Combat {
     );
 
     const releasedAbility = enemy.telegraphedAbility;
-    const newStatus =
+    const rolledStatus =
       releasedAbility?.forceStatus && !player.statusEffect
         ? statusForRole(enemy.role, Math.random())
         : statusFromThreat(enemy.role, weather, player.statusEffect);
+    const newStatus =
+      rolledStatus?.type === 'poison'
+        ? {
+            ...rolledStatus,
+            damagePerRound: Math.ceil(rolledStatus.damagePerRound * relicPoisonMultiplier(player)),
+          }
+        : rolledStatus;
 
     this.gameState.updatePlayer((current) => {
       const hp = Math.max(0, current.hp - reducedDamage);
@@ -628,6 +661,7 @@ export class Combat {
             baseRecovery[action] +
             petManaRegen(player) +
             relicManaRegenBonus(player) +
+            relicWeatherManaBonus(player, this.path.weather()) +
             modifiers.manaRegenDelta +
             (focusState.consumed ? 8 : 0),
         ),
@@ -684,7 +718,13 @@ export class Combat {
     if (!enemy) {
       return;
     }
-    const overkill = overkillReward(overkillDamage, enemy.role);
+    const baseOverkill = overkillReward(overkillDamage, enemy.role);
+    const overkill = {
+      ...baseOverkill,
+      dragonShards:
+        baseOverkill.dragonShards +
+        (overkillDamage > 0 ? relicOverkillShards(this.gameState.player()) : 0),
+    };
     this.gameState.addLog(`${enemy.name} besiegt. +${enemy.gold} Gold, +${enemy.xp} XP.`, 'heal');
     if (overkillDamage > 0) {
       this.gameState.addLog(
@@ -753,7 +793,13 @@ export class Combat {
         learnedSkills,
         gold:
           player.gold +
-          Math.round((enemy.gold + resolvePreservedBonus + overkill.gold) * skillGoldMultiplier(player)),
+          Math.round(
+            (enemy.gold +
+              resolvePreservedBonus +
+              overkill.gold +
+              (enemy.role === 'swift' ? relicSwiftGoldBonus(player) : 0)) *
+              skillGoldMultiplier(player),
+          ),
         mana: Math.min(maxMana, mana + overkill.mana),
         dragonShards: player.dragonShards + overkill.dragonShards,
         totalKills: player.totalKills + 1,

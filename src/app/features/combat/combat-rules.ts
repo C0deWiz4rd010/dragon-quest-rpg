@@ -117,12 +117,13 @@ export function roleFollowUpChance(role: EnemyRole): number {
   }
 }
 
-export function executeDamageMultiplier(enemyHpPercent: number): number {
-  if (enemyHpPercent <= 25) {
+/** `windowBonus` widens both execute windows (Shadow Mantle). */
+export function executeDamageMultiplier(enemyHpPercent: number, windowBonus = 0): number {
+  if (enemyHpPercent <= 25 + windowBonus) {
     return 1.35;
   }
 
-  if (enemyHpPercent <= 40) {
+  if (enemyHpPercent <= 40 + windowBonus) {
     return 1.18;
   }
 

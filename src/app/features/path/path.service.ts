@@ -10,6 +10,7 @@ import { RouteHistoryType } from '../inventory/player.model';
 import { Inventory } from '../inventory/inventory.service';
 import {
   randomMissingRelic,
+  relicRiposteStart,
   relicPrepFocusBonus,
   relicRestHealBonus,
   RUN_RELICS,
@@ -94,6 +95,13 @@ export class Path {
         this.gameState.player().newGamePlus ?? 0,
       );
       this.gameState.setEnemy(enemy);
+      const riposteStart = relicRiposteStart(this.gameState.player());
+      if (riposteStart > 0) {
+        this.gameState.updatePlayer((player) => ({
+          ...player,
+          riposteCharges: Math.min(3, player.riposteCharges + riposteStart),
+        }));
+      }
       this.gameState.addLog(
         `${branch.name}: ${enemy.name} stellt sich dir in den Weg.${branch.eliteRoute ? ' Elite-Beute und Relic-Chance steigen.' : ''}`,
         branch.eliteRoute ? 'achievement' : 'event',
@@ -1107,10 +1115,10 @@ export class Path {
     const player = this.gameState.player();
     const relic = branch.guaranteedRelicId
       ? (RUN_RELICS.find((entry) => entry.id === branch.guaranteedRelicId) ??
-        randomMissingRelic(player) ??
+        randomMissingRelic(player, branch.biome) ??
         RUN_RELICS[Math.floor(Math.random() * RUN_RELICS.length)] ??
         null)
-      : (randomMissingRelic(player) ??
+      : (randomMissingRelic(player, branch.biome) ??
         RUN_RELICS[Math.floor(Math.random() * RUN_RELICS.length)] ??
         null);
 
