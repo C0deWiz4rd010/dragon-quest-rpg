@@ -1,5 +1,6 @@
 import { computed, Injectable, signal } from '@angular/core';
 import { COMBAT_BALANCE } from '../combat/combat-balance';
+import { activeMetaPerks, applyMetaPerks, loadUnlockedAchievementIds } from './meta-progression';
 import { AttackElement, statusAttackMultiplier } from '../combat/combat-rules';
 import { Enemy } from '../combat/enemy.model';
 import {
@@ -360,7 +361,7 @@ export class GameState {
   }
 
   reset(characterClass?: CharacterClassId): void {
-    const base = createInitialPlayer();
+    const base = applyMetaPerks(createInitialPlayer(), loadUnlockedAchievementIds());
     this.player.set(characterClass ? applyCharacterClass(base, characterClass) : base);
     this.enemy.set(null);
     this.gameActive.set(true);
@@ -369,6 +370,15 @@ export class GameState {
     this.logs.set([
       createLogEntry('Neues Abenteuer gestartet. Wahle deinen ersten Pfad.', 'event'),
     ]);
+    this.logMetaPerks();
+  }
+
+  private logMetaPerks(): void {
+    const perks = activeMetaPerks(loadUnlockedAchievementIds());
+
+    if (perks.length) {
+      this.addLog(`Meta-Boni aktiv: ${perks.map((perk) => perk.label).join(' · ')}`, 'achievement');
+    }
   }
 
   /**
@@ -378,7 +388,7 @@ export class GameState {
   startNewGamePlus(): void {
     const prev = this.player();
     const tier = (prev.newGamePlus ?? 0) + 1;
-    const base = createInitialPlayer();
+    const base = applyMetaPerks(createInitialPlayer(), loadUnlockedAchievementIds());
     const carried = prev.characterClass
       ? applyCharacterClass(base, prev.characterClass as CharacterClassId)
       : base;

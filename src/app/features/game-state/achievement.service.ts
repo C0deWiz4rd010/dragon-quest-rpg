@@ -1,6 +1,7 @@
 import { effect, inject, Injectable, signal } from '@angular/core';
 import { GameState } from './game-state.service';
 import { Player } from '../inventory/player.model';
+import { ACHIEVEMENT_STORAGE_KEY } from './meta-progression';
 import { learnedSkills } from './skills';
 
 export interface Achievement {
@@ -11,7 +12,7 @@ export interface Achievement {
   check: (player: Player) => boolean;
 }
 
-const STORAGE_KEY = 'dragonQuestRpgAchievements';
+const STORAGE_KEY = ACHIEVEMENT_STORAGE_KEY;
 
 export const ACHIEVEMENTS: Achievement[] = [
   { id: 'first-blood', name: 'Erstes Blut', icon: '🩸', description: 'Besiege deinen ersten Gegner.', check: (p) => p.totalKills >= 1 },
@@ -43,6 +44,15 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'relic-8', name: 'Kurator', icon: '🗿', description: 'Sammle 8 Relikte.', check: (p) => p.ownedRelics.length >= 8 },
   { id: 'contract-5', name: 'Vertragsprofi', icon: '📜', description: 'Schließe 5 Aufträge ab.', check: (p) => p.completedContracts >= 5 },
   { id: 'contract-15', name: 'Auftragsmeister', icon: '📋', description: 'Schließe 15 Aufträge ab.', check: (p) => p.completedContracts >= 15 },
+  { id: 'relic-all', name: 'Vollständige Sammlung', icon: '🏛', description: 'Sammle alle 18 Relikte.', check: (p) => p.ownedRelics.length >= 18 },
+  { id: 'ng-1', name: 'Noch eine Runde', icon: '🔄', description: 'Starte New Game+.', check: (p) => (p.newGamePlus ?? 0) >= 1 },
+  { id: 'ng-3', name: 'Ewiger Held', icon: '♾', description: 'Erreiche New Game+ 3.', check: (p) => (p.newGamePlus ?? 0) >= 3 },
+  { id: 'ng-boss', name: 'Bezwinger der Neuen Welt', icon: '🌠', description: 'Besiege einen Boss in New Game+.', check: (p) => p.bossKilled && (p.newGamePlus ?? 0) >= 1 },
+  { id: 'overkill-3', name: 'Overkill-Serie', icon: '☄', description: 'Erreiche 3 Overkills in Folge.', check: (p) => p.overkillStreak >= 3 },
+  { id: 'boss-warrior', name: 'Eiserner Bezwinger', icon: '⚔', description: 'Besiege einen Boss als Krieger.', check: (p) => p.bossKilled && p.characterClass === 'warrior' },
+  { id: 'boss-mage', name: 'Arkaner Bezwinger', icon: '🔮', description: 'Besiege einen Boss als Magier.', check: (p) => p.bossKilled && p.characterClass === 'mage' },
+  { id: 'boss-rogue', name: 'Schattenbezwinger', icon: '🗡', description: 'Besiege einen Boss als Schurke.', check: (p) => p.bossKilled && p.characterClass === 'rogue' },
+  { id: 'boss-paladin', name: 'Heiliger Bezwinger', icon: '🛡', description: 'Besiege einen Boss als Paladin.', check: (p) => p.bossKilled && p.characterClass === 'paladin' },
   { id: 'streak-10', name: 'Glückssträhne', icon: '🔥', description: 'Erreiche eine 10er-Routenserie.', check: (p) => p.routeStreak >= 10 },
 ];
 
