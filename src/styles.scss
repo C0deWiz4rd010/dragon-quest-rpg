@@ -62,6 +62,8 @@
   --dq-font-lg: clamp(16px, 3.6vw, 20px);
   --dq-font-xl: clamp(20px, 5vw, 30px);
   --dq-font-scale: 1;
+  /* Smallest text the UI uses (badges, captions); everything below 11px was lifted to this. */
+  --dq-font-micro: 11px;
 }
 
 // --- Accessibility / performance settings toggles ---
@@ -79,7 +81,23 @@ html.dq-no-particles .splash-scanline {
   display: none !important;
 }
 
+/* Colour-blind friendly palette (Okabe-Ito): good/bad read as blue/orange instead of green/red. */
+html.dq-colorblind {
+  --dq-green: #56b4e9;
+  --dq-green-soft: #9fd3f2;
+  --dq-green-deep: #0072b2;
+  --dq-red: #e69f00;
+  --dq-red-soft: #f5c96b;
+  --dq-red-pale: #fbe3b0;
+}
+
 html.dq-high-contrast {
+  --dq-ink-bright: #ffffff;
+  --dq-ink-accent: #ffe27a;
+  --dq-surface-1: rgba(0, 0, 0, 0.96);
+  --dq-surface-2: rgba(0, 0, 0, 0.94);
+  --dq-slate-light: #f1f5f9;
+  --dq-sky-soft: #bae6fd;
   --dq-line-strong: rgba(243, 203, 98, 0.7);
   --dq-line-soft: rgba(255, 255, 255, 0.24);
   --dq-ink-soft: #f1f6ff;
@@ -431,3 +449,39 @@ img {
   }
 }
 /* You can add global styles to this file, and also import other style files */
+// --- Keyboard focus, touch and landscape ---
+:focus-visible {
+  outline: 2px solid var(--dq-yellow);
+  outline-offset: 2px;
+}
+
+html.dq-high-contrast :focus-visible {
+  outline-width: 3px;
+}
+
+html.dq-high-contrast .card-frame,
+html.dq-high-contrast button,
+html.dq-high-contrast [role='dialog'] {
+  border-color: var(--dq-line-strong);
+}
+
+button,
+[role='button'],
+.setting-row {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+@media (pointer: coarse) {
+  button:not(.setting-toggle):not(.tutorial-dot) {
+    min-height: var(--dq-touch);
+  }
+
+  .setting-row {
+    min-height: var(--dq-touch);
+  }
+
+  input[type='range'] {
+    min-height: var(--dq-touch);
+  }
+}

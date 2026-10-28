@@ -61,7 +61,16 @@
                 ]
               }
             ],
-            "styles": ["src/styles.scss"]
+            "styles": [
+              "node_modules/@fontsource/cinzel/latin-400.css",
+              "node_modules/@fontsource/cinzel/latin-700.css",
+              "node_modules/@fontsource/cinzel/latin-900.css",
+              "node_modules/@fontsource/press-start-2p/latin-400.css",
+              "node_modules/@fontsource/roboto/latin-300.css",
+              "node_modules/@fontsource/roboto/latin-400.css",
+              "node_modules/@fontsource/roboto/latin-500.css",
+              "src/styles.scss"
+            ]
           },
           "configurations": {
             "production": {

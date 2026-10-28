@@ -1,3 +1,4 @@
+import { DialogFocus } from '../../../features/a11y/dialog-focus';
 import { ChangeDetectionStrategy, Component, HostListener, computed, inject, output } from '@angular/core';
 
 import { AchievementService } from '../../game-state/achievement.service';
@@ -5,6 +6,7 @@ import { activeMetaPerks } from '../../game-state/meta-progression';
 
 /** In-game manual, achievement gallery and the list of active meta perks. */
 @Component({
+  imports: [DialogFocus],
   selector: 'app-handbook-panel',
   templateUrl: './handbook-panel.html',
   styleUrl: './handbook-panel.scss',

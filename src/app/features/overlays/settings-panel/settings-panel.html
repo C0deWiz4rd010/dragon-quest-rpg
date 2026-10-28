@@ -1,4 +1,4 @@
-  <aside class="settings-panel" aria-label="Einstellungen">
+  <aside class="settings-panel" role="dialog" aria-modal="true" aria-label="Einstellungen" appDialogFocus>
     <button type="button" title="Schliessen" (click)="closed.emit()">✕ Schliessen</button>
     <h2>⚙ Einstellungen</h2>
 
@@ -79,6 +79,19 @@
         [class.on]="settings.screenShake()"
         [attr.aria-pressed]="settings.screenShake()"
         (click)="settings.toggleScreenShake()"
+      >
+        <span class="toggle-knob"></span>
+      </button>
+    </label>
+
+    <label class="setting-row">
+      <span class="setting-label"><span aria-hidden="true">🎨</span> Farbenblind-Palette</span>
+      <button
+        type="button"
+        class="setting-toggle"
+        [class.on]="settings.colorBlind()"
+        [attr.aria-pressed]="settings.colorBlind()"
+        (click)="settings.toggleColorBlind()"
       >
         <span class="toggle-knob"></span>
       </button>

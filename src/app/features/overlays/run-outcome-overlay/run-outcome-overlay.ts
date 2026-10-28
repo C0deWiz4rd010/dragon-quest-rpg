@@ -1,3 +1,4 @@
+import { DialogFocus } from '../../../features/a11y/dialog-focus';
 import { ChangeDetectionStrategy, Component, computed, inject, output } from '@angular/core';
 
 import { GameState } from '../../game-state/game-state.service';
@@ -8,6 +9,7 @@ import { Path } from '../../path/path.service';
 
 /** Victory / defeat summary shown when a run ends. */
 @Component({
+  imports: [DialogFocus],
   selector: 'app-run-outcome-overlay',
   templateUrl: './run-outcome-overlay.html',
   styleUrl: './run-outcome-overlay.scss',

@@ -65,7 +65,7 @@ export class PixiBackground {
 
     // Partikel-Einstellung aus → vorhandene Embers entfernen
     effect(() => {
-      if (!this.settings.particles()) {
+      if (!this.settings.particles() || !this.settings.animations()) {
         this.clearEmbers();
       }
     });
@@ -98,7 +98,7 @@ export class PixiBackground {
     });
 
     // Initiale Embers verteilt über die gesamte Höhe
-    if (this.settings.particles()) {
+    if (this.settings.particles() && this.settings.animations()) {
       for (let i = 0; i < 70; i++) {
         this.spawnEmber(true);
       }
@@ -178,7 +178,7 @@ export class PixiBackground {
     }
 
     // Anzahl aufrecht erhalten
-    if (this.settings.particles()) {
+    if (this.settings.particles() && this.settings.animations()) {
       while (this.embers.length < 70) {
         this.spawnEmber(false);
       }

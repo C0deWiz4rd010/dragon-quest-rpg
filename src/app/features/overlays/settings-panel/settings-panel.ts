@@ -1,3 +1,4 @@
+import { DialogFocus } from '../../../features/a11y/dialog-focus';
 import { ChangeDetectionStrategy, Component, HostListener, inject, output } from '@angular/core';
 
 import { SettingsService } from '../../game-state/settings.service';
@@ -5,6 +6,7 @@ import { TutorialService } from '../../game-state/tutorial.service';
 
 /** Accessibility and effect toggles; closes on Escape. */
 @Component({
+  imports: [DialogFocus],
   selector: 'app-settings-panel',
   templateUrl: './settings-panel.html',
   styleUrl: './settings-panel.scss',

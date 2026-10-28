@@ -137,7 +137,7 @@
 .combat-readout span,
 .actions-header p {
   color: #f0a0a0;
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
   font-weight: 900;
   letter-spacing: 0.14em;
   margin: 0;
@@ -156,7 +156,7 @@
 .combat-readout small,
 .actions-header span {
   color: #cdd8e8;
-  font-size: 9px;
+  font-size: var(--dq-font-micro);
 }
 
 /* ── Action buttons row ──────────────────────────────────────────── */
@@ -191,7 +191,7 @@
   color: var(--dq-ink-soft);
   cursor: pointer;
   display: flex;
-  font-size: 9px;
+  font-size: var(--dq-font-micro);
   font-weight: 700;
   gap: 5px;
   justify-content: center;
@@ -276,7 +276,7 @@
   border-radius: 50%;
   color: #fff;
   display: inline-flex;
-  font-size: 9px;
+  font-size: var(--dq-font-micro);
   font-weight: 900;
   height: 16px;
   justify-content: center;
@@ -291,7 +291,7 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 4px;
   flex-shrink: 0;
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
   padding: 1px 4px;
 }
 
@@ -299,7 +299,7 @@
 .status-badge {
   animation: statusPulse 1.2s ease-in-out infinite;
   border-radius: 6px;
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
   font-weight: 700;
   letter-spacing: 0.06em;
   padding: 2px 7px;
@@ -335,7 +335,7 @@
 .stun-badge,
 .element-badge {
   border-radius: 6px;
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
   font-weight: 800;
   padding: 2px 7px;
   white-space: nowrap;
@@ -366,7 +366,7 @@
   border: 1px solid rgba(56, 189, 248, 0.3);
   border-radius: 6px;
   color: var(--dq-sky-soft);
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
   padding: 2px 7px;
   white-space: nowrap;
 }
@@ -376,7 +376,7 @@
   border: 1px solid rgba(250, 204, 21, 0.28);
   border-radius: 6px;
   color: var(--dq-gold-soft);
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
   font-weight: 800;
   padding: 2px 7px;
   white-space: nowrap;
@@ -389,7 +389,7 @@
   border: 1px solid rgba(239, 68, 68, 0.58);
   border-radius: 6px;
   color: var(--dq-red-soft);
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
   font-weight: 900;
   letter-spacing: 0.08em;
   padding: 2px 7px;
@@ -416,7 +416,7 @@
 
 .combo-meter-label {
   color: var(--dq-slate-light);
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -455,7 +455,7 @@
   border: 1px solid rgba(100, 116, 139, 0.3);
   border-radius: 6px;
   color: var(--dq-ink-muted);
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
   font-weight: 800;
   padding: 2px 7px;
   white-space: nowrap;
@@ -488,21 +488,21 @@
   strong {
     color: var(--dq-red-soft);
     flex-shrink: 0;
-    font-size: 9px;
+    font-size: var(--dq-font-micro);
     letter-spacing: 0.1em;
     text-transform: uppercase;
   }
 
   span:last-child {
     color: var(--dq-red-pale);
-    font-size: 8px;
+    font-size: var(--dq-font-micro);
   }
 }
 
 .riposte-badge,
 .phase-badge {
   border-radius: 6px;
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
   font-weight: 900;
   padding: 2px 7px;
   white-space: nowrap;
@@ -553,7 +553,7 @@
   border: 1px solid rgba(45, 212, 191, 0.28);
   border-radius: 999px;
   color: var(--dq-teal-soft);
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
   font-weight: 800;
   letter-spacing: 0.04em;
   padding: 3px 8px;
@@ -677,7 +677,7 @@
 
   small {
     color: var(--dq-sky-soft);
-    font-size: 7px;
+    font-size: var(--dq-font-micro);
     letter-spacing: 0.04em;
     text-align: center;
 

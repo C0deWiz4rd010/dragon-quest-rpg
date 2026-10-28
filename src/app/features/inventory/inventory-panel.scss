@@ -35,8 +35,8 @@
   gap: 4px;
   padding: 3px 8px;
 
-  i { font-size: 10px; font-style: normal; }
-  small { color: var(--dq-ink-muted, var(--dq-ink-muted)); font-size: 7px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+  i { font-size: var(--dq-font-micro); font-style: normal; }
+  small { color: var(--dq-ink-muted, var(--dq-ink-muted)); font-size: var(--dq-font-micro); font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
 
   &.shards { color: #c4b5fd; }
   &.pots { color: #bbf7d0; }
@@ -48,7 +48,7 @@
   border-radius: 8px;
   color: #e0f2fe;
   cursor: pointer;
-  font-size: 9px;
+  font-size: var(--dq-font-micro);
   font-weight: 800;
   letter-spacing: 0.04em;
   margin-left: auto;
@@ -78,7 +78,7 @@
   border-radius: 7px;
   color: #9fb3c8;
   cursor: pointer;
-  font-size: 10px;
+  font-size: var(--dq-font-micro);
   font-weight: 800;
   letter-spacing: 0.03em;
   padding: 6px 4px;
@@ -135,7 +135,7 @@
 
 .block-head span {
   color: var(--dq-ink-muted);
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
   font-weight: 900;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -143,7 +143,7 @@
 
 .block-head strong {
   color: var(--dq-gold-soft);
-  font-size: 9px;
+  font-size: var(--dq-font-micro);
   font-weight: 800;
 }
 
@@ -207,7 +207,7 @@
 
   strong {
     color: #f1f5f9;
-    font-size: 9px;
+    font-size: var(--dq-font-micro);
     font-weight: 700;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -224,7 +224,7 @@
 
 /* Compact empty states inside the gear tab so all blocks fit */
 .chip-grid .empty-chip {
-  font-size: 9px;
+  font-size: var(--dq-font-micro);
   grid-column: 1 / -1;
   min-height: 28px;
 }
@@ -234,7 +234,7 @@
   --mdc-outlined-button-container-height: 30px;
   --mdc-filled-button-container-height: 30px;
   --mdc-text-button-label-text-size: 9px;
-  font-size: 9px;
+  font-size: var(--dq-font-micro);
   min-width: 0;
   transition: transform 100ms ease;
 
@@ -259,7 +259,7 @@
 
 .section-head span {
   color: var(--dq-ink-muted);
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
   font-weight: 800;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -267,7 +267,7 @@
 
 .section-head strong {
   color: var(--dq-gold-soft);
-  font-size: 10px;
+  font-size: var(--dq-font-micro);
 }
 
 .run-note {
@@ -281,12 +281,12 @@
 
 .run-note strong {
   color: var(--dq-cream);
-  font-size: 9px;
+  font-size: var(--dq-font-micro);
 }
 
 .run-note span {
   color: var(--dq-ink-cool);
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
   line-height: 1.2;
 }
 
@@ -313,14 +313,14 @@
 .resources span {
   color: var(--dq-ink-muted);
   display: block;
-  font-size: 7px;
+  font-size: var(--dq-font-micro);
   text-transform: uppercase;
 }
 
 .resources strong {
   color: #e7edf8;
   display: block;
-  font-size: 10px;
+  font-size: var(--dq-font-micro);
   margin-top: 1px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -345,7 +345,7 @@
 
 .blessing-chip span {
   color: var(--dq-teal-soft);
-  font-size: 7px;
+  font-size: var(--dq-font-micro);
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -353,7 +353,7 @@
 
 .blessing-chip strong {
   color: var(--dq-white-soft);
-  font-size: 9px;
+  font-size: var(--dq-font-micro);
 }
 
 .blessing-empty {
@@ -379,7 +379,7 @@
 
 .history-row span {
   color: var(--dq-ink-muted);
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
   font-weight: 800;
   grid-row: 1 / span 2;
   place-self: center start;
@@ -388,12 +388,12 @@
 
 .history-row strong {
   color: var(--dq-white-soft);
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
 }
 
 .history-row small {
   color: var(--dq-slate-light);
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
 }
 
 .equipment-title {
@@ -405,7 +405,7 @@
 .equipment-title span,
 .equipment-title strong {
   color: var(--dq-sky-pale);
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
   font-weight: 900;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -488,7 +488,7 @@
 .pet-chip span,
 .relic-chip span {
   color: var(--dq-gold-soft);
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
   font-weight: 800;
   text-transform: uppercase;
 }
@@ -496,7 +496,7 @@
 .loadout-chip strong,
 .pet-chip strong,
 .relic-chip strong {
-  font-size: 7px;
+  font-size: var(--dq-font-micro);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -532,7 +532,7 @@
   --mdc-outlined-button-container-height: 26px;
   --mdc-filled-button-container-height: 26px;
   --mdc-tonal-button-container-height: 26px;
-  font-size: 9px;
+  font-size: var(--dq-font-micro);
   min-width: 0;
   transition: transform 100ms ease;
 }
@@ -543,7 +543,7 @@
   min-height: 26px;
 
   .mdc-button__label {
-    font-size: 9px;
+    font-size: var(--dq-font-micro);
   }
 }
 
@@ -552,7 +552,7 @@
   min-height: 30px;
 
   .mdc-button__label {
-    font-size: 9px;
+    font-size: var(--dq-font-micro);
   }
 }
 

@@ -1,6 +1,13 @@
 @if (activeGame(); as game) {
   <div class="mg-backdrop" (click)="skipGame()"></div>
-  <div class="mg-card" (click)="$event.stopPropagation()">
+  <div
+    class="mg-card"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Minispiel"
+    appDialogFocus
+    (click)="$event.stopPropagation()"
+  >
 
     <div class="mg-header">
       <span class="mg-title">

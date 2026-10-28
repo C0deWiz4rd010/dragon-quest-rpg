@@ -46,7 +46,7 @@
 
   strong {
     color: var(--dq-yellow-soft);
-    font-size: 9px;
+    font-size: var(--dq-font-micro);
     font-weight: 900;
     letter-spacing: 0.16em;
     text-transform: uppercase;
@@ -103,7 +103,7 @@
   display: grid;
   gap: 2px;
 
-  strong { color: var(--dq-ink-accent); font-size: 9px; text-transform: uppercase; }
+  strong { color: var(--dq-ink-accent); font-size: var(--dq-font-micro); text-transform: uppercase; }
   span { color: var(--dq-ink-bright); font-size: 12px; }
 }
 

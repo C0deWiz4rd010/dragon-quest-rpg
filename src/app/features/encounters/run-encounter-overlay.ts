@@ -1,7 +1,9 @@
+import { DialogFocus } from '../../features/a11y/dialog-focus';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RunEncounterService } from './run-encounter.service';
 
 @Component({
+  imports: [DialogFocus],
   selector: 'app-run-encounter-overlay',
   standalone: true,
   templateUrl: './run-encounter-overlay.html',

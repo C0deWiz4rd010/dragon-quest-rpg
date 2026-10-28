@@ -5,6 +5,7 @@ export type FontScale = 'sm' | 'md' | 'lg';
 interface SettingsState {
   particles: boolean;
   animations: boolean;
+  colorBlind: boolean;
   screenShake: boolean;
   sound: boolean;
   sfxVolume: number;
@@ -18,6 +19,7 @@ const STORAGE_KEY = 'dragonQuestRpgSettings';
 const DEFAULTS: SettingsState = {
   particles: true,
   animations: true,
+  colorBlind: false,
   screenShake: true,
   sound: true,
   sfxVolume: 0.7,
@@ -38,6 +40,7 @@ export class SettingsService {
 
   readonly particles = signal(this.initial.particles);
   readonly animations = signal(this.initial.animations);
+  readonly colorBlind = signal(this.initial.colorBlind);
   readonly screenShake = signal(this.initial.screenShake);
   readonly sound = signal(this.initial.sound);
   readonly sfxVolume = signal(this.initial.sfxVolume);
@@ -50,6 +53,7 @@ export class SettingsService {
       const state: SettingsState = {
         particles: this.particles(),
         animations: this.animations(),
+        colorBlind: this.colorBlind(),
         screenShake: this.screenShake(),
         sound: this.sound(),
         sfxVolume: this.sfxVolume(),
@@ -68,6 +72,10 @@ export class SettingsService {
 
   toggleAnimations(): void {
     this.animations.update((value) => !value);
+  }
+
+  toggleColorBlind(): void {
+    this.colorBlind.update((value) => !value);
   }
 
   toggleScreenShake(): void {
@@ -102,6 +110,7 @@ export class SettingsService {
     root.classList.toggle('dq-no-particles', !state.particles);
     root.classList.toggle('dq-reduce-motion', !state.animations);
     root.classList.toggle('dq-high-contrast', state.highContrast);
+    root.classList.toggle('dq-colorblind', state.colorBlind);
     root.style.setProperty('--dq-font-scale', FONT_SCALE_VALUE[state.fontScale]);
   }
 
@@ -109,12 +118,13 @@ export class SettingsService {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) {
-        return { ...DEFAULTS };
+        return { ...DEFAULTS, animations: !prefersReducedMotion() };
       }
       const parsed = JSON.parse(raw) as Partial<SettingsState>;
       return {
         particles: parsed.particles ?? DEFAULTS.particles,
-        animations: parsed.animations ?? DEFAULTS.animations,
+        animations: parsed.animations ?? !prefersReducedMotion(),
+        colorBlind: parsed.colorBlind ?? DEFAULTS.colorBlind,
         screenShake: parsed.screenShake ?? DEFAULTS.screenShake,
         sound: parsed.sound ?? DEFAULTS.sound,
         sfxVolume: clampVolume(parsed.sfxVolume ?? DEFAULTS.sfxVolume),
@@ -138,4 +148,13 @@ export class SettingsService {
 
 function clampVolume(value: number): number {
   return Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 0;
+}
+
+/** True when the operating system asks for reduced motion. */
+export function prefersReducedMotion(): boolean {
+  try {
+    return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return false;
+  }
 }

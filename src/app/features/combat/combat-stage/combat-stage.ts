@@ -74,6 +74,20 @@ const ELEMENT_COLORS: Record<AttackElement, number> = {
   none: 0xfb7185,
 };
 
+/** Colours for bars and damage numbers; the colour-blind set avoids red/green pairs. */
+const PALETTE = {
+  default: {
+    hp: [0x4ade80, 0xff5252],
+    enemyHp: [0xf87171, 0xff2222],
+    text: { damage: 0xfb7185, heal: 0x4ade80, crit: 0xfacc15, mana: 0x38bdf8 },
+  },
+  colorBlind: {
+    hp: [0x56b4e9, 0xe69f00],
+    enemyHp: [0xd55e00, 0xcc79a7],
+    text: { damage: 0xe69f00, heal: 0x56b4e9, crit: 0xf0e442, mana: 0xcc79a7 },
+  },
+} as const;
+
 /** Biome flavour for the ground props drawn behind the fighters. */
 const DECOR: Record<PathBiome, { kind: 'rock' | 'bush'; tint: number }> = {
   ember: { kind: 'rock', tint: 0xff9a6a },
@@ -136,6 +150,7 @@ export class CombatStage {
       const mana = this.gameState.playerManaPercent();
       const xp = this.gameState.playerXpPercent();
       const enemyHp = this.gameState.enemyHpPercent();
+      this.settings.colorBlind(); // redraw when the palette changes
       if (!this.app) return;
       this.drawAllBars(hp, mana, xp, enemyHp);
     });
@@ -483,7 +498,9 @@ export class CombatStage {
     const barH = 6;
     const y0 = this.H - 30;
 
-    this.drawBar(this.heroHpBar, pad, y0, halfW, barH, hpPct, 0x4ade80, 0xff5252, 0x081408);
+    const colors = PALETTE[this.settings.colorBlind() ? 'colorBlind' : 'default'];
+
+    this.drawBar(this.heroHpBar, pad, y0, halfW, barH, hpPct, colors.hp[0], colors.hp[1], 0x081408);
     this.drawBar(this.heroManaBar, pad, y0 + 9, halfW, barH, manaPct, 0x38bdf8, 0x38bdf8, 0x021420);
     this.drawBar(this.heroXpBar, pad, y0 + 18, halfW, 4, xpPct, 0xc084fc, 0xc084fc, 0x100820);
     this.drawBar(
@@ -493,8 +510,8 @@ export class CombatStage {
       halfW,
       barH,
       enemyHpPct,
-      0xf87171,
-      0xff2222,
+      colors.enemyHp[0],
+      colors.enemyHp[1],
       0x180404,
     );
   }
@@ -524,12 +541,8 @@ export class CombatStage {
 
   private spawnFloatingText(ft: FloatingCombatText): void {
     if (!this.app) return;
-    const colors: Record<string, number> = {
-      damage: 0xfb7185,
-      heal: 0x4ade80,
-      crit: 0xfacc15,
-      mana: 0x38bdf8,
-    };
+    const colors: Record<string, number> =
+      PALETTE[this.settings.colorBlind() ? 'colorBlind' : 'default'].text;
     const isCrit = ft.tone === 'crit';
     const style = new TextStyle({
       fontSize: isCrit ? 21 : 15,

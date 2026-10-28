@@ -101,7 +101,7 @@
   gap: 3px;
   padding: 8px 4px;
 
-  span { color: var(--dq-ink-muted); font-size: 7px; text-transform: uppercase; }
+  span { color: var(--dq-ink-muted); font-size: var(--dq-font-micro); text-transform: uppercase; }
   strong { color: var(--dq-ink-bright); font-size: 15px; }
 }
 

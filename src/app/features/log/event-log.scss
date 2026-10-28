@@ -20,7 +20,7 @@
   color: #9fb3c8;
   cursor: pointer;
   flex: 1;
-  font-size: 10px;
+  font-size: var(--dq-font-micro);
   font-weight: 700;
   min-height: 28px;
   padding: 4px 8px;
@@ -60,7 +60,7 @@
 
 .entries-empty {
   color: var(--dq-ink-muted, var(--dq-ink-muted));
-  font-size: 10px;
+  font-size: var(--dq-font-micro);
   font-style: italic;
   margin: 8px 4px;
   opacity: 0.7;
@@ -120,7 +120,7 @@
 
 .entry-card strong {
   color: color-mix(in srgb, var(--rail) 60%, #ffffff);
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -128,14 +128,14 @@
 
 .entry-card time {
   color: var(--dq-ink-muted, var(--dq-ink-muted));
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
   font-variant-numeric: tabular-nums;
   margin-left: auto;
 }
 
 .entry-card p {
   color: var(--dq-ink-cool);
-  font-size: 10px;
+  font-size: var(--dq-font-micro);
   line-height: 1.28;
   margin: 0;
 }

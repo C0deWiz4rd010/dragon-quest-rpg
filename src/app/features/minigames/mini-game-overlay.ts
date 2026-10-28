@@ -7,6 +7,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
+import { DialogFocus } from '../../features/a11y/dialog-focus';
 import { MiniGameService, MiniGameType } from './mini-game.service';
 import { PrecisionCanvas } from './precision-canvas/precision-canvas';
 import { ReactionCanvas } from './reaction-canvas/reaction-canvas';
@@ -43,7 +44,7 @@ type MemoryPhase = 'showing' | 'input' | 'result';
 @Component({
   selector: 'app-mini-game-overlay',
   standalone: true,
-  imports: [PrecisionCanvas, ReactionCanvas],
+  imports: [DialogFocus, PrecisionCanvas, ReactionCanvas],
   templateUrl: './mini-game-overlay.html',
   styleUrl: './mini-game-overlay.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

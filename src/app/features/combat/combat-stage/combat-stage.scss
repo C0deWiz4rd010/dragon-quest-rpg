@@ -169,7 +169,7 @@
   border: 1px solid rgba(45, 212, 191, 0.38);
   border-radius: 999px;
   color: var(--dq-teal-soft);
-  font-size: 7px;
+  font-size: var(--dq-font-micro);
   font-weight: 900;
   letter-spacing: 0.08em;
   padding: 3px 7px;
@@ -198,7 +198,7 @@
 
 .fighter-title p {
   color: var(--dq-ink-muted);
-  font-size: 7px;
+  font-size: var(--dq-font-micro);
   font-weight: 800;
   letter-spacing: 0.18em;
   margin: 0;
@@ -276,7 +276,7 @@
 
 .stat-grid dt {
   color: #7f8aa5;
-  font-size: 6px;
+  font-size: var(--dq-font-micro);
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;

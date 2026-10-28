@@ -133,7 +133,7 @@
 
 .splash-eyebrow {
   color: var(--dq-ink-muted);
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
   font-weight: 900;
   letter-spacing: 0.3em;
   margin: 0;
@@ -220,7 +220,7 @@
 
 .class-tagline {
   color: #9fb3c8;
-  font-size: 10px;
+  font-size: var(--dq-font-micro);
   line-height: 1.25;
 }
 
@@ -232,7 +232,7 @@
 
   small {
     color: var(--dq-green-soft);
-    font-size: 9px;
+    font-size: var(--dq-font-micro);
     font-weight: 600;
   }
 }
@@ -319,7 +319,7 @@
 .slot-time {
   color: #9fb3c8;
   font-family: var(--dq-font-body, inherit);
-  font-size: 10px;
+  font-size: var(--dq-font-micro);
   font-weight: 500;
 }
 
@@ -334,7 +334,7 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 999px;
     color: var(--dq-ink-soft);
-    font-size: 9px;
+    font-size: var(--dq-font-micro);
     font-weight: 600;
     padding: 3px 10px;
     transition: border-color 150ms, color 150ms, transform 150ms;
@@ -349,7 +349,7 @@
 
 .splash-version {
   color: var(--dq-ink-muted);
-  font-size: 8px;
+  font-size: var(--dq-font-micro);
   letter-spacing: 0.08em;
   margin: 0;
   opacity: 0.55;

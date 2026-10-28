@@ -6,6 +6,7 @@
     [attr.aria-label]="outcome === 'victory' ? 'Sieg!' : 'Niederlage'"
   >
     <div
+      appDialogFocus
       class="run-outcome-card"
       [class.victory]="outcome === 'victory'"
       [class.defeat]="outcome === 'defeat'"
