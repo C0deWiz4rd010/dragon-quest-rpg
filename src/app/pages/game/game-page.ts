@@ -7,6 +7,7 @@ import {
   isDevMode,
   signal,
 } from '@angular/core';
+import { AudioDirector } from '../../features/audio/audio-director.service';
 import { CombatPanel } from '../../features/combat/combat-panel';
 import { statusIcon } from '../../features/combat/combat-rules';
 import { RunEncounterOverlay } from '../../features/encounters/run-encounter-overlay';
@@ -66,6 +67,8 @@ export class GamePage {
   protected readonly tutorial = inject(TutorialService);
   protected readonly settings = inject(SettingsService);
   private readonly storage = inject(StorageService);
+  // Instantiated for its side effects: it turns game events into sound.
+  protected readonly audioDirector = inject(AudioDirector);
   protected readonly handbookOpen = signal(false);
   protected readonly settingsOpen = signal(false);
   protected readonly mobileTab = signal<MobileTab>('combat');

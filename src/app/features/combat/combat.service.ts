@@ -45,7 +45,14 @@ import { PetTrigger } from '../inventory/pet.model';
 import { Path } from '../path/path.service';
 import { Enemy } from './enemy.model';
 export type CombatAnimationTarget = 'hero' | 'enemy';
-export type CombatAnimationType = 'attack' | 'hit' | 'crit' | 'heal' | 'death' | 'skill';
+export type CombatAnimationType =
+  | 'attack'
+  | 'hit'
+  | 'crit'
+  | 'heal'
+  | 'death'
+  | 'skill'
+  | 'guard';
 
 export interface CombatAnimation {
   id: number;
@@ -281,7 +288,7 @@ export class Combat {
       combo: guardKeepsCombo(current) ? current.combo : 0,
       comboFever: guardKeepsCombo(current) ? current.comboFever : false,
     }));
-    this.animate('hero', 'skill');
+    this.animate('hero', 'guard');
     this.showFloatingText('hero', 'Guard', 'mana');
     this.gameState.addLog(
       'Du gehst in Deckung, tankst Mana und beschleunigst die Drachenklaue.',

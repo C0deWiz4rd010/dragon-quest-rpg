@@ -135,3 +135,18 @@
   }
 }
 
+
+.slider-row {
+  gap: 12px;
+}
+
+.setting-slider {
+  accent-color: var(--dq-gold);
+  flex: 1;
+  max-width: 160px;
+  min-height: 24px;
+
+  &:disabled {
+    opacity: 0.4;
+  }
+}

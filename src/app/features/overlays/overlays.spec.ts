@@ -25,9 +25,9 @@ describe('overlay components', () => {
 
     const toggles = (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('.setting-toggle');
     const before = settings.screenShake();
-    expect(toggles.length).toBeGreaterThanOrEqual(4);
+    expect(toggles.length).toBeGreaterThanOrEqual(5);
 
-    toggles[2].click();
+    toggles[3].click(); // order: Ton, Partikel, Animationen, Wackeln, Kontrast
     expect(settings.screenShake()).toBe(!before);
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));

@@ -53,6 +53,15 @@ export class Path {
   readonly weather = signal<PathWeather>('clear');
 
   readonly currentSegment = computed(() => this.segments()[this.currentDepth()] ?? null);
+
+  /** Biome of the route the player is currently on, if one is selected. */
+  readonly activeBiome = computed(() => {
+    const branchId = this.gameState.selectedBranchId();
+
+    return (
+      this.currentSegment()?.branches.find((branch) => branch.id === branchId)?.biome ?? null
+    );
+  });
   readonly visibleSegments = computed(() => {
     const segments = this.segments();
     const windowSize = 5;

@@ -3,6 +3,49 @@
     <h2>⚙ Einstellungen</h2>
 
     <label class="setting-row">
+      <span class="setting-label"><span aria-hidden="true">🔊</span> Ton</span>
+      <button
+        type="button"
+        class="setting-toggle"
+        [class.on]="settings.sound()"
+        [attr.aria-pressed]="settings.sound()"
+        (click)="settings.toggleSound()"
+      >
+        <span class="toggle-knob"></span>
+      </button>
+    </label>
+
+    <label class="setting-row slider-row">
+      <span class="setting-label"><span aria-hidden="true">💥</span> Effekte</span>
+      <input
+        type="range"
+        class="setting-slider"
+        min="0"
+        max="100"
+        step="5"
+        aria-label="Effektlautstärke"
+        [disabled]="!settings.sound()"
+        [value]="settings.sfxVolume() * 100"
+        (input)="settings.setSfxVolume(+$any($event.target).value / 100)"
+      />
+    </label>
+
+    <label class="setting-row slider-row">
+      <span class="setting-label"><span aria-hidden="true">🎵</span> Musik</span>
+      <input
+        type="range"
+        class="setting-slider"
+        min="0"
+        max="100"
+        step="5"
+        aria-label="Musiklautstärke"
+        [disabled]="!settings.sound()"
+        [value]="settings.musicVolume() * 100"
+        (input)="settings.setMusicVolume(+$any($event.target).value / 100)"
+      />
+    </label>
+
+    <label class="setting-row">
       <span class="setting-label">✨ Partikel-Effekte</span>
       <button
         type="button"

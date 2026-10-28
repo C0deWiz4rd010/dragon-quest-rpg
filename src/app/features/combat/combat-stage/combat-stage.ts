@@ -184,10 +184,7 @@ export class CombatStage {
 
   /** Biome of the route the player is currently fighting on. */
   protected biome(): PathBiome | 'none' {
-    const branchId = this.gameState.selectedBranchId();
-    const segment = this.path.currentSegment();
-
-    return segment?.branches.find((branch) => branch.id === branchId)?.biome ?? 'none';
+    return this.path.activeBiome() ?? 'none';
   }
 
   protected enemyPhaseTone(): 'calm' | 'heated' | 'enraged' {
@@ -595,6 +592,11 @@ export class CombatStage {
         this.spawnParticles(cx, cy, 0x38bdf8, 16);
         this.shakeStage(7, 11);
         this.flashScreen(0x38bdf8, 0.26);
+        break;
+      case 'guard':
+        this.flashTint(sprite, 0x7dd3fc, 260);
+        this.spawnParticles(cx, cy, 0x7dd3fc, 10);
+        this.flashScreen(0x38bdf8, 0.14);
         break;
       case 'death':
         this.playDeath(sprite);

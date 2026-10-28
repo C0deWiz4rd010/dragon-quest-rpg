@@ -6,6 +6,9 @@ interface SettingsState {
   particles: boolean;
   animations: boolean;
   screenShake: boolean;
+  sound: boolean;
+  sfxVolume: number;
+  musicVolume: number;
   highContrast: boolean;
   fontScale: FontScale;
 }
@@ -16,6 +19,9 @@ const DEFAULTS: SettingsState = {
   particles: true,
   animations: true,
   screenShake: true,
+  sound: true,
+  sfxVolume: 0.7,
+  musicVolume: 0.35,
   highContrast: false,
   fontScale: 'md',
 };
@@ -33,6 +39,9 @@ export class SettingsService {
   readonly particles = signal(this.initial.particles);
   readonly animations = signal(this.initial.animations);
   readonly screenShake = signal(this.initial.screenShake);
+  readonly sound = signal(this.initial.sound);
+  readonly sfxVolume = signal(this.initial.sfxVolume);
+  readonly musicVolume = signal(this.initial.musicVolume);
   readonly highContrast = signal(this.initial.highContrast);
   readonly fontScale = signal<FontScale>(this.initial.fontScale);
 
@@ -42,6 +51,9 @@ export class SettingsService {
         particles: this.particles(),
         animations: this.animations(),
         screenShake: this.screenShake(),
+        sound: this.sound(),
+        sfxVolume: this.sfxVolume(),
+        musicVolume: this.musicVolume(),
         highContrast: this.highContrast(),
         fontScale: this.fontScale(),
       };
@@ -60,6 +72,18 @@ export class SettingsService {
 
   toggleScreenShake(): void {
     this.screenShake.update((value) => !value);
+  }
+
+  toggleSound(): void {
+    this.sound.update((value) => !value);
+  }
+
+  setSfxVolume(value: number): void {
+    this.sfxVolume.set(clampVolume(value));
+  }
+
+  setMusicVolume(value: number): void {
+    this.musicVolume.set(clampVolume(value));
   }
 
   toggleHighContrast(): void {
@@ -92,6 +116,9 @@ export class SettingsService {
         particles: parsed.particles ?? DEFAULTS.particles,
         animations: parsed.animations ?? DEFAULTS.animations,
         screenShake: parsed.screenShake ?? DEFAULTS.screenShake,
+        sound: parsed.sound ?? DEFAULTS.sound,
+        sfxVolume: clampVolume(parsed.sfxVolume ?? DEFAULTS.sfxVolume),
+        musicVolume: clampVolume(parsed.musicVolume ?? DEFAULTS.musicVolume),
         highContrast: parsed.highContrast ?? DEFAULTS.highContrast,
         fontScale: parsed.fontScale ?? DEFAULTS.fontScale,
       };
@@ -107,4 +134,8 @@ export class SettingsService {
       /* storage unavailable — ignore */
     }
   }
+}
+
+function clampVolume(value: number): number {
+  return Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 0;
 }
