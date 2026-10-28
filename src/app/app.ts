@@ -3,6 +3,7 @@ import { GamePage } from './pages/game/game-page';
 import { SplashScreen, SplashStartEvent } from './features/splash/splash-screen';
 import { StorageService } from './features/persistence/storage.service';
 import { GameState } from './features/game-state/game-state.service';
+import { AudioService } from './features/audio/audio.service';
 
 @Component({
   selector: 'app-root',
@@ -14,6 +15,8 @@ import { GameState } from './features/game-state/game-state.service';
 export class App {
   private readonly storage = inject(StorageService);
   private readonly gameState = inject(GameState);
+  // Created at startup so the first click on the splash screen can unlock audio.
+  protected readonly audio = inject(AudioService);
 
   protected readonly showSplash = signal(true);
 
