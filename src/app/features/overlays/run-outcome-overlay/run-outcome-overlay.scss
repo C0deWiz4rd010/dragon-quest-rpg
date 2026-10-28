@@ -1,0 +1,152 @@
+:host {
+  display: contents;
+}
+
+/* ═══════════════════════════════════════════════════════
+   RUN OUTCOME OVERLAY
+═══════════════════════════════════════════════════════ */
+.run-outcome-overlay {
+  align-items: center;
+  backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  position: fixed;
+  z-index: 300;
+}
+
+.run-outcome-card {
+  animation: outcomeEnter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border-radius: 20px;
+  max-width: 480px;
+  overflow: hidden;
+  padding: 32px;
+  text-align: center;
+  width: 92vw;
+
+  &.victory {
+    background: linear-gradient(160deg, rgba(18, 28, 14, 0.99), rgba(6, 12, 6, 0.99));
+    border: 1px solid rgba(74, 222, 128, 0.42);
+    box-shadow: 0 0 60px rgba(74, 222, 128, 0.1), 0 28px 64px rgba(0, 0, 0, 0.7);
+  }
+
+  &.defeat {
+    background: linear-gradient(160deg, rgba(28, 12, 12, 0.99), rgba(12, 6, 6, 0.99));
+    border: 1px solid rgba(248, 113, 113, 0.38);
+    box-shadow: 0 0 60px rgba(248, 113, 113, 0.08), 0 28px 64px rgba(0, 0, 0, 0.7);
+  }
+}
+
+.outcome-emblem {
+  font-size: 54px;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.outcome-title {
+  color: var(--dq-ink-bright);
+  font-family: var(--dq-font-display);
+  font-size: clamp(18px, 4vw, 28px);
+  margin: 0 0 6px;
+}
+
+.outcome-sub { color: var(--dq-ink-muted); font-size: 12px; margin: 0 0 20px; }
+
+.outcome-grade-row {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.outcome-grade {
+  animation: gradeReveal 0.55s 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  font-family: var(--dq-font-display);
+  font-size: 60px;
+  font-weight: 900;
+  line-height: 1;
+
+  &[data-grade='S'] { color: #facc15; text-shadow: 0 0 24px rgba(250, 204, 21, 0.7), 0 0 48px rgba(250, 204, 21, 0.3); }
+  &[data-grade='A'] { color: #4ade80; text-shadow: 0 0 20px rgba(74, 222, 128, 0.6); }
+  &[data-grade='B'] { color: #38bdf8; text-shadow: 0 0 18px rgba(56, 189, 248, 0.55); }
+  &[data-grade='C'] { color: #f59e0b; }
+  &[data-grade='D'] { color: #94a3b8; }
+}
+
+.outcome-rank {
+  animation: gradeReveal 0.55s 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: #dce6f5;
+  font-family: var(--dq-font-display);
+  font-size: 13px;
+  padding: 8px 14px;
+}
+
+.outcome-stats-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 24px;
+}
+
+.outcome-stat {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  display: grid;
+  gap: 3px;
+  padding: 8px 4px;
+
+  span { color: var(--dq-ink-muted); font-size: 7px; text-transform: uppercase; }
+  strong { color: var(--dq-ink-bright); font-size: 15px; }
+}
+
+.outcome-restart-btn {
+  background: linear-gradient(135deg, #d4af37, #c9940a);
+  border: 0;
+  border-radius: 12px;
+  color: #0a0e18;
+  cursor: pointer;
+  font-family: var(--dq-font-display);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px 32px;
+  transition: filter 120ms, transform 80ms;
+
+  &:hover { filter: brightness(1.12); }
+  &:active { transform: scale(0.97); }
+}
+
+.outcome-ngplus-btn {
+  background: linear-gradient(135deg, #7c3aed, #a855f7 55%, #6d28d9);
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 0 22px rgba(168, 85, 247, 0.4);
+  color: #f5f3ff;
+  cursor: pointer;
+  font-family: var(--dq-font-display);
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  padding: 12px 32px;
+  transition: filter 120ms, transform 80ms;
+
+  &:hover { filter: brightness(1.12); }
+  &:active { transform: scale(0.97); }
+}
+
+
+@keyframes outcomeEnter {
+  from { opacity: 0; transform: scale(0.86) translateY(28px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes gradeReveal {
+  from { opacity: 0; transform: scale(0.4) rotate(-12deg); }
+  to { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+

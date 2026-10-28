@@ -1,0 +1,22 @@
+@if (inventory.lastLoot(); as loot) {
+  <div class="loot-toast" role="status" aria-live="polite">
+    <span class="loot-toast-icon">{{ loot.icon }}</span>
+    <div class="loot-toast-text">
+      <strong>{{
+        loot.kind === 'pet' ? '🐾 Begleiter!' :
+        loot.kind === 'relic' ? '🔮 Relic!' : '🎁 Item!'
+      }}</strong>
+      <span>{{ loot.name }}</span>
+    </div>
+  </div>
+}
+@if (achievements.recentUnlock(); as ach) {
+  <div class="achievement-toast" role="status" aria-live="polite">
+    <span class="ach-badge" aria-hidden="true">{{ ach.icon }}</span>
+    <div class="ach-body">
+      <strong>Erfolg freigeschaltet</strong>
+      <span class="ach-name">{{ ach.name }}</span>
+      <span class="ach-desc">{{ ach.description }}</span>
+    </div>
+  </div>
+}

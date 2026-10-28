@@ -1,0 +1,50 @@
+@if (gameState.runOutcome(); as outcome) {
+  <div
+    class="run-outcome-overlay"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="outcome === 'victory' ? 'Sieg!' : 'Niederlage'"
+  >
+    <div
+      class="run-outcome-card"
+      [class.victory]="outcome === 'victory'"
+      [class.defeat]="outcome === 'defeat'"
+    >
+      <div class="outcome-emblem">{{ outcome === 'victory' ? '🏆' : '💀' }}</div>
+      <h2 class="outcome-title">
+        {{ outcome === 'victory' ? 'Sieg gesichert!' : 'Gefallen im Kampf' }}
+      </h2>
+      <p class="outcome-sub">
+        {{ outcome === 'victory' ? 'Der Drachenkönig liegt besiegt.' : 'Du hast dein Bestes gegeben.' }}
+      </p>
+      <div class="outcome-grade-row">
+        <div class="outcome-grade" [attr.data-grade]="gameState.runGrade()">
+          {{ gameState.runGrade() }}
+        </div>
+        <div class="outcome-rank">{{ gameState.dragonRank() }}</div>
+      </div>
+      <div class="outcome-stats-grid">
+        <div class="outcome-stat"><span>Level</span><strong>{{ player().level }}</strong></div>
+        <div class="outcome-stat"><span>Kills</span><strong>{{ player().totalKills }}</strong></div>
+        <div class="outcome-stat"><span>Elite</span><strong>{{ player().eliteKills }}</strong></div>
+        <div class="outcome-stat"><span>Gold</span><strong>{{ player().gold }}</strong></div>
+        <div class="outcome-stat"><span>💎 Shards</span><strong>{{ player().dragonShards }}</strong></div>
+        <div class="outcome-stat"><span>Combo</span><strong>{{ player().maxCombo }}x</strong></div>
+        <div class="outcome-stat"><span>Riposte</span><strong>{{ player().perfectGuards }}</strong></div>
+        <div class="outcome-stat"><span>Overkill</span><strong>{{ player().totalOverkillDamage }}</strong></div>
+        <div class="outcome-stat"><span>Pfade</span><strong>{{ player().completedPaths }}</strong></div>
+        <div class="outcome-stat"><span>Prep</span><strong>{{ gameState.bossPrepScore() }}%</strong></div>
+        <div class="outcome-stat"><span>MiniGames</span><strong>{{ player().miniGamesWon }}</strong></div>
+        <div class="outcome-stat"><span>Tiefe</span><strong>{{ path.currentDepth() + 1 }}</strong></div>
+      </div>
+      @if (outcome === 'victory') {
+        <button type="button" class="outcome-ngplus-btn" (click)="newGamePlus.emit()">
+          ⚔ New Game+ {{ (player().newGamePlus ?? 0) + 1 }}
+        </button>
+      }
+      <button type="button" class="outcome-restart-btn" (click)="restart.emit()">
+        ↺ Neuer Run
+      </button>
+    </div>
+  </div>
+}

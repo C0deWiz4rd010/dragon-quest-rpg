@@ -242,249 +242,27 @@
   </section>
 
   <!-- ── SETTINGS OVERLAY ─────────────────────────────────────── -->
-  @if (settingsOpen()) {
-    <aside class="settings-panel" aria-label="Einstellungen">
-      <button type="button" title="Schliessen" (click)="settingsOpen.set(false)">✕ Schliessen</button>
-      <h2>⚙ Einstellungen</h2>
-
-      <label class="setting-row">
-        <span class="setting-label">✨ Partikel-Effekte</span>
-        <button
-          type="button"
-          class="setting-toggle"
-          [class.on]="settings.particles()"
-          [attr.aria-pressed]="settings.particles()"
-          (click)="settings.toggleParticles()"
-        >
-          <span class="toggle-knob"></span>
-        </button>
-      </label>
-
-      <label class="setting-row">
-        <span class="setting-label">🎞 Animationen</span>
-        <button
-          type="button"
-          class="setting-toggle"
-          [class.on]="settings.animations()"
-          [attr.aria-pressed]="settings.animations()"
-          (click)="settings.toggleAnimations()"
-        >
-          <span class="toggle-knob"></span>
-        </button>
-      </label>
-
-      <label class="setting-row">
-        <span class="setting-label">📳 Bildschirm-Wackeln</span>
-        <button
-          type="button"
-          class="setting-toggle"
-          [class.on]="settings.screenShake()"
-          [attr.aria-pressed]="settings.screenShake()"
-          (click)="settings.toggleScreenShake()"
-        >
-          <span class="toggle-knob"></span>
-        </button>
-      </label>
-
-      <label class="setting-row">
-        <span class="setting-label">🌗 Hoher Kontrast</span>
-        <button
-          type="button"
-          class="setting-toggle"
-          [class.on]="settings.highContrast()"
-          [attr.aria-pressed]="settings.highContrast()"
-          (click)="settings.toggleHighContrast()"
-        >
-          <span class="toggle-knob"></span>
-        </button>
-      </label>
-
-      <div class="setting-row">
-        <span class="setting-label">🔠 UI-Größe</span>
-        <div class="font-scale-group">
-          <button
-            type="button"
-            class="font-scale-btn"
-            [class.active]="settings.fontScale() === 'sm'"
-            (click)="settings.setFontScale('sm')"
-          >
-            A−
-          </button>
-          <button
-            type="button"
-            class="font-scale-btn"
-            [class.active]="settings.fontScale() === 'md'"
-            (click)="settings.setFontScale('md')"
-          >
-            A
-          </button>
-          <button
-            type="button"
-            class="font-scale-btn"
-            [class.active]="settings.fontScale() === 'lg'"
-            (click)="settings.setFontScale('lg')"
-          >
-            A+
-          </button>
-        </div>
-      </div>
-
-      <button type="button" class="settings-tutorial-btn" (click)="settingsOpen.set(false); tutorial.open()">
-        📘 Tutorial erneut ansehen
-      </button>
-    </aside>
+@if (settingsOpen()) {
+    <app-settings-panel (closed)="settingsOpen.set(false)" />
   }
 
   <!-- ── HANDBOOK OVERLAY ─────────────────────────────────────── -->
-  @if (handbookOpen()) {
-    <aside class="handbook" aria-label="Handbuch">
-      <button type="button" title="Schliessen" (click)="handbookOpen.set(false)">✕ Schliessen</button>
-      <h2>📖 Handbuch</h2>
-      <p><strong>Ziel:</strong> Besiege den Boss in Tiefe 5, 10, 15 und überlebe so lang wie möglich.</p>
-      <p><strong>Pfadwahl:</strong> Branches zeigen Wetter, Risiko und Reward-Tendenz. Gefährliche Wege lohnen mehr, Spezialrouten liefern Prep.</p>
-      <p><strong>Spezialrouten:</strong> Händler reagieren auf deinen Bedarf, Schmieden heben deine Kampfwerte an, Sanktuarien geben Resolve und Blessings.</p>
-      <p><strong>Gegnerrollen:</strong> Bruiser schlagen hart, Swift sind schneller belohnt, Hexer legen Status, Elite und Boss geben hohe Rewards.</p>
-      <p><strong>Wetter:</strong> 🌧 Regen gibt Mana, ⛈ Sturm lässt Gegner verfehlen, ❄ Schnee stärkt DEF, 🌋 Asche brennt, ✨ Aura stärkt Krits, 🌫 Nebel senkt Krits.</p>
-      <p><strong>Combat:</strong> Combo stärkt normale Angriffe und den Drachenklaue-Finisher. Deckung gibt Mana und Cooldown-Tempo.</p>
-      <p><strong>Riposte ⚡:</strong> Gute Deckung baut Konter-Ladungen auf. Der nächste Angriff oder Finisher entlädt sie für Bonus-Schaden.</p>
-      <p><strong>Overkill:</strong> Sehr starke Kill-Treffer geben Bonus-Mana, Extra-Gold und bei hohen Werten Dragon Shards 💎.</p>
-      <p><strong>Blessings:</strong> Kampfrausch, Aegis, Fokuslicht, Glückssegen und Lebenskern verknüpfen Karte, Heilung und Kampf enger.</p>
-      <p><strong>Boss-Prep:</strong> HP, Mana, Resolve, Blessings, Relics und Shards speisen den Prep-Score. Vor Bossen lohnt sich gezielte Vorbereitung.</p>
-      <p><strong>Resolve:</strong> Der Notfallzug reinigt Status, heilt, gibt Mana und verhindert einen Gegenschlag. Aufträge füllen Resolve wieder auf.</p>
-
-      <h2 class="handbook-ach-title">
-        🏅 Erfolge
-        <span class="handbook-ach-count">
-          {{ achievements.unlockedCount() }} / {{ achievements.all.length }}
-        </span>
-      </h2>
-      <div class="achievement-grid">
-        @for (ach of achievements.all; track ach.id) {
-          <div
-            class="achievement-cell"
-            [class.locked]="!achievements.isUnlocked(ach.id)"
-            [title]="ach.description"
-          >
-            <span class="achievement-cell-icon" aria-hidden="true">
-              {{ achievements.isUnlocked(ach.id) ? ach.icon : '🔒' }}
-            </span>
-            <span class="achievement-cell-name">{{ ach.name }}</span>
-          </div>
-        }
-      </div>
-    </aside>
+@if (handbookOpen()) {
+    <app-handbook-panel (closed)="handbookOpen.set(false)" />
   }
 
   <!-- ── LOOT TOAST ───────────────────────────────────────────── -->
-  @if (inventory.lastLoot(); as loot) {
-    <div class="loot-toast" role="status" aria-live="polite">
-      <span class="loot-toast-icon">{{ loot.icon }}</span>
-      <div class="loot-toast-text">
-        <strong>{{
-          loot.kind === 'pet' ? '🐾 Begleiter!' :
-          loot.kind === 'relic' ? '🔮 Relic!' : '🎁 Item!'
-        }}</strong>
-        <span>{{ loot.name }}</span>
-      </div>
-    </div>
-  }
+<app-toast-layer />
 
   <!-- ── RUN OUTCOME OVERLAY ──────────────────────────────────── -->
-  @if (gameState.runOutcome(); as outcome) {
-    <div
-      class="run-outcome-overlay"
-      role="dialog"
-      aria-modal="true"
-      [attr.aria-label]="outcome === 'victory' ? 'Sieg!' : 'Niederlage'"
-    >
-      <div
-        class="run-outcome-card"
-        [class.victory]="outcome === 'victory'"
-        [class.defeat]="outcome === 'defeat'"
-      >
-        <div class="outcome-emblem">{{ outcome === 'victory' ? '🏆' : '💀' }}</div>
-        <h2 class="outcome-title">
-          {{ outcome === 'victory' ? 'Sieg gesichert!' : 'Gefallen im Kampf' }}
-        </h2>
-        <p class="outcome-sub">
-          {{ outcome === 'victory' ? 'Der Drachenkönig liegt besiegt.' : 'Du hast dein Bestes gegeben.' }}
-        </p>
-        <div class="outcome-grade-row">
-          <div class="outcome-grade" [attr.data-grade]="gameState.runGrade()">
-            {{ gameState.runGrade() }}
-          </div>
-          <div class="outcome-rank">{{ gameState.dragonRank() }}</div>
-        </div>
-        <div class="outcome-stats-grid">
-          <div class="outcome-stat"><span>Level</span><strong>{{ player().level }}</strong></div>
-          <div class="outcome-stat"><span>Kills</span><strong>{{ player().totalKills }}</strong></div>
-          <div class="outcome-stat"><span>Elite</span><strong>{{ player().eliteKills }}</strong></div>
-          <div class="outcome-stat"><span>Gold</span><strong>{{ player().gold }}</strong></div>
-          <div class="outcome-stat"><span>💎 Shards</span><strong>{{ player().dragonShards }}</strong></div>
-          <div class="outcome-stat"><span>Combo</span><strong>{{ player().maxCombo }}x</strong></div>
-          <div class="outcome-stat"><span>Riposte</span><strong>{{ player().perfectGuards }}</strong></div>
-          <div class="outcome-stat"><span>Overkill</span><strong>{{ player().totalOverkillDamage }}</strong></div>
-          <div class="outcome-stat"><span>Pfade</span><strong>{{ player().completedPaths }}</strong></div>
-          <div class="outcome-stat"><span>Prep</span><strong>{{ gameState.bossPrepScore() }}%</strong></div>
-          <div class="outcome-stat"><span>MiniGames</span><strong>{{ player().miniGamesWon }}</strong></div>
-          <div class="outcome-stat"><span>Tiefe</span><strong>{{ path.currentDepth() + 1 }}</strong></div>
-        </div>
-        @if (outcome === 'victory') {
-          <button type="button" class="outcome-ngplus-btn" (click)="startNewGamePlus()">
-            ⚔ New Game+ {{ (player().newGamePlus ?? 0) + 1 }}
-          </button>
-        }
-        <button type="button" class="outcome-restart-btn" (click)="resetRun()">
-          ↺ Neuer Run
-        </button>
-      </div>
-    </div>
+@if (gameState.runOutcome()) {
+    <app-run-outcome-overlay (restart)="resetRun()" (newGamePlus)="startNewGamePlus()" />
   }
 </main>
 
 <app-mini-game-overlay />
 <app-run-encounter-overlay />
 
-@if (achievements.recentUnlock(); as ach) {
-  <div class="achievement-toast" role="status" aria-live="polite">
-    <span class="ach-badge" aria-hidden="true">{{ ach.icon }}</span>
-    <div class="ach-body">
-      <strong>Erfolg freigeschaltet</strong>
-      <span class="ach-name">{{ ach.name }}</span>
-      <span class="ach-desc">{{ ach.description }}</span>
-    </div>
-  </div>
-}
 
-@if (tutorial.active()) {
-  <div class="tutorial-scrim" role="dialog" aria-modal="true" aria-label="Tutorial">
-    <div class="tutorial-card">
-      <button
-        type="button"
-        class="tutorial-skip"
-        title="Tutorial überspringen"
-        (click)="tutorial.finish()"
-      >
-        ✕ Überspringen
-      </button>
-      <span class="tutorial-icon" aria-hidden="true">{{ tutorial.currentStep().icon }}</span>
-      <h2 class="tutorial-title">{{ tutorial.currentStep().title }}</h2>
-      <p class="tutorial-body">{{ tutorial.currentStep().body }}</p>
 
-      <div class="tutorial-dots" aria-hidden="true">
-        @for (step of tutorial.steps; track $index) {
-          <span class="tutorial-dot" [class.active]="$index === tutorial.stepIndex()"></span>
-        }
-      </div>
-
-      <div class="tutorial-nav">
-        @if (tutorial.stepIndex() > 0) {
-          <button type="button" class="tutorial-btn ghost" (click)="tutorial.back()">Zurück</button>
-        }
-        <button type="button" class="tutorial-btn primary" (click)="tutorial.next()">
-          {{ tutorial.isLastStep() ? 'Los geht’s!' : 'Weiter' }}
-        </button>
-      </div>
-    </div>
-  </div>
-}
+<app-tutorial-overlay />

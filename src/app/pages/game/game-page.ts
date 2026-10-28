@@ -22,6 +22,11 @@ import { PathBoard } from '../../features/path/path-board';
 import { routeSynergyPreview } from '../../features/path/path-advisor';
 import { Path, PathWeather } from '../../features/path/path.service';
 import { StorageService } from '../../features/persistence/storage.service';
+import { HandbookPanel } from '../../features/overlays/handbook-panel/handbook-panel';
+import { RunOutcomeOverlay } from '../../features/overlays/run-outcome-overlay/run-outcome-overlay';
+import { SettingsPanel } from '../../features/overlays/settings-panel/settings-panel';
+import { ToastLayer } from '../../features/overlays/toast-layer/toast-layer';
+import { TutorialOverlay } from '../../features/overlays/tutorial-overlay/tutorial-overlay';
 import { PixiBackground } from '../../features/pixi/pixi-background/pixi-background';
 
 export type MobileTab = 'combat' | 'path' | 'supply' | 'log';
@@ -38,11 +43,16 @@ declare global {
   imports: [
     CombatPanel,
     EventLog,
+    HandbookPanel,
     InventoryPanel,
     PathBoard,
     MiniGameOverlay,
     PixiBackground,
     RunEncounterOverlay,
+    RunOutcomeOverlay,
+    SettingsPanel,
+    ToastLayer,
+    TutorialOverlay,
   ],
   templateUrl: './game-page.html',
   styleUrl: './game-page.scss',
