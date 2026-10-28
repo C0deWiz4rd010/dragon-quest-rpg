@@ -23,6 +23,8 @@ export interface PathBranch {
   icon: string;
   assetUrl?: string;
   sprite?: UnitSprite;
+  /** Hue rotation (degrees) applied to the enemy sprite on the route map. */
+  enemyHue?: number;
   description: string;
   threat: number;
   riskLabel?: string;

@@ -22,6 +22,10 @@ export interface Enemy {
   xp: number;
   icon: string;
   assetUrl?: string;
+  /** Hue rotation (degrees) that recolours shared sprites so enemies look distinct. */
+  hue?: number;
+  /** Size multiplier on the battlefield; bosses and elites stand taller. */
+  scale?: number;
   sprite?: UnitSprite;
   level: number;
   elite: boolean;

@@ -32,7 +32,33 @@
               {
                 "glob": "**/*",
                 "input": "src/assets",
-                "output": "assets"
+                "output": "assets",
+                "ignore": [
+                  "1bitpack_kenney_1.2/**",
+                  "kenney_tiny-battle/**",
+                  "kenney_tinyDungeon/Tiled/**",
+                  "kenney_tinyDungeon/Tilemap/**",
+                  "kenney_tinyDungeon/*.png",
+                  "**/*.aseprite",
+                  "**/*.url",
+                  "**/Buildings/**",
+                  "**/Terrain/Tileset/**",
+                  "**/Terrain/Resources/**",
+                  "**/Terrain/Decorations/Clouds/**",
+                  "**/Terrain/Decorations/Rocks in the Water/**",
+                  "**/Terrain/Decorations/Rubber Duck/**",
+                  "**/UI Elements/UI Banners from the store page/**",
+                  "**/UI Elements/UI Elements/{Banners,Bars,Buttons,Cursors,Human Avatars,Ribbons,Swords,Wood Table}/**",
+                  "**/Units/**/*Run*.png",
+                  "**/Units/**/*_Defence.png",
+                  "**/Units/**/*Gold.png",
+                  "**/Units/**/*Meat.png",
+                  "**/Units/**/*Wood.png",
+                  "**/Units/**/*Idle Pickaxe.png",
+                  "**/Units/**/*Interact Pickaxe.png",
+                  "**/Units/**/*Heal_Effect.png",
+                  "**/Particle FX/Water Splash.png"
+                ]
               }
             ],
             "styles": ["src/styles.scss"]

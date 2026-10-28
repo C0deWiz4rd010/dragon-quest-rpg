@@ -18,6 +18,7 @@ export const ENEMY_BLUEPRINTS: Record<
     assetUrl: assets.units.slime.idle,
     level: 1,
     elite: false,
+    scale: 0.85,
   },
   bat: {
     name: 'Vampirfledermaus',
@@ -78,6 +79,7 @@ export const ENEMY_BLUEPRINTS: Record<
     assetUrl: assets.units.ancient.idle,
     level: 7,
     elite: true,
+    scale: 1.2,
   },
   boss: {
     name: 'Drachenkonig',
@@ -91,6 +93,7 @@ export const ENEMY_BLUEPRINTS: Record<
     level: 8,
     elite: false,
     isBoss: true,
+    scale: 1.35,
   },
   'frost-wyrm': {
     name: 'Frostwyrm Glacia',
@@ -105,6 +108,8 @@ export const ENEMY_BLUEPRINTS: Record<
     elite: false,
     isBoss: true,
     signature: { name: 'Eisiger Atem', damageMultiplier: 1.5, forceStatus: true },
+    hue: 150,
+    scale: 1.35,
   },
   'storm-titan': {
     name: 'Sturmtitan Voltarr',
@@ -119,6 +124,8 @@ export const ENEMY_BLUEPRINTS: Record<
     elite: false,
     isBoss: true,
     signature: { name: 'Donnerschlag', damageMultiplier: 1.9 },
+    hue: 70,
+    scale: 1.4,
   },
   // === Ember biome ===
   'fire-sprite': {
@@ -156,6 +163,7 @@ export const ENEMY_BLUEPRINTS: Record<
     assetUrl: assets.units.magmaDrake.idle,
     level: 6,
     elite: true,
+    scale: 1.2,
   },
   // === Grove biome ===
   'forest-wisp': {
@@ -267,6 +275,7 @@ export const ENEMY_BLUEPRINTS: Record<
     assetUrl: assets.units.blizzardElemental.idle,
     level: 7,
     elite: true,
+    scale: 1.2,
   },
   // === Storm biome ===
   'thunder-hawk': {
@@ -280,6 +289,7 @@ export const ENEMY_BLUEPRINTS: Record<
     assetUrl: assets.units.thunderHawk.idle,
     level: 3,
     elite: false,
+    hue: 190,
   },
   'storm-djinn': {
     name: 'Sturmdschinn',
@@ -304,6 +314,7 @@ export const ENEMY_BLUEPRINTS: Record<
     assetUrl: assets.units.cycloneSerpent.idle,
     level: 7,
     elite: true,
+    scale: 1.2,
   },
   // === Sanctum biome ===
   'holy-sentinel': {
@@ -317,6 +328,8 @@ export const ENEMY_BLUEPRINTS: Record<
     assetUrl: assets.units.holySentinel.idle,
     level: 4,
     elite: false,
+    hue: 35,
+    scale: 1.1,
   },
   'rune-golem': {
     name: 'Runengolem',
@@ -329,6 +342,7 @@ export const ENEMY_BLUEPRINTS: Record<
     assetUrl: assets.units.runeGolem.idle,
     level: 7,
     elite: true,
+    scale: 1.15,
   },
   'void-walker': {
     name: 'Leerenwandler',
@@ -341,6 +355,7 @@ export const ENEMY_BLUEPRINTS: Record<
     assetUrl: assets.units.voidWalker.idle,
     level: 7,
     elite: true,
+    scale: 1.15,
   },
 };
 
@@ -412,6 +427,8 @@ export function hydrateEnemyVisuals(enemy: Enemy | null): Enemy | null {
     role: enemy.role ?? blueprint.role,
     assetUrl: enemy.assetUrl ?? blueprint.assetUrl,
     sprite: enemy.sprite ?? blueprint.sprite,
+    hue: enemy.hue ?? blueprint.hue,
+    scale: enemy.scale ?? blueprint.scale,
     weakness: enemy.weakness ?? profileFor(key ?? 'slime', enemy.role ?? blueprint.role).weakness,
     resistance:
       enemy.resistance ?? profileFor(key ?? 'slime', enemy.role ?? blueprint.role).resistance ?? null,

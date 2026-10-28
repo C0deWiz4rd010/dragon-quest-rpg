@@ -35,14 +35,25 @@ export const assets = {
     runeGolem: { idle: `${tinySwords}/Units/Blue%20Units/Monk/Idle.png`, frames: 8 },
     voidWalker: { idle: `${tinySwords}/Units/Black%20Units/Monk/Idle.png`, frames: 8 },
   },
+  // Every node type has its own tile so routes are readable at a glance.
   nodes: {
-    treasure: `${tinyDungeon}/Tiles/tile_0044.png`,
-    shrine: `${tinyDungeon}/Tiles/tile_0068.png`,
-    camp: `${tinyDungeon}/Tiles/tile_0087.png`,
+    treasure: `${tinyDungeon}/Tiles/tile_0089.png`,
+    shrine: `${tinyDungeon}/Tiles/tile_0032.png`,
+    camp: `${tinyDungeon}/Tiles/tile_0029.png`,
     boss: `${tinyDungeon}/Tiles/tile_0047.png`,
-    forge: `${tinyDungeon}/Tiles/tile_0044.png`,
+    forge: `${tinyDungeon}/Tiles/tile_0064.png`,
     merchant: `${tinyDungeon}/Tiles/tile_0087.png`,
-    sanctuary: `${tinyDungeon}/Tiles/tile_0068.png`,
+    sanctuary: `${tinyDungeon}/Tiles/tile_0044.png`,
+  },
+  fx: {
+    fire: `${tinySwords}/Particle%20FX/Fire_01.png`,
+    explosion: `${tinySwords}/Particle%20FX/Explosion_01.png`,
+    explosionBig: `${tinySwords}/Particle%20FX/Explosion_02.png`,
+    dust: `${tinySwords}/Particle%20FX/Dust_01.png`,
+  },
+  decor: {
+    rocks: [1, 2, 3, 4].map((n) => `${tinySwords}/Terrain/Decorations/Rocks/Rock${n}.png`),
+    bushes: [1, 2, 3, 4].map((n) => `${tinySwords}/Terrain/Decorations/Bushes/Bushe${n}.png`),
   },
   ui: {
     paper: `${tinySwords}/UI%20Elements/UI%20Elements/Papers/SpecialPaper.png`,
@@ -51,3 +62,23 @@ export const assets = {
 } as const;
 
 export type UnitSprite = (typeof assets.units)[keyof typeof assets.units];
+
+/**
+ * Maps an idle sheet to the sheet that shows the unit attacking, or null if none exists.
+ * Tiny Swords names its sheets consistently, so the mapping is a pure string rewrite.
+ */
+export function attackSheetFor(idleUrl: string): string | null {
+  const url = idleUrl;
+
+  if (url.includes('Warrior_Idle.png')) return url.replace('Warrior_Idle.png', 'Warrior_Attack1.png');
+  if (url.includes('Archer_Idle.png')) return url.replace('Archer_Idle.png', 'Archer_Shoot.png');
+  if (url.includes('Lancer_Idle.png')) return url.replace('Lancer_Idle.png', 'Lancer_Right_Attack.png');
+  if (/\/Monk\/Idle\.png$/.test(url)) return url.replace('/Idle.png', '/Heal.png');
+
+  const pawn = /Pawn_Idle(?:%20(Axe|Hammer|Knife|Pickaxe))?\.png$/.exec(url);
+  if (pawn) {
+    return url.replace(/Pawn_Idle(?:%20\w+)?\.png$/, `Pawn_Interact%20${pawn[1] ?? 'Hammer'}.png`);
+  }
+
+  return null;
+}

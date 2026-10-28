@@ -145,6 +145,7 @@
                         [attr.aria-label]="branch.name"
                         [style.--frames]="sprite.frames"
                         [style.background-image]="'url(' + sprite.idle + ')'"
+                        [style.filter]="branch.enemyHue ? 'hue-rotate(' + branch.enemyHue + 'deg)' : null"
                       ></span>
                     } @else if (branch.assetUrl) {
                       <img [src]="branch.assetUrl" [alt]="branch.name" />
