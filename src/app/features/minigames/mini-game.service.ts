@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 
-export type MiniGameType = 'reaction' | 'memory' | 'precision' | 'typing';
+export type MiniGameType = 'reaction' | 'memory' | 'precision' | 'typing' | 'sums';
 
 export interface MiniGameResult {
   won: boolean;
@@ -9,6 +9,8 @@ export interface MiniGameResult {
 
 export interface ActiveMiniGame {
   type: MiniGameType;
+  /** Route depth; deeper routes make the game harder. */
+  depth: number;
   onComplete: (result: MiniGameResult) => void;
 }
 
@@ -16,8 +18,8 @@ export interface ActiveMiniGame {
 export class MiniGameService {
   readonly activeGame = signal<ActiveMiniGame | null>(null);
 
-  launch(type: MiniGameType, onComplete: (result: MiniGameResult) => void): void {
-    this.activeGame.set({ type, onComplete });
+  launch(type: MiniGameType, onComplete: (result: MiniGameResult) => void, depth = 0): void {
+    this.activeGame.set({ type, depth, onComplete });
   }
 
   complete(result: MiniGameResult): void {

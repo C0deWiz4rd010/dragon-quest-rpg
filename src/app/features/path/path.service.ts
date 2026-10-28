@@ -207,7 +207,7 @@ export class Path {
     }
 
     if (branch.type === 'minigame') {
-      const types: MiniGameType[] = ['reaction', 'memory', 'precision', 'typing'];
+      const types: MiniGameType[] = ['reaction', 'memory', 'precision', 'typing', 'sums'];
       const type = types[Math.floor(Math.random() * types.length)];
 
       this.miniGameService.launch(type, (result) => {
@@ -254,7 +254,7 @@ export class Path {
           result.won ? 'achievement' : 'event',
         );
         this.completeSelectedBranch();
-      });
+      }, this.currentDepth());
       return;
     }
 

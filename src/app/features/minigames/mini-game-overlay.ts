@@ -28,6 +28,15 @@ const TYPING_SENTENCES = [
   'Kein Monster kann mein Abenteuer stoppen',
 ];
 
+import {
+  generateSums,
+  memoryScore,
+  miniGameDifficulty,
+  reactionScore,
+  SumProblem,
+  timeScore,
+} from './mini-game-rules';
+
 type ReactionPhase = 'waiting' | 'ready' | 'tooEarly' | 'done';
 type MemoryPhase = 'showing' | 'input' | 'result';
 
@@ -73,12 +82,32 @@ export class MiniGameOverlay implements OnDestroy {
   protected readonly typingDone = signal(false);
   protected readonly typingWon = signal(false);
   private typingTimer: ReturnType<typeof setInterval> | null = null;
+  private typingTotal = 10;
+  private precisionTotal = 3;
+  private precisionScore = 0;
+  private typingScore = 0;
+
+  // ---- Sums ----
+  protected readonly sums = signal<SumProblem[]>([]);
+  protected readonly sumsIndex = signal(0);
+  protected readonly sumsInput = signal('');
+  protected readonly sumsTimeLeft = signal(16);
+  protected readonly sumsDone = signal(false);
+  protected readonly sumsWon = signal(false);
+  private sumsTimer: ReturnType<typeof setInterval> | null = null;
+  private sumsTotal = 16;
+  private sumsScore = 0;
+
+  private difficulty = miniGameDifficulty(0);
 
   constructor() {
     effect(() => {
       const game = this.svc.activeGame();
       if (!game) return;
-      untracked(() => this.startGame(game.type));
+      untracked(() => {
+        this.difficulty = miniGameDifficulty(game.depth);
+        this.startGame(game.type);
+      });
     });
   }
 
@@ -96,6 +125,9 @@ export class MiniGameOverlay implements OnDestroy {
         break;
       case 'typing':
         this.startTyping();
+        break;
+      case 'sums':
+        this.startSums();
         break;
     }
   }
@@ -136,7 +168,7 @@ export class MiniGameOverlay implements OnDestroy {
     if (ms < 250) return 'Unglaublich! 🔥';
     if (ms < 400) return 'Blitzschnell! ⚡';
     if (ms < 600) return 'Gut! 👍';
-    if (ms < 800) return 'Knapp bestanden!';
+    if (ms < this.difficulty.reactionLimitMs) return 'Knapp bestanden!';
     return 'Zu langsam 😅';
   }
 
@@ -147,9 +179,9 @@ export class MiniGameOverlay implements OnDestroy {
       return;
     }
     const ms = this.reactionMs();
-    const won = ms < 700;
-    const score = won ? Math.max(0, Math.round((700 - ms) / 7)) : 0;
-    this.svc.complete({ won, score });
+    const limit = this.difficulty.reactionLimitMs;
+    const won = ms < limit;
+    this.svc.complete({ won, score: reactionScore(ms, limit) });
   }
 
   protected retryReaction(): void {
@@ -159,7 +191,7 @@ export class MiniGameOverlay implements OnDestroy {
   // ================================ MEMORY ================================
   private startMemory(): void {
     const sequence = Array.from(
-      { length: 4 },
+      { length: this.difficulty.memoryLength },
       () => MEMORY_COLORS[Math.floor(Math.random() * MEMORY_COLORS.length)].id,
     );
     this.memorySequence.set(sequence);
@@ -201,17 +233,19 @@ export class MiniGameOverlay implements OnDestroy {
 
   protected submitMemory(): void {
     const won = this.memoryWon() === true;
-    this.svc.complete({ won, score: won ? 80 : 20 });
+    this.svc.complete({ won, score: memoryScore(won, this.memorySequence().length) });
   }
 
   // ================================ PRECISION ================================
   private startPrecision(): void {
     this.precisionDone.set(false);
     this.precisionWon.set(false);
-    this.precisionTimeLeft.set(3);
+    this.precisionTotal = this.difficulty.precisionSeconds;
+    this.precisionScore = 0;
+    this.precisionTimeLeft.set(this.precisionTotal);
     this.moveDot();
 
-    this.precisionMoveTimer = setInterval(() => this.moveDot(), 600);
+    this.precisionMoveTimer = setInterval(() => this.moveDot(), this.difficulty.precisionMoveMs);
 
     this.precisionCountTimer = setInterval(() => {
       const t = this.precisionTimeLeft() - 1;
@@ -246,29 +280,29 @@ export class MiniGameOverlay implements OnDestroy {
 
   protected onDotClick(event: MouseEvent): void {
     event.stopPropagation();
-    if (this.precisionDone()) return;
-    this.clearPrecisionTimers();
-    this.precisionDone.set(true);
-    this.precisionWon.set(true);
+    this.onDotClickFromCanvas();
   }
 
   /** Aufgerufen vom PrecisionCanvas wenn der Punkt getroffen wird. */
   protected onDotClickFromCanvas(): void {
     if (this.precisionDone()) return;
+    this.precisionScore = timeScore(true, this.precisionTimeLeft(), this.precisionTotal);
     this.clearPrecisionTimers();
     this.precisionDone.set(true);
     this.precisionWon.set(true);
   }
 
   protected submitPrecision(): void {
-    this.svc.complete({ won: this.precisionWon(), score: this.precisionWon() ? 75 : 0 });
+    this.svc.complete({ won: this.precisionWon(), score: this.precisionScore });
   }
 
   // ================================ TYPING ================================
   private startTyping(): void {
     this.typingTarget.set(TYPING_SENTENCES[Math.floor(Math.random() * TYPING_SENTENCES.length)]);
     this.typingInput.set('');
-    this.typingTimeLeft.set(10);
+    this.typingTotal = this.difficulty.typingSeconds;
+    this.typingScore = 0;
+    this.typingTimeLeft.set(this.typingTotal);
     this.typingDone.set(false);
     this.typingWon.set(false);
 
@@ -291,6 +325,7 @@ export class MiniGameOverlay implements OnDestroy {
     const value = (event.target as HTMLInputElement).value;
     this.typingInput.set(value);
     if (value === this.typingTarget()) {
+      this.typingScore = timeScore(true, this.typingTimeLeft(), this.typingTotal);
       if (this.typingTimer) {
         clearInterval(this.typingTimer);
         this.typingTimer = null;
@@ -301,7 +336,70 @@ export class MiniGameOverlay implements OnDestroy {
   }
 
   protected submitTyping(): void {
-    this.svc.complete({ won: this.typingWon(), score: this.typingWon() ? 90 : 0 });
+    this.svc.complete({ won: this.typingWon(), score: this.typingScore });
+  }
+
+  // ================================ SUMS ================================
+  private startSums(): void {
+    const { sumsCount, sumsSeconds } = this.difficulty;
+
+    this.sums.set(generateSums(sumsCount, this.svc.activeGame()?.depth ?? 0));
+    this.sumsIndex.set(0);
+    this.sumsInput.set('');
+    this.sumsDone.set(false);
+    this.sumsWon.set(false);
+    this.sumsScore = 0;
+    this.sumsTotal = sumsSeconds;
+    this.sumsTimeLeft.set(sumsSeconds);
+
+    this.sumsTimer = setInterval(() => {
+      const left = this.sumsTimeLeft() - 1;
+      this.sumsTimeLeft.set(left);
+      if (left <= 0) {
+        this.clearSumsTimer();
+        if (!this.sumsDone()) {
+          this.sumsDone.set(true);
+          this.sumsWon.set(false);
+        }
+      }
+    }, 1000);
+  }
+
+  protected currentSum(): SumProblem | null {
+    return this.sums()[this.sumsIndex()] ?? null;
+  }
+
+  protected onSumsInput(event: Event): void {
+    if (this.sumsDone()) return;
+    const input = event.target as HTMLInputElement;
+    const sum = this.currentSum();
+    this.sumsInput.set(input.value);
+
+    if (!sum || input.value.trim() !== String(sum.answer)) return;
+
+    input.value = '';
+    this.sumsInput.set('');
+
+    if (this.sumsIndex() + 1 >= this.sums().length) {
+      this.sumsScore = timeScore(true, this.sumsTimeLeft(), this.sumsTotal);
+      this.clearSumsTimer();
+      this.sumsDone.set(true);
+      this.sumsWon.set(true);
+      return;
+    }
+
+    this.sumsIndex.update((index) => index + 1);
+  }
+
+  protected submitSums(): void {
+    this.svc.complete({ won: this.sumsWon(), score: this.sumsScore });
+  }
+
+  private clearSumsTimer(): void {
+    if (this.sumsTimer) {
+      clearInterval(this.sumsTimer);
+      this.sumsTimer = null;
+    }
   }
 
   // ================================ SHARED ================================
@@ -319,6 +417,7 @@ export class MiniGameOverlay implements OnDestroy {
       this.memoryTimer = null;
     }
     this.clearPrecisionTimers();
+    this.clearSumsTimer();
     if (this.typingTimer) {
       clearInterval(this.typingTimer);
       this.typingTimer = null;

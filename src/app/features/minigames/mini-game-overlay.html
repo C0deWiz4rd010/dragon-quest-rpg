@@ -9,6 +9,7 @@
           @case ('memory')    { 🧠 Gedächtnisspiel }
           @case ('precision') { 🎯 Präzisionsspiel }
           @case ('typing')    { ⌨️ Schnelltipp     }
+          @case ('sums')      { ➕ Kopfrechnen     }
         }
       </span>
       <button class="mg-skip" type="button" (click)="skipGame()">✕ Skip</button>
@@ -140,6 +141,34 @@
             <p class="typing-target small">{{ typingTarget() }}</p>
           }
           <button class="mg-btn primary" (click)="submitTyping()">Weiter →</button>
+        }
+      }
+
+      <!-- ======= SUMS ======= -->
+      @case ('sums') {
+        @if (!sumsDone()) {
+          <p class="mg-desc">
+            Löse {{ sums().length }} Aufgaben in <strong>{{ sumsTimeLeft() }}s</strong>
+            ({{ sumsIndex() + 1 }}/{{ sums().length }})
+          </p>
+          <p class="typing-target">{{ currentSum()?.text }} = ?</p>
+          <input
+            class="typing-input"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="Ergebnis..."
+            [value]="sumsInput()"
+            (input)="onSumsInput($event)"
+          />
+        } @else {
+          @if (sumsWon()) {
+            <p class="mg-result-text won">➕ Alles richtig! Schnell gerechnet!</p>
+          } @else {
+            <p class="mg-result-text lost">⏱️ Zeit abgelaufen!</p>
+          }
+          <button class="mg-btn primary" (click)="submitSums()">Weiter →</button>
         }
       }
 
