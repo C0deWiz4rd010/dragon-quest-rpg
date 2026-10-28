@@ -9,8 +9,8 @@ Am Ende: Version-Bump.
 - [x] A1 · Enemy-Bestiary auf 25 biome-basierte Varianten erweitern
 - [x] A2 · Item-Pool auf 24 Stücke mit Rarity-Tiers (common/rare/legendary) + Set-Bonus
 - [x] A3 · Pets auf 14 mit aktiven Fähigkeiten (Trigger-basiert)
-- [x] A4 · Relikte auf 18 mit Synergie-Paaren
-- [x] A5 · Event-Bibliothek auf 50+ inkl. NPC-Begegnungen
+- [x] A4 · Relikte auf 18 mit Synergie-Paaren (alle 18 Effekte seit Phase 3 implementiert, siehe `relics.ts`)
+- [ ] A5 · Event-Bibliothek auf 50+ inkl. NPC-Begegnungen (Stand: 35 Events in `event-library.ts`, 15 fehlen)
 
 ## Phase B — Mobile-First CSS aller Views
 
