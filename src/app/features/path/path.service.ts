@@ -2,11 +2,10 @@ import { computed, Injectable, inject, signal } from '@angular/core';
 import {
   RunEncounterService,
   MerchantOffer,
-  DilemmaChoice,
 } from '../encounters/run-encounter.service';
 import { GameState } from '../game-state/game-state.service';
 import { blessingLabel, mergeBlessing, spendBlessing } from '../game-state/run-blessings';
-import { RouteHistoryType } from '../inventory/player.model';
+import { Player, RouteHistoryType } from '../inventory/player.model';
 import { Inventory } from '../inventory/inventory.service';
 import {
   randomMissingRelic,
@@ -19,6 +18,7 @@ import { MiniGameService, MiniGameType } from '../minigames/mini-game.service';
 import { routeSynergyBonus } from './path-advisor';
 import { PathBranch, PathSegment, type PathWeather } from './path-segment.model';
 import { createEnemy } from './enemy-blueprints';
+import { EventApi, EventInfo, pickEvent } from './event-library';
 import {
   adaptSegmentToPlayerState,
   createPathSegment,
@@ -444,400 +444,79 @@ export class Path {
   private launchEventDilemma(branch: PathBranch): void {
     const depth = this.currentDepth();
     const luck = this.gameState.playerLuck();
-    const biome = branch.biome ?? 'ruin';
-    const goldBase = 30 + depth * 6 + Math.floor(luck * 1.4);
-
-    const hurt = (frac: number) =>
-      this.gameState.updatePlayer((p) => ({
-        ...p,
-        hp: Math.max(1, p.hp - Math.floor(p.maxHp * frac)),
-      }));
-
-    const archetypes = [
-      'shrine',
-      'coin',
-      'cache',
-      'wanderer',
-      'soldier',
-      'dragonghost',
-      'keeper',
-      'bard',
-    ] as const;
-    const kind = archetypes[Math.floor(Math.random() * archetypes.length)];
-
-    const effects: Record<string, () => void> = {};
-    const choices: DilemmaChoice[] = [];
-    let icon = '🔮';
-    let source = 'Runenschrein';
-    let flavor = '';
-
-    if (kind === 'shrine') {
-      icon = '⛩';
-      source = 'Verfluchter Schrein';
-      flavor = 'Ein verfallener Schrein pulsiert mit dunkler Macht — sein Segen hat einen Preis.';
-      choices.push(
-        {
-          id: 'risk',
-          title: 'Blut opfern',
-          description: 'Lege die Hand auf den Altar und gib Lebenskraft hin.',
-          tone: 'risk',
-          riskLabel: 'Risiko: -18% HP',
-          rewardLabel: 'Relikt + Shard',
-        },
-        {
-          id: 'reward',
-          title: 'Andächtig beten',
-          description: 'Ehre den Schrein ohne Opfer.',
-          tone: 'reward',
-          rewardLabel: 'Segen + Heilung',
-        },
-      );
-      effects['risk'] = () => {
-        hurt(0.18);
-        this.grantRouteRelic({ ...branch, guaranteedRelicId: undefined }, source);
-        this.gameState.addDragonShards(1, source);
-        this.gameState.addLog(
-          `${source}: Du opferst Lebenskraft — der Altar gewährt ein Relikt und einen Shard.`,
-          'achievement',
-        );
-      };
-      effects['reward'] = () => {
-        const blessing = randomBlessing(['ward', 'focus']);
-        this.gameState.updatePlayer((p) => ({
-          ...p,
-          hp: Math.min(p.maxHp, p.hp + Math.floor(p.maxHp * 0.15)),
-          mana: Math.min(p.maxMana, p.mana + 14),
-        }));
-        this.gameState.grantBlessing(blessing.type, blessing.charges, source);
-        this.gameState.addLog(
-          `${source}: Dein Gebet bringt ${blessingLabel(blessing.type)} und etwas Heilung.`,
-          'heal',
-        );
-      };
-    } else if (kind === 'coin') {
-      icon = '🪙';
-      source = 'Gauklermünze';
-      flavor = 'Ein Geist wirft dir eine schimmernde Münze zu. Versuchst du dein Glück?';
-      const winChance = Math.min(72, 52 + Math.floor(luck * 0.9));
-      choices.push(
-        {
-          id: 'risk',
-          title: 'Münze werfen',
-          description: 'Alles oder nichts — der Geist liebt Mut.',
-          tone: 'risk',
-          chance: winChance,
-          riskLabel: 'Verlust: -30% Gold',
-          rewardLabel: `+${goldBase * 2} Gold + Shard`,
-        },
-        {
-          id: 'reward',
-          title: 'Sicher tauschen',
-          description: 'Nimm den garantierten kleinen Gewinn.',
-          tone: 'reward',
-          rewardLabel: `+${Math.floor(goldBase * 0.8)} Gold, +1 Trank`,
-        },
-      );
-      effects['risk'] = () => {
-        if (Math.random() * 100 < winChance) {
-          this.gameState.updatePlayer((p) => ({ ...p, gold: p.gold + goldBase * 2 }));
-          this.gameState.addDragonShards(1, source);
-          this.gameState.addLog(
-            `${source}: Die Münze fällt günstig! +${goldBase * 2} Gold und ein Shard.`,
-            'achievement',
-          );
-        } else {
-          this.gameState.updatePlayer((p) => ({ ...p, gold: Math.floor(p.gold * 0.7) }));
-          this.gameState.addLog(`${source}: Pech — der Geist nimmt 30% deines Goldes.`, 'damage');
-        }
-      };
-      effects['reward'] = () => {
-        this.gameState.updatePlayer((p) => ({
-          ...p,
-          gold: p.gold + Math.floor(goldBase * 0.8),
-          potions: p.potions + 1,
-        }));
-        this.gameState.addLog(
-          `${source}: Sicherer Tausch — +${Math.floor(goldBase * 0.8)} Gold und ein Trank.`,
-          'heal',
-        );
-      };
-    } else if (kind === 'cache') {
-      icon = '📦';
-      source = 'Uralter Hort';
-      flavor = 'Eine versiegelte Truhe summt vor Energie. Das Schloss könnte eine Falle sein.';
-      choices.push(
-        {
-          id: 'risk',
-          title: 'Gewaltsam öffnen',
-          description: 'Brich das Siegel auf — egal, was lauert.',
-          tone: 'risk',
-          riskLabel: 'Risiko: -12% HP',
-          rewardLabel: `+${goldBase + 20} Gold, Trank, Relikt-Chance`,
-        },
-        {
-          id: 'reward',
-          title: 'Mechanik studieren',
-          description: 'Entschärfe die Falle mit Bedacht.',
-          tone: 'reward',
-          rewardLabel: 'Fokus-Segen + Mana',
-        },
-      );
-      effects['risk'] = () => {
-        hurt(0.12);
-        this.gameState.updatePlayer((p) => ({
-          ...p,
-          gold: p.gold + goldBase + 20,
-          potions: p.potions + 1,
-        }));
-        if (Math.random() < 0.45) {
-          this.grantRouteRelic({ ...branch, guaranteedRelicId: undefined }, source);
-        }
-        this.gameState.addDragonShards(1, source);
-        this.gameState.addLog(
-          `${source}: Eine Falle schnappt zu, doch der Hort ist reich — +${goldBase + 20} Gold und mehr.`,
-          'achievement',
-        );
-      };
-      effects['reward'] = () => {
-        const blessing = randomBlessing(['focus', 'fortune']);
-        this.gameState.updatePlayer((p) => ({
-          ...p,
-          mana: Math.min(p.maxMana, p.mana + 20),
-        }));
-        this.gameState.grantBlessing(blessing.type, blessing.charges, source);
-        this.gameState.addLog(
-          `${source}: Sorgfalt zahlt sich aus — ${blessingLabel(blessing.type)} und Mana.`,
-          'event',
-        );
-      };
-    } else if (kind === 'wanderer') {
-      icon = '🧙';
-      source = 'Wandernder Händler';
-      flavor = 'Ein verhüllter Händler breitet seltene Ware aus und bietet dir einen Handel an.';
-      choices.push(
-        {
-          id: 'risk',
-          title: 'Relikt erhandeln',
-          description: 'Gib Gold für ein unbekanntes Relikt aus seinem Beutel.',
-          tone: 'risk',
-          riskLabel: `Kosten: ${goldBase + 30} Gold`,
-          rewardLabel: 'Zufälliges Relikt',
-          disabled: this.gameState.player().gold < goldBase + 30,
-        },
-        {
-          id: 'reward',
-          title: 'Vorräte kaufen',
-          description: 'Nimm Tränke und einen Manaschluck.',
-          tone: 'reward',
-          rewardLabel: '+2 Tränke, +18 Mana',
-        },
-      );
-      effects['risk'] = () => {
-        this.gameState.updatePlayer((p) => ({ ...p, gold: Math.max(0, p.gold - (goldBase + 30)) }));
-        this.grantRouteRelic({ ...branch, guaranteedRelicId: undefined }, source);
-        this.gameState.addLog(
-          `${source}: Der Handel gelingt — ein Relikt wechselt den Besitzer.`,
-          'achievement',
-        );
-      };
-      effects['reward'] = () => {
-        this.gameState.updatePlayer((p) => ({
-          ...p,
-          potions: p.potions + 2,
-          mana: Math.min(p.maxMana, p.mana + 18),
-        }));
-        this.gameState.addLog(
-          `${source}: Du deckst dich mit Vorräten ein — +2 Tränke, +18 Mana.`,
-          'heal',
-        );
-      };
-    } else if (kind === 'soldier') {
-      icon = '🪖';
-      source = 'Verlorener Soldat';
-      flavor = 'Ein verwundeter Soldat lehnt an einem Felsen und bittet dich um Hilfe.';
-      choices.push(
-        {
-          id: 'risk',
-          title: 'Wunden versorgen',
-          description: 'Teile Vorräte und Zeit — er dankt es dir mit einem Segen.',
-          tone: 'reward',
-          riskLabel: 'Kosten: -1 Trank',
-          rewardLabel: 'Kampf-Segen + Gold',
-          disabled: this.gameState.player().potions < 1,
-        },
-        {
-          id: 'reward',
-          title: 'Weiterziehen',
-          description: 'Nimm nur, was am Wegesrand liegt.',
-          tone: 'safe',
-          rewardLabel: `+${Math.floor(goldBase * 0.5)} Gold`,
-        },
-      );
-      effects['risk'] = () => {
-        this.gameState.updatePlayer((p) => ({
-          ...p,
-          potions: Math.max(0, p.potions - 1),
-          gold: p.gold + goldBase,
-        }));
-        this.gameState.grantBlessing('battle', 2, source);
-        this.gameState.addLog(
-          `${source}: Dankbar teilt er Kampfwissen — Segen und +${goldBase} Gold.`,
-          'achievement',
-        );
-      };
-      effects['reward'] = () => {
-        this.gameState.updatePlayer((p) => ({ ...p, gold: p.gold + Math.floor(goldBase * 0.5) }));
-        this.gameState.addLog(`${source}: Du ziehst weiter und findest etwas Gold.`, 'event');
-      };
-    } else if (kind === 'dragonghost') {
-      icon = '🐉';
-      source = 'Geist des Urdrachen';
-      flavor = 'Ein schimmernder Drachengeist prüft deinen Mut mit einer uralten Frage.';
-      const challengeChance = Math.min(75, 55 + Math.floor(luck * 0.9));
-      choices.push(
-        {
-          id: 'risk',
-          title: 'Herausforderung annehmen',
-          description: 'Stelle dich der Prüfung des Geistes.',
-          tone: 'risk',
-          chance: challengeChance,
-          riskLabel: 'Fehlschlag: -20% HP',
-          rewardLabel: 'Dauerhaft +2 ATK + Shard',
-        },
-        {
-          id: 'reward',
-          title: 'Um Weisheit bitten',
-          description: 'Bescheidenheit bringt ruhige Gaben.',
-          tone: 'reward',
-          rewardLabel: '+3 Resolve-Fokus, Mana',
-        },
-      );
-      effects['risk'] = () => {
-        if (Math.random() * 100 < challengeChance) {
-          this.gameState.updatePlayer((p) => ({
-            ...p,
-            baseAttack: p.baseAttack + 2,
-          }));
-          this.gameState.addDragonShards(1, source);
-          this.gameState.addLog(
-            `${source}: Du bestehst die Prüfung — dauerhaft +2 ATK und ein Shard!`,
-            'achievement',
-          );
-        } else {
-          hurt(0.2);
-          this.gameState.addLog(
-            `${source}: Die Prüfung überwältigt dich — der Geist entzieht Lebenskraft.`,
-            'damage',
-          );
-        }
-      };
-      effects['reward'] = () => {
-        this.gameState.updatePlayer((p) => ({
-          ...p,
-          mana: Math.min(p.maxMana, p.mana + 22),
-          resolve: Math.min(p.maxResolve, p.resolve + 1),
-        }));
-        this.gameState.grantBlessing('focus', 2, source);
-        this.gameState.addLog(
-          `${source}: Weisheit fließt zu dir — Fokus, Mana und Resolve.`,
-          'heal',
-        );
-      };
-    } else if (kind === 'keeper') {
-      icon = '⛩';
-      source = 'Drachenschrein-Hüter';
-      flavor = 'Ein stiller Hüter bietet dir vollständige Heilung — gegen eine Opfergabe.';
-      choices.push(
-        {
-          id: 'risk',
-          title: 'Opfergabe leisten',
-          description: 'Lege Gold auf den Altar für vollständige Erholung.',
-          tone: 'reward',
-          riskLabel: 'Kosten: 60 Gold',
-          rewardLabel: 'Voll-Heilung + Reinigung',
-          disabled: this.gameState.player().gold < 60,
-        },
-        {
-          id: 'reward',
-          title: 'Nur rasten',
-          description: 'Nimm eine bescheidene Erholung ohne Gabe.',
-          tone: 'safe',
-          rewardLabel: '+20% HP, +12 Mana',
-        },
-      );
-      effects['risk'] = () => {
-        this.gameState.updatePlayer((p) => ({
-          ...p,
-          gold: Math.max(0, p.gold - 60),
-          hp: p.maxHp,
-          mana: p.maxMana,
-          statusEffect: null,
-        }));
-        this.gameState.addLog(
-          `${source}: Der Altar leuchtet — volle HP, volles Mana, Status gereinigt.`,
-          'heal',
-        );
-      };
-      effects['reward'] = () => {
-        this.gameState.updatePlayer((p) => ({
-          ...p,
-          hp: Math.min(p.maxHp, p.hp + Math.floor(p.maxHp * 0.2)),
-          mana: Math.min(p.maxMana, p.mana + 12),
-        }));
-        this.gameState.addLog(`${source}: Eine kurze Rast stärkt dich etwas.`, 'event');
-      };
-    } else {
-      icon = '🎵';
-      source = 'Wandernder Barde';
-      flavor = 'Ein Barde besingt deine Taten und hebt die Moral der Reise.';
-      choices.push(
-        {
-          id: 'risk',
-          title: 'Zuhören & mitfeiern',
-          description: 'Lass dich vom Lied mitreißen — Mut und Glück steigen.',
-          tone: 'reward',
-          rewardLabel: 'Glücks-Segen + Gold',
-        },
-        {
-          id: 'reward',
-          title: 'Höflich weiterziehen',
-          description: 'Ein kurzer Applaus, dann geht es weiter.',
-          tone: 'safe',
-          rewardLabel: '+10 Mana',
-        },
-      );
-      effects['risk'] = () => {
-        this.gameState.updatePlayer((p) => ({ ...p, gold: p.gold + Math.floor(goldBase * 0.7) }));
-        this.gameState.grantBlessing('fortune', 2, source);
-        this.gameState.addLog(
-          `${source}: Das Lied beflügelt dich — Glücks-Segen und +${Math.floor(goldBase * 0.7)} Gold.`,
-          'achievement',
-        );
-      };
-      effects['reward'] = () => {
-        this.gameState.updatePlayer((p) => ({ ...p, mana: Math.min(p.maxMana, p.mana + 10) }));
-        this.gameState.addLog(`${source}: Die Melodie klärt deinen Geist — +10 Mana.`, 'event');
-      };
-    }
+    const event = pickEvent(branch.biome, depth);
+    const info: EventInfo = {
+      depth,
+      luck,
+      goldBase: 30 + depth * 6 + Math.floor(luck * 1.4),
+      player: this.gameState.player(),
+      odds: (base, cap) => Math.min(cap, base + Math.floor(luck * 0.9)),
+    };
+    const choices = event.choices(info);
+    const api = this.createEventApi(branch, event.source);
 
     this.encounters.launchDilemma({
-      source,
+      source: event.source,
       subtitle: '',
-      flavor,
-      icon,
-      biome,
+      flavor: event.flavor,
+      icon: event.icon,
+      biome: branch.biome ?? 'ruin',
       choices,
       onResolve: (choiceId) => {
-        const effect = choiceId ? effects[choiceId] : null;
-        if (effect) {
-          effect();
+        const choice = choices.find((entry) => entry.id === choiceId);
+
+        if (choice) {
+          choice.apply(api);
         } else {
-          this.gameState.addLog(`${source}: Du ziehst vorsichtig weiter.`, 'event');
+          this.gameState.addLog(`${event.source}: Du ziehst vorsichtig weiter.`, 'event');
           this.applyOmenOutcome(branch);
         }
         this.completeSelectedBranch();
       },
     });
+  }
+
+  /** Bridges event-library effects onto the live game state. */
+  private createEventApi(branch: PathBranch, source: string): EventApi {
+    const update = (change: (player: Player) => Player) => this.gameState.updatePlayer(change);
+
+    return {
+      hurt: (fraction) =>
+        update((p) => ({ ...p, hp: Math.max(1, p.hp - Math.floor(p.maxHp * fraction)) })),
+      heal: (fraction) =>
+        update((p) => ({ ...p, hp: Math.min(p.maxHp, p.hp + Math.floor(p.maxHp * fraction)) })),
+      mana: (amount) =>
+        update((p) => ({ ...p, mana: Math.max(0, Math.min(p.maxMana, p.mana + amount)) })),
+      gold: (amount) => update((p) => ({ ...p, gold: Math.max(0, p.gold + amount) })),
+      potions: (amount) => update((p) => ({ ...p, potions: Math.max(0, p.potions + amount) })),
+      shards: (amount) => this.gameState.addDragonShards(amount, source),
+      resolve: (amount) =>
+        update((p) => ({ ...p, resolve: Math.max(0, Math.min(p.maxResolve, p.resolve + amount)) })),
+      permanent: (stat, amount) =>
+        update((p) => {
+          const next = { ...p, [stat]: p[stat] + amount };
+
+          if (stat === 'maxHp') next.hp = p.hp + amount;
+          if (stat === 'maxMana') next.mana = p.mana + amount;
+          if (stat === 'maxResolve') next.resolve = p.resolve + amount;
+
+          return next;
+        }),
+      blessing: (pool) => {
+        const blessing = randomBlessing(pool);
+        this.gameState.grantBlessing(blessing.type, blessing.charges, source);
+
+        return blessingLabel(blessing.type);
+      },
+      fixedBlessing: (type, charges) => this.gameState.grantBlessing(type, charges, source),
+      relic: () => this.grantRouteRelic({ ...branch, guaranteedRelicId: undefined }, source),
+      cleanse: () => update((p) => ({ ...p, statusEffect: null })),
+      afflict: (effect) =>
+        update((p) => ({ ...p, statusEffect: p.statusEffect ?? effect })),
+      gamble: (chance) => Math.random() * 100 < chance,
+      log: (message, tone = 'event') =>
+        this.gameState.addLog(`${source}: ${message}`, tone === 'normal' ? 'normal' : tone),
+    };
   }
 
   completeSelectedBranch(): void {
