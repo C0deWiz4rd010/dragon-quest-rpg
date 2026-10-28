@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Dragon Quest RPG">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="35%" r="75%">
+      <stop offset="0" stop-color="#1b2540"/>
+      <stop offset="1" stop-color="#07090f"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fde68a"/>
+      <stop offset="1" stop-color="#d4af37"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="196" fill="none" stroke="url(#gold)" stroke-width="12" stroke-dasharray="26 18"/>
+  <!-- stylised dragon head -->
+  <path d="M138 318c8-62 52-112 118-122l42-58 8 62 58 20-52 36c4 30-12 58-44 74l-30-34-34 22-40-4z" fill="#4ade80"/>
+  <path d="M256 196c24 2 44 14 58 32l-46 6z" fill="#86efac"/>
+  <circle cx="300" cy="238" r="9" fill="#fde047"/>
+  <path d="M298 140l-14-50 44 34z" fill="#d4af37"/>
+</svg>

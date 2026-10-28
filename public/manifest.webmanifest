@@ -1,0 +1,21 @@
+{
+  "name": "Dragon Quest RPG",
+  "short_name": "Dragon Quest",
+  "description": "Ein Roguelike im Browser: Pfade wählen, Drachen besiegen, Relikte sammeln.",
+  "lang": "de",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#07090f",
+  "theme_color": "#0b111f",
+  "categories": ["games"],
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

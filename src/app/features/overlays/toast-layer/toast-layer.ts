@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { AchievementService } from '../../game-state/achievement.service';
 import { Inventory } from '../../inventory/inventory.service';
 import { StorageService } from '../../persistence/storage.service';
+import { UpdateService } from '../../pwa/update.service';
 
 /** Transient notifications for loot drops and unlocked achievements. */
 @Component({
@@ -15,4 +16,5 @@ export class ToastLayer {
   protected readonly inventory = inject(Inventory);
   protected readonly achievements = inject(AchievementService);
   protected readonly storage = inject(StorageService);
+  protected readonly updates = inject(UpdateService);
 }

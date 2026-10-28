@@ -28,3 +28,12 @@
     <button type="button" (click)="storage.saveError.set(null)">OK</button>
   </div>
 }
+
+@if (updates.updateReady()) {
+  <div class="update-toast" role="status" aria-live="polite">
+    <span aria-hidden="true">⬆</span>
+    <p>Eine neue Version ist bereit.</p>
+    <button type="button" (click)="updates.applyUpdate()">Neu laden</button>
+    <button type="button" class="ghost" (click)="updates.dismiss()">Später</button>
+  </div>
+}
