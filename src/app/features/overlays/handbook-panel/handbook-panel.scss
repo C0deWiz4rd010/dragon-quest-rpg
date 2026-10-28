@@ -10,7 +10,7 @@
   border: 1px solid rgba(250, 204, 21, 0.42);
   border-radius: 16px;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(250, 204, 21, 0.06) inset;
-  color: #fff6c7;
+  color: var(--dq-cream);
   max-height: calc(100dvh - 80px);
   max-width: min(390px, calc(100vw - 24px));
   overflow-y: auto;
@@ -21,7 +21,7 @@
   z-index: 4;
 
   h2 {
-    color: #facc15;
+    color: var(--dq-yellow);
     font-family: var(--dq-font-display);
     font-size: 13px;
     letter-spacing: 0.14em;
@@ -42,7 +42,7 @@
     background: rgba(250, 204, 21, 0.1);
     border: 1px solid rgba(250, 204, 21, 0.35);
     border-radius: 999px;
-    color: #facc15;
+    color: var(--dq-yellow);
     cursor: pointer;
     float: right;
     font-size: 9px;
@@ -65,7 +65,7 @@
 .handbook-ach-count {
   background: rgba(250, 204, 21, 0.14);
   border-radius: 999px;
-  color: #fde047;
+  color: var(--dq-yellow-soft);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0;
@@ -109,3 +109,18 @@
   line-height: 1.2;
 }
 
+
+.handbook-perks {
+  color: var(--dq-ink-soft);
+  display: grid;
+  font-size: 12px;
+  gap: 4px;
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+}
+
+.handbook-perks li::before {
+  color: var(--dq-gold);
+  content: '✦ ';
+}

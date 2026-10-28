@@ -17,7 +17,12 @@
       <p class="outcome-sub">
         {{ outcome === 'victory' ? 'Der Drachenkönig liegt besiegt.' : 'Du hast dein Bestes gegeben.' }}
       </p>
-      <div class="outcome-grade-row">
+      <p class="outcome-meta">
+      @if (className()) { <span>{{ className() }}</span> }
+      @if (player().newGamePlus) { <span>New Game+ {{ player().newGamePlus }}</span> }
+      <span>{{ perkCount() }} Meta-Boni aktiv</span>
+    </p>
+    <div class="outcome-grade-row">
         <div class="outcome-grade" [attr.data-grade]="gameState.runGrade()">
           {{ gameState.runGrade() }}
         </div>

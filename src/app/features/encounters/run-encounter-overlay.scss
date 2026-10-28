@@ -43,13 +43,13 @@
 }
 
 .encounter-header h2 {
-  color: #f8fafc;
+  color: var(--dq-white-soft);
   font-size: clamp(22px, 2vw, 28px);
   margin: 0;
 }
 
 .encounter-header span {
-  color: #cbd5e1;
+  color: var(--dq-slate-light);
   font-size: 13px;
 }
 
@@ -107,7 +107,7 @@
 }
 
 .offer-desc {
-  color: #cbd5e1;
+  color: var(--dq-slate-light);
   font-size: 13px;
   line-height: 1.45;
 }
@@ -116,7 +116,7 @@
   border: 1px solid rgba(148, 163, 184, 0.28);
   border-radius: 12px;
   background: rgba(15, 23, 42, 0.84);
-  color: #cbd5e1;
+  color: var(--dq-slate-light);
   cursor: pointer;
   font-size: 13px;
   justify-self: center;
@@ -165,7 +165,7 @@
 }
 
 .dilemma-flavor {
-  color: #cbd5e1;
+  color: var(--dq-slate-light);
   font-size: 13px;
   font-style: italic;
   line-height: 1.45;
@@ -218,9 +218,9 @@
   opacity: 0.45;
 }
 
-.choice-card.tone-risk { --tone: #f87171; }
-.choice-card.tone-reward { --tone: #facc15; }
-.choice-card.tone-safe { --tone: #4ade80; }
+.choice-card.tone-risk { --tone: var(--dq-red); }
+.choice-card.tone-reward { --tone: var(--dq-yellow); }
+.choice-card.tone-safe { --tone: var(--dq-green); }
 
 .choice-topline {
   align-items: center;
@@ -231,7 +231,7 @@
 }
 
 .choice-topline strong {
-  color: #f8fafc;
+  color: var(--dq-white-soft);
   font-size: 15px;
 }
 
@@ -247,7 +247,7 @@
 }
 
 .choice-desc {
-  color: #cbd5e1;
+  color: var(--dq-slate-light);
   font-size: 12.5px;
   line-height: 1.4;
   padding-left: 8px;
@@ -273,7 +273,7 @@
 .choice-risk {
   background: rgba(248, 113, 113, 0.12);
   border: 1px solid rgba(248, 113, 113, 0.38);
-  color: #fca5a5;
+  color: var(--dq-red-soft);
 }
 
 .choice-reward {

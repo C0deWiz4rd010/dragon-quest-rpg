@@ -42,7 +42,7 @@
   top: 12px;
 
   &:hover {
-    color: #dbe7f5;
+    color: var(--dq-ink-cool-2);
   }
 }
 
@@ -54,7 +54,7 @@
 }
 
 .tutorial-title {
-  color: #fde047;
+  color: var(--dq-yellow-soft);
   font-size: 19px;
   font-weight: 800;
   margin: 0 0 8px;
@@ -82,7 +82,7 @@
   width: 7px;
 
   &.active {
-    background: #facc15;
+    background: var(--dq-yellow);
     transform: scale(1.1);
     width: 18px;
     border-radius: 999px;
@@ -109,7 +109,7 @@
   }
 
   &.primary {
-    background: linear-gradient(135deg, #f3cb62, #d4af37 55%, #f59e0b);
+    background: linear-gradient(135deg, var(--dq-gold-bright), var(--dq-gold) 55%, var(--dq-amber));
     border: 0;
     color: #0a0e18;
 
@@ -121,7 +121,7 @@
   &.ghost {
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.16);
-    color: #dbe7f5;
+    color: var(--dq-ink-cool-2);
 
     &:hover {
       background: rgba(255, 255, 255, 0.12);

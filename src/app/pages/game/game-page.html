@@ -4,7 +4,7 @@
 
   <section class="shell-content">
     <!-- ── TOP COCKPIT ──────────────────────────────────────────── -->
-    <header class="cockpit" aria-label="Run cockpit">
+    <header class="cockpit" aria-label="Übersicht">
 
       <!-- Row 1: identity crest + controls -->
       <div class="cockpit-top">
@@ -35,16 +35,16 @@
           </div>
         </div>
 
-        <div class="cockpit-controls" aria-label="Run tools">
+        <div class="cockpit-controls" role="group" aria-label="Werkzeuge">
           <div class="boss-dial" [class]="bossCountdownClass()">
-            <span class="boss-dial-icon">🐉</span>
+            <span class="boss-dial-icon" aria-hidden="true">🐉</span>
             <div class="boss-dial-text">
               <small>Boss-Etappe</small>
               <strong>{{ bossCountdown() === 1 ? 'JETZT' : 'in ' + bossCountdown() }}</strong>
             </div>
           </div>
 
-          <div class="weather-rail" [class]="weatherColorFor(path.weather())" aria-label="Wetter">
+          <div class="weather-rail" [class]="weatherColorFor(path.weather())" role="group" aria-label="Wetter">
             @for (mode of weatherOptions; track mode) {
               <button
                 type="button"
@@ -63,9 +63,10 @@
               type="button"
               class="tool-btn save-btn"
               [title]="savedAt() ? 'Gespeichert ' + savedAt() : 'Speichern'"
+              [attr.aria-label]="savedAt() ? 'Speichern, zuletzt ' + savedAt() : 'Speichern'"
               (click)="saveGame()"
             >
-              <span class="tool-glyph">💾</span>
+              <span class="tool-glyph" aria-hidden="true">💾</span>
               @if (savedAt()) { <span class="save-time">{{ savedAt() }}</span> }
             </button>
             <button
@@ -74,7 +75,7 @@
               title="Handbuch"
               (click)="handbookOpen.set(!handbookOpen())"
             >
-              <span class="tool-glyph">📖</span>
+              <span class="tool-glyph" aria-hidden="true">📖</span>
             </button>
             <button
               type="button"
@@ -82,10 +83,10 @@
               title="Einstellungen"
               (click)="settingsOpen.set(!settingsOpen())"
             >
-              <span class="tool-glyph">⚙</span>
+              <span class="tool-glyph" aria-hidden="true">⚙</span>
             </button>
             <button type="button" class="tool-btn reset-btn" title="Neustart" (click)="resetRun()">
-              <span class="tool-glyph">↺</span>
+              <span class="tool-glyph" aria-hidden="true">↺</span>
             </button>
           </div>
         </div>
@@ -143,7 +144,7 @@
           </div>
         </section>
 
-        <section class="ledger" aria-label="Run Werte">
+        <section class="ledger" aria-label="Laufwerte">
           @for (stat of quickStats(); track stat.label) {
             <article class="ledger-cell">
               <span class="ledger-label">{{ stat.label }}</span>
@@ -213,29 +214,33 @@
     </div>
 
     <!-- ── MOBILE TABS ──────────────────────────────────────────── -->
-    <nav class="mobile-tabs" aria-label="Navigation">
+    <nav class="mobile-tabs" aria-label="Bereichsauswahl">
       <button
         type="button"
         [class.active]="mobileTab() === 'combat'"
+        [attr.aria-current]="mobileTab() === 'combat' ? 'page' : null"
         (click)="mobileTab.set('combat')"
       >
-        <span class="tab-icon">⚔</span>
+        <span class="tab-icon" aria-hidden="true">⚔</span>
         <span class="tab-label">Kampf</span>
       </button>
-      <button type="button" [class.active]="mobileTab() === 'path'" (click)="mobileTab.set('path')">
-        <span class="tab-icon">🗺</span>
+      <button type="button" [class.active]="mobileTab() === 'path'"
+        [attr.aria-current]="mobileTab() === 'path' ? 'page' : null" (click)="mobileTab.set('path')">
+        <span class="tab-icon" aria-hidden="true">🗺</span>
         <span class="tab-label">Karte</span>
       </button>
       <button
         type="button"
         [class.active]="mobileTab() === 'supply'"
+        [attr.aria-current]="mobileTab() === 'supply' ? 'page' : null"
         (click)="mobileTab.set('supply')"
       >
-        <span class="tab-icon">🎒</span>
+        <span class="tab-icon" aria-hidden="true">🎒</span>
         <span class="tab-label">Vorrat</span>
       </button>
-      <button type="button" [class.active]="mobileTab() === 'log'" (click)="mobileTab.set('log')">
-        <span class="tab-icon">📜</span>
+      <button type="button" [class.active]="mobileTab() === 'log'"
+        [attr.aria-current]="mobileTab() === 'log' ? 'page' : null" (click)="mobileTab.set('log')">
+        <span class="tab-icon" aria-hidden="true">📜</span>
         <span class="tab-label">Chronik</span>
       </button>
     </nav>

@@ -151,7 +151,7 @@
     0 0 60px rgba(212, 175, 55, 0.2);
 
   span {
-    background: linear-gradient(135deg, #fff0b8, #f3cb62 40%, #d4af37 60%, #f59e0b);
+    background: linear-gradient(135deg, #fff0b8, var(--dq-gold-bright) 40%, var(--dq-gold) 60%, var(--dq-amber));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -181,7 +181,7 @@
   background: rgba(8, 14, 22, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
-  color: #dbe7f5;
+  color: var(--dq-ink-cool-2);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -231,7 +231,7 @@
   margin-top: 2px;
 
   small {
-    color: #86efac;
+    color: var(--dq-green-soft);
     font-size: 9px;
     font-weight: 600;
   }
@@ -260,7 +260,7 @@
 }
 
 .btn-start {
-  background: linear-gradient(135deg, #f3cb62, #d4af37 55%, #f59e0b);
+  background: linear-gradient(135deg, var(--dq-gold-bright), var(--dq-gold) 55%, var(--dq-amber));
   border: 0;
   box-shadow: 0 0 26px rgba(212, 175, 55, 0.4), 0 8px 24px rgba(0, 0, 0, 0.45);
   color: #0a0e18;
@@ -310,7 +310,7 @@
 }
 
 .slot-meta {
-  color: #86efac;
+  color: var(--dq-green-soft);
   font-family: var(--dq-font-body, inherit);
   font-size: 11px;
   font-weight: 600;

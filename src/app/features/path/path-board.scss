@@ -147,17 +147,17 @@
 
 .pill.prep-pill.ready {
   border-color: rgba(74, 222, 128, 0.45);
-  color: #4ade80;
+  color: var(--dq-green);
 }
 
 .pill.boss-pill.close {
   border-color: rgba(250, 204, 21, 0.45);
-  color: #fde047;
+  color: var(--dq-yellow-soft);
 }
 
 .pill.boss-pill.imminent {
   border-color: rgba(249, 115, 22, 0.6);
-  color: #fb923c;
+  color: var(--dq-orange);
   animation: bossPillPulse 1.4s ease-in-out infinite;
 }
 
@@ -208,7 +208,7 @@
 .contract-mini-count {
   background: rgba(74, 222, 128, 0.12);
   border-radius: 999px;
-  color: #86efac;
+  color: var(--dq-green-soft);
   flex-shrink: 0;
   font-size: 9px;
   font-weight: 800;
@@ -225,14 +225,14 @@
 }
 
 .contract-mini-fill {
-  background: linear-gradient(90deg, #4ade80, #22c55e);
+  background: linear-gradient(90deg, var(--dq-green), var(--dq-green-deep));
   border-radius: inherit;
   display: block;
   height: 100%;
   transition: width 300ms ease-out;
 
   &.complete {
-    background: linear-gradient(90deg, #facc15, #d4af37);
+    background: linear-gradient(90deg, var(--dq-yellow), var(--dq-gold));
     animation: contractComplete 1.2s ease-in-out infinite;
   }
 }
@@ -280,7 +280,7 @@
   }
 
   &.current {
-    background: linear-gradient(90deg, #facc15, #f97316);
+    background: linear-gradient(90deg, var(--dq-yellow), #f97316);
     box-shadow: 0 0 8px rgba(250, 204, 21, 0.5);
   }
 
@@ -299,7 +299,7 @@
   background: rgba(250, 204, 21, 0.14);
   border: 1px solid rgba(250, 204, 21, 0.3);
   border-radius: 6px;
-  color: #fde047;
+  color: var(--dq-yellow-soft);
   flex-shrink: 0;
   font-size: 8px;
   font-weight: 900;
@@ -461,7 +461,7 @@
   }
 
   strong {
-    color: #fff6c7;
+    color: var(--dq-cream);
     font-size: 11px;
     font-weight: 900;
   }
@@ -470,21 +470,21 @@
 .segment.current .segment-tag {
   small {
     color: #0a0d08;
-    background: linear-gradient(90deg, #facc15, #fde047);
+    background: linear-gradient(90deg, var(--dq-yellow), var(--dq-yellow-soft));
     border-radius: 999px;
     box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
     padding: 1px 6px;
   }
 
   strong {
-    color: #fde047;
+    color: var(--dq-yellow-soft);
   }
 
   /* Downward pin pointing at the active station */
   &::after {
     border-left: 4px solid transparent;
     border-right: 4px solid transparent;
-    border-top: 5px solid #facc15;
+    border-top: 5px solid var(--dq-yellow);
     content: '';
     height: 0;
     width: 0;
@@ -539,7 +539,7 @@
 .node-dot {
   --ring: rgba(212, 175, 55, 0.5);
   --fill: rgba(15, 23, 42, 0.92);
-  --ink: #f8e7a2;
+  --ink: var(--dq-gold-soft);
   align-items: center;
   background:
     radial-gradient(circle at 50% 32%, rgba(255, 255, 255, 0.08), transparent 55%),
@@ -599,7 +599,7 @@
 }
 
 .done-flag {
-  background: #4ade80;
+  background: var(--dq-green);
   color: #06280f;
 }
 
@@ -610,13 +610,13 @@
 }
 
 .star-flag {
-  background: #22c55e;
+  background: var(--dq-green-deep);
   box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
   color: #06280f;
 }
 
 .warn-flag {
-  background: #f87171;
+  background: var(--dq-red);
   box-shadow: 0 0 8px rgba(248, 113, 113, 0.55);
   color: #2c0606;
 }
@@ -631,7 +631,7 @@
 }
 
 .node-name {
-  color: #fff6c7;
+  color: var(--dq-cream);
   font-size: 10px;
   font-weight: 800;
   line-height: 1.1;
@@ -669,12 +669,12 @@
   }
 
   i.on {
-    background: #facc15;
+    background: var(--dq-yellow);
   }
 
   &[data-threat='4'] i.on,
   &[data-threat='5'] i.on {
-    background: #f87171;
+    background: var(--dq-red);
   }
 }
 
@@ -682,7 +682,7 @@
   background: rgba(250, 204, 21, 0.1);
   border: 1px solid rgba(250, 204, 21, 0.26);
   border-radius: 999px;
-  color: #f8e7a2;
+  color: var(--dq-gold-soft);
   font-size: 8px;
   font-weight: 800;
   max-width: 112px;
@@ -694,7 +694,7 @@
 }
 
 .best-chip {
-  background: linear-gradient(90deg, #facc15, #fb923c);
+  background: linear-gradient(90deg, var(--dq-yellow), var(--dq-orange));
   border-radius: 999px;
   color: #1a0f02;
   font-size: 7px;
@@ -785,7 +785,7 @@
 .node.type-fight .node-dot {
   --ring: rgba(248, 113, 113, 0.6);
   --fill: radial-gradient(circle at 50% 32%, rgba(248, 113, 113, 0.24), transparent 55%), #160d12;
-  --ink: #fca5a5;
+  --ink: var(--dq-red-soft);
 }
 
 .node.type-rest .node-dot {
@@ -797,13 +797,13 @@
 .node.type-event .node-dot {
   --ring: rgba(125, 211, 252, 0.6);
   --fill: radial-gradient(circle at 50% 32%, rgba(125, 211, 252, 0.2), transparent 55%), #0a1320;
-  --ink: #7dd3fc;
+  --ink: var(--dq-sky-soft);
 }
 
 .node.type-treasure .node-dot {
   --ring: rgba(250, 204, 21, 0.68);
   --fill: radial-gradient(circle at 50% 32%, rgba(250, 204, 21, 0.24), transparent 55%), #161204;
-  --ink: #fde047;
+  --ink: var(--dq-yellow-soft);
 }
 
 .node.type-minigame .node-dot {
@@ -815,7 +815,7 @@
 .node.type-merchant .node-dot {
   --ring: rgba(192, 132, 252, 0.6);
   --fill: radial-gradient(circle at 50% 32%, rgba(192, 132, 252, 0.22), transparent 55%), #150b1c;
-  --ink: #d8b4fe;
+  --ink: var(--dq-violet-soft);
 }
 
 .node.type-forge .node-dot {
@@ -833,7 +833,7 @@
 .node.type-boss .node-dot {
   --ring: rgba(249, 115, 22, 0.75);
   --fill: radial-gradient(circle at 50% 32%, rgba(249, 115, 22, 0.3), transparent 55%), #1a0d05;
-  --ink: #fb923c;
+  --ink: var(--dq-orange);
   height: 58px;
   width: 58px;
 }

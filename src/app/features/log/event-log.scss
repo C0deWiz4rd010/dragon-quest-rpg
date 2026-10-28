@@ -59,7 +59,7 @@
 }
 
 .entries-empty {
-  color: var(--dq-ink-muted, #94a3b8);
+  color: var(--dq-ink-muted, var(--dq-ink-muted));
   font-size: 10px;
   font-style: italic;
   margin: 8px 4px;
@@ -127,14 +127,14 @@
 }
 
 .entry-card time {
-  color: var(--dq-ink-muted, #94a3b8);
+  color: var(--dq-ink-muted, var(--dq-ink-muted));
   font-size: 8px;
   font-variant-numeric: tabular-nums;
   margin-left: auto;
 }
 
 .entry-card p {
-  color: #dce6f5;
+  color: var(--dq-ink-cool);
   font-size: 10px;
   line-height: 1.28;
   margin: 0;
@@ -142,11 +142,11 @@
 
 /* Per-type accent */
 .entry-card.damage { --rail: #ef4444; }
-.entry-card.heal { --rail: #22c55e; }
+.entry-card.heal { --rail: var(--dq-green-deep); }
 .entry-card.event,
-.entry-card.skill { --rail: #38bdf8; }
+.entry-card.skill { --rail: var(--dq-sky); }
 .entry-card.achievement,
-.entry-card.critical { --rail: #facc15; }
+.entry-card.critical { --rail: var(--dq-yellow); }
 
 .entry-card.latest {
   animation: latestEntryPulse 480ms ease-out;

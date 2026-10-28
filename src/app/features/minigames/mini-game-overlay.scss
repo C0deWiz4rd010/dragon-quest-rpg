@@ -28,7 +28,7 @@
   background:
     linear-gradient(180deg, rgba(14, 17, 32, 0.76), rgba(8, 11, 24, 0.62)),
     rgba(14, 17, 32, 0.58);
-  border: 2px solid #d4af37;
+  border: 2px solid var(--dq-gold);
   border-radius: 10px;
   backdrop-filter: blur(10px);
   padding: 0;
@@ -59,7 +59,7 @@
 .mg-title {
   font-family: 'Press Start 2P', monospace, sans-serif;
   font-size: 11px;
-  color: #ffd966;
+  color: var(--dq-gold-warm);
   letter-spacing: 0.5px;
 }
 
@@ -98,7 +98,7 @@
   margin: 0;
   line-height: 1.5;
 
-  strong { color: #ffd966; }
+  strong { color: var(--dq-gold-warm); }
 }
 
 // ---- Shared buttons ----
@@ -115,8 +115,8 @@
 
   &:hover {
     background: #252945;
-    border-color: #d4af37;
-    color: #ffd966;
+    border-color: var(--dq-gold);
+    color: var(--dq-gold-warm);
   }
 
   &.primary {
@@ -265,7 +265,7 @@
   transition: background 0.15s;
 
   &.active {
-    background: #ffd966;
+    background: var(--dq-gold-warm);
     box-shadow: 0 0 8px rgba(255, 217, 102, 0.7);
   }
 }
@@ -327,7 +327,7 @@
 // =========================================
 .typing-target {
   font-size: 14px;
-  color: #ffd966;
+  color: var(--dq-gold-warm);
   background: #0d1022;
   border: 1px solid #2a2f45;
   border-radius: 6px;
@@ -358,7 +358,7 @@
   outline: none;
   transition: border-color 0.15s;
 
-  &:focus { border-color: #d4af37; }
+  &:focus { border-color: var(--dq-gold); }
   &::placeholder { color: #3a3f58; }
 }
 

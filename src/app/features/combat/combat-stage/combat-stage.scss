@@ -168,7 +168,7 @@
   background: rgba(7, 11, 18, 0.72);
   border: 1px solid rgba(45, 212, 191, 0.38);
   border-radius: 999px;
-  color: #99f6e4;
+  color: var(--dq-teal-soft);
   font-size: 7px;
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -179,7 +179,7 @@
 
 .stage-alerts .danger {
   border-color: rgba(248, 113, 113, 0.52);
-  color: #fecaca;
+  color: var(--dq-red-pale);
 }
 
 /* Fighter titles */
@@ -197,7 +197,7 @@
 }
 
 .fighter-title p {
-  color: #94a3b8;
+  color: var(--dq-ink-muted);
   font-size: 7px;
   font-weight: 800;
   letter-spacing: 0.18em;
@@ -206,7 +206,7 @@
 }
 
 .fighter-title strong {
-  color: #f8e7a2;
+  color: var(--dq-gold-soft);
   display: block;
   font-size: clamp(9px, 0.9vw, 11px);
   overflow: hidden;
@@ -215,7 +215,7 @@
 }
 
 .fighter-title.enemy-title strong {
-  color: #bae6fd;
+  color: var(--dq-sky-pale);
 }
 
 .fighter-title.idle strong {
@@ -260,7 +260,7 @@
 }
 
 .stat-grid.hp-danger dt {
-  color: #fca5a5;
+  color: var(--dq-red-soft);
 }
 
 .stat-grid > div {
